@@ -118,7 +118,7 @@ export default function UpdatingWaitingTimeGreeters() {
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium">Greeter</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600">
                 <User className="h-5 w-5 text-primary-foreground" />
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function UpdatingWaitingTimeGreeters() {
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600"
             >
               {isSaving ? (
                 <>
