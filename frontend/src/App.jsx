@@ -18,6 +18,7 @@ import Profile from "./pages/admin/pages/Profile";
 import PrintMap from "./pages/admin/pages/PrintMap";
 import { ThemeProvider } from "./components/theme-provider";
 import ModeToggle from "./components/mode-toggle";
+import AssigenDrivers from "./pages/greeter/pages/AssigenDrivers";
 
 function App() {
   return (
@@ -54,6 +55,11 @@ function App() {
           <Route path="/admin/map" element={<Map />} />\
           <Route path="/admin/profile" element={<Profile />} />
           <Route path="/admin/printmap" element={<PrintMap />} />
+          {/* Greeter Pages */}
+          <Route
+            path="/greeter/greeter-dashboard"
+            element={<AssigenDrivers />}
+          />
         </Routes>
       </Router>
     </ThemeProvider>

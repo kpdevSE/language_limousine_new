@@ -74,9 +74,14 @@ const NavigationBar = () => {
                 <DialogHeader>
                   <DialogTitle>Welcome to Language Limousine</DialogTitle>
                   <DialogDescription>
-                    <Link to="/admin/admin-dashboard">
-                      <Button variant="default">Admin Page</Button>
-                    </Link>
+                    <div className="flex flex-col gap-2">
+                      <Link to="/admin/admin-dashboard">
+                        <Button variant="default">Admin Page</Button>
+                      </Link>
+                      <Link to="/greeter/greeter-dashboard">
+                        <Button>Greeter Page</Button>
+                      </Link>
+                    </div>
                   </DialogDescription>
                 </DialogHeader>
               </DialogContent>
@@ -131,11 +136,24 @@ const NavigationBar = () => {
               <DialogHeader>
                 <DialogTitle>Welcome to Language Limousine</DialogTitle>
                 <DialogDescription>
-                  <Link to="/admin/admin-dashboard">
-                    <Button className="w-full" onClick={() => setIsOpen(false)}>
-                      Admin Page
-                    </Button>
-                  </Link>
+                  <div className="flex  gap-2">
+                    <Link to="/admin/admin-dashboard">
+                      <Button
+                        className="w-full"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Admin Page
+                      </Button>
+                    </Link>
+                    <Link to="/greeter/greeter-dashboard">
+                      <Button
+                        className="w-full"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Greeter Page
+                      </Button>
+                    </Link>
+                  </div>
                 </DialogDescription>
               </DialogHeader>
             </DialogContent>
