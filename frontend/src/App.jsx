@@ -19,6 +19,8 @@ import PrintMap from "./pages/admin/pages/PrintMap";
 import { ThemeProvider } from "./components/theme-provider";
 import ModeToggle from "./components/mode-toggle";
 import AssigenDrivers from "./pages/greeter/pages/AssigenDrivers";
+import AbsentFeedback from "./pages/greeter/pages/AbsentFeedback";
+import UpdatingWaitingTimeGreeters from "./pages/greeter/pages/UpdatingWaitingTime";
 
 function App() {
   return (
@@ -59,6 +61,11 @@ function App() {
           <Route
             path="/greeter/greeter-dashboard"
             element={<AssigenDrivers />}
+          />
+          <Route path="/greeter/absentfeedback" element={<AbsentFeedback />} />
+          <Route
+            path="/greeter/updatingwaitingtime"
+            element={<UpdatingWaitingTimeGreeters />}
           />
         </Routes>
       </Router>

@@ -19,6 +19,7 @@ import {
   LayoutDashboard,
   Menu,
   X,
+  MessageSquareX,
 } from "lucide-react";
 import ModeToggle from "@/components/mode-toggle";
 
@@ -31,7 +32,7 @@ export default function Sidebar() {
   const [activeItem, setActiveItem] = useState();
   const [expandedSections, setExpandedSections] = useState({
     users: false,
-    students: false, // Changed from true to false
+    students: false,
   });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -145,118 +146,26 @@ export default function Sidebar() {
 
   const menuItems = [
     {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: <LayoutDashboard className="w-4 h-4" />,
-      path: "/admin/admin-dashboard",
-    },
-    {
-      id: "users",
-      label: "Users",
-      icon: <Users className="w-4 h-4" />,
-      path: "/admin/admin-users",
-      expandable: true,
-      expanded: expandedSections.users,
-      children: [
-        {
-          label: "Greeters",
-          icon: <ChevronRight className="w-3 h-3" />,
-          path: "/admin/admin-users/greeters",
-          id: "greeters",
-        },
-        {
-          label: "Drivers",
-          icon: <ChevronRight className="w-3 h-3" />,
-          path: "/admin/admin-users/drivers",
-          id: "drivers",
-        },
-        {
-          label: "School",
-          icon: <ChevronRight className="w-3 h-3" />,
-          path: "/admin/admin-users/school",
-          id: "school",
-        },
-        {
-          label: "Sub Drivers",
-          icon: <ChevronRight className="w-3 h-3" />,
-          path: "/admin/admin-users/subdrivers",
-          id: "sub-drivers",
-        },
-      ],
-    },
-    {
-      id: "students",
-      label: "Students",
-      icon: <GraduationCap className="w-4 h-4" />,
-      path: "/students",
-      expandable: true,
-      expanded: expandedSections.students,
-      children: [
-        {
-          label: "Add",
-          icon: <Plus className="w-3 h-3" />,
-          path: "/admin/admin-students/add",
-          id: "students-add",
-        },
-        {
-          label: "View",
-          icon: <Eye className="w-3 h-3" />,
-          path: "/admin/admin-students/view",
-          id: "students-view",
-        },
-        {
-          label: "Upload",
-          icon: <Upload className="w-3 h-3" />,
-          path: "/admin/admin-students/upload",
-          id: "students-upload",
-        },
-        {
-          label: "Update",
-          icon: <RotateCcw className="w-3 h-3" />,
-          path: "/admin/admin-students/update",
-          id: "students-update",
-        },
-        {
-          label: "Download",
-          icon: <Download className="w-3 h-3" />,
-          path: "/admin/admin-students/download",
-          id: "students-download",
-        },
-      ],
+      id: "assign-drivers",
+      label: "Assign Drivers",
+      icon: <UserPlus className="w-4 h-4" />,
+      path: "/greeter/greeter-dashboard",
     },
     {
       id: "waiting-time",
       label: "Update Waiting Time",
       icon: <Clock className="w-4 h-4" />,
-      path: "/admin/admin-waitingtime",
+      path: "/greeter/updatingwaitingtime",
     },
     {
-      id: "assign-drivers",
-      label: "Assign Drivers",
-      icon: <UserPlus className="w-4 h-4" />,
-      path: "/admin/assigndrivers",
-    },
-    {
-      id: "print",
-      label: "Print",
-      icon: <Printer className="w-4 h-4" />,
-      path: "/admin/printmap",
-    },
-    {
-      id: "map",
-      label: "Map",
-      icon: <MapPin className="w-4 h-4" />,
-      path: "/admin/map",
+      id: "absent-feedback",
+      label: "Absent Feedback",
+      icon: <MessageSquareX className="w-4 h-4" />,
+      path: "/greeter/absentfeedback",
     },
   ];
 
   const bottomMenuItems = [
-    {
-      id: "profile",
-      label: "Profile",
-      icon: <User className="w-4 h-4" />,
-      path: "/admin/profile",
-    },
     {
       id: "logout",
       label: "Logout",
