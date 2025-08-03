@@ -52,7 +52,7 @@ export default function AssignDrivers() {
             {/* Admin User */}
             <div className="flex items-center space-x-3">
               <span className="hidden sm:block text-gray-900 font-medium text-sm">
-                Admin User
+                Greeter
               </span>
               <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
