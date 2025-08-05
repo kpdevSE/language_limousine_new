@@ -21,6 +21,8 @@ import ModeToggle from "./components/mode-toggle";
 import AssigenDrivers from "./pages/greeter/pages/AssigenDrivers";
 import AbsentFeedback from "./pages/greeter/pages/AbsentFeedback";
 import UpdatingWaitingTimeGreeters from "./pages/greeter/pages/UpdatingWaitingTime";
+import Dashboard from "./pages/driver/pages/Dashboard";
+import DriverProfile from "./pages/driver/pages/Profile";
 
 function App() {
   return (
@@ -67,6 +69,9 @@ function App() {
             path="/greeter/updatingwaitingtime"
             element={<UpdatingWaitingTimeGreeters />}
           />
+          {/* Driver Pages */}
+          <Route path="/driver/driver-dashboard" element={<Dashboard />} />
+          <Route path="/driver/driver-profile" element={<DriverProfile />} />
         </Routes>
       </Router>
     </ThemeProvider>

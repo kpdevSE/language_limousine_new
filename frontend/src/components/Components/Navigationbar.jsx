@@ -81,6 +81,9 @@ const NavigationBar = () => {
                       <Link to="/greeter/greeter-dashboard">
                         <Button>Greeter Page</Button>
                       </Link>
+                      <Link to="/driver/driver-dashboard">
+                        <Button>Driver Page</Button>
+                      </Link>
                     </div>
                   </DialogDescription>
                 </DialogHeader>
@@ -151,6 +154,14 @@ const NavigationBar = () => {
                         onClick={() => setIsOpen(false)}
                       >
                         Greeter Page
+                      </Button>
+                    </Link>
+                    <Link to="/driver/driver-dashboard">
+                      <Button
+                        className="w-full"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Driver Page
                       </Button>
                     </Link>
                   </div>
