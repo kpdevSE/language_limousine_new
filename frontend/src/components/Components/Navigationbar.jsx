@@ -129,6 +129,11 @@ const NavigationBar = () => {
                       School Page
                     </Button>
                   </Link>
+                  <Link to="/subdriver/subdriver-dashboard">
+                    <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border-0 text-white font-medium py-3 transition-all duration-300 transform hover:scale-105">
+                      Sub Driver Page
+                    </Button>
+                  </Link>
                 </div>
               </DialogContent>
             </Dialog>

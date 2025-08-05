@@ -27,6 +27,8 @@ import SchoolDashboard from "./pages/schools/pages/Dashboard";
 import AddStudentsPage from "./pages/schools/pages/AddStudents";
 import StudentDetails from "./pages/schools/pages/StudentsDetails";
 import StatusPage from "./pages/schools/pages/Status";
+import SubDriverDashboard from "./pages/subdriver/pages/Dashboard";
+import SubDriverProfile from "./pages/subdriver/pages/Profile";
 
 function App() {
   return (
@@ -90,6 +92,15 @@ function App() {
             element={<StudentDetails />}
           />
           <Route path="/school/school-status" element={<StatusPage />} />
+          {/* Sub Driver Pages */}
+          <Route
+            path="/subdriver/subdriver-dashboard"
+            element={<SubDriverDashboard />}
+          />
+          <Route
+            path="/subdriver/subdriver-profile"
+            element={<SubDriverProfile />}
+          />
         </Routes>
       </Router>
     </ThemeProvider>
