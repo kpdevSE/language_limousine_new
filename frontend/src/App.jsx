@@ -23,6 +23,10 @@ import AbsentFeedback from "./pages/greeter/pages/AbsentFeedback";
 import UpdatingWaitingTimeGreeters from "./pages/greeter/pages/UpdatingWaitingTime";
 import Dashboard from "./pages/driver/pages/Dashboard";
 import DriverProfile from "./pages/driver/pages/Profile";
+import SchoolDashboard from "./pages/schools/pages/Dashboard";
+import AddStudentsPage from "./pages/schools/pages/AddStudents";
+import StudentDetails from "./pages/schools/pages/StudentsDetails";
+import StatusPage from "./pages/schools/pages/Status";
 
 function App() {
   return (
@@ -56,7 +60,7 @@ function App() {
             element={<UpdatingWaitingTime />}
           />
           <Route path="/admin/assigndrivers" element={<AssignDrivers />} />
-          <Route path="/admin/map" element={<Map />} />\
+          <Route path="/admin/map" element={<Map />} />
           <Route path="/admin/profile" element={<Profile />} />
           <Route path="/admin/printmap" element={<PrintMap />} />
           {/* Greeter Pages */}
@@ -72,6 +76,20 @@ function App() {
           {/* Driver Pages */}
           <Route path="/driver/driver-dashboard" element={<Dashboard />} />
           <Route path="/driver/driver-profile" element={<DriverProfile />} />
+          {/* School Pages */}
+          <Route
+            path="/school/school-dashboard"
+            element={<SchoolDashboard />}
+          />
+          <Route
+            path="/school/school-addstudents"
+            element={<AddStudentsPage />}
+          />
+          <Route
+            path="/school/school-studentsdetails"
+            element={<StudentDetails />}
+          />
+          <Route path="/school/school-status" element={<StatusPage />} />
         </Routes>
       </Router>
     </ThemeProvider>
