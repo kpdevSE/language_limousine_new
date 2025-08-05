@@ -16,10 +16,10 @@ const NavigationBar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   const navigationItems = [
-    { name: "Home", href: "#home", isActive: true },
-    { name: "About Us", href: "#about", isActive: false },
+    { name: "Home", href: "/", isActive: true },
+    { name: "About Us", href: "/aboutus", isActive: false },
     { name: "Tracking", href: "#tracking", isActive: false },
-    { name: "Privacy & Policy", href: "#privacy", isActive: false },
+    { name: "Privacy & Policy", href: "/privacy", isActive: false },
   ];
 
   useEffect(() => {

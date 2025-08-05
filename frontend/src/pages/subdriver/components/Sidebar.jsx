@@ -21,7 +21,8 @@ import {
   X,
   MessageSquareX,
 } from "lucide-react";
-import ModeToggle from "@/components/mode-toggle";
+
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Sidebar() {
   const navigate = useNavigate();
