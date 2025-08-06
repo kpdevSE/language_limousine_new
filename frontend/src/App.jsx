@@ -29,68 +29,80 @@ import SubDriverDashboard from "./pages/subdriver/pages/Dashboard";
 import SubDriverProfile from "./pages/subdriver/pages/Profile";
 import AboutUs from "./aboutus/aboutus";
 import Privacy from "./privacy/privacy";
+import { ThemeProvider } from "./components/theme-provider";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Home Pages */}
-        <Route path="/" element={<Home />} />
-        <Route path="/aboutus" element={<AboutUs />} />
-        <Route path="/privacy" element={<Privacy />} />
-        {/* Admin Pages */}
-        <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
-        {/* Admin Users */}
-        <Route path="/admin/admin-users/greeters" element={<Greeters />} />
-        <Route path="/admin/admin-users/drivers" element={<Drivers />} />
-        <Route path="/admin/admin-users/school" element={<Schools />} />
-        <Route path="/admin/admin-users/subdrivers" element={<SubDrivers />} />
-        {/* Admin Students */}
-        <Route path="/admin/admin-students/add" element={<Add />} />
-        <Route path="/admin/admin-students/download" element={<Download />} />
-        <Route path="/admin/admin-students/upload" element={<Upload />} />
-        <Route path="/admin/admin-students/update" element={<Update />} />
-        <Route path="/admin/admin-students/view" element={<View />} />
-        <Route
-          path="/admin/admin-waitingtime"
-          element={<UpdatingWaitingTime />}
-        />
-        <Route path="/admin/assigndrivers" element={<AssignDrivers />} />
-        <Route path="/admin/map" element={<Map />} />
-        <Route path="/admin/profile" element={<Profile />} />
-        <Route path="/admin/printmap" element={<PrintMap />} />
-        {/* Greeter Pages */}
-        <Route path="/greeter/greeter-dashboard" element={<AssigenDrivers />} />
-        <Route path="/greeter/absentfeedback" element={<AbsentFeedback />} />
-        <Route
-          path="/greeter/updatingwaitingtime"
-          element={<UpdatingWaitingTimeGreeters />}
-        />
-        {/* Driver Pages */}
-        <Route path="/driver/driver-dashboard" element={<Dashboard />} />
-        <Route path="/driver/driver-profile" element={<DriverProfile />} />
-        {/* School Pages */}
-        <Route path="/school/school-dashboard" element={<SchoolDashboard />} />
-        <Route
-          path="/school/school-addstudents"
-          element={<AddStudentsPage />}
-        />
-        <Route
-          path="/school/school-studentsdetails"
-          element={<StudentDetails />}
-        />
-        <Route path="/school/school-status" element={<StatusPage />} />
-        {/* Sub Driver Pages */}
-        <Route
-          path="/subdriver/subdriver-dashboard"
-          element={<SubDriverDashboard />}
-        />
-        <Route
-          path="/subdriver/subdriver-profile"
-          element={<SubDriverProfile />}
-        />
-      </Routes>
-    </Router>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <Router>
+        <Routes>
+          {/* Home Pages */}
+          <Route path="/" element={<Home />} />
+          <Route path="/aboutus" element={<AboutUs />} />
+          <Route path="/privacy" element={<Privacy />} />
+          {/* Admin Pages */}
+          <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
+          {/* Admin Users */}
+          <Route path="/admin/admin-users/greeters" element={<Greeters />} />
+          <Route path="/admin/admin-users/drivers" element={<Drivers />} />
+          <Route path="/admin/admin-users/school" element={<Schools />} />
+          <Route
+            path="/admin/admin-users/subdrivers"
+            element={<SubDrivers />}
+          />
+          {/* Admin Students */}
+          <Route path="/admin/admin-students/add" element={<Add />} />
+          <Route path="/admin/admin-students/download" element={<Download />} />
+          <Route path="/admin/admin-students/upload" element={<Upload />} />
+          <Route path="/admin/admin-students/update" element={<Update />} />
+          <Route path="/admin/admin-students/view" element={<View />} />
+          <Route
+            path="/admin/admin-waitingtime"
+            element={<UpdatingWaitingTime />}
+          />
+          <Route path="/admin/assigndrivers" element={<AssignDrivers />} />
+          <Route path="/admin/map" element={<Map />} />
+          <Route path="/admin/profile" element={<Profile />} />
+          <Route path="/admin/printmap" element={<PrintMap />} />
+          {/* Greeter Pages */}
+          <Route
+            path="/greeter/greeter-dashboard"
+            element={<AssigenDrivers />}
+          />
+          <Route path="/greeter/absentfeedback" element={<AbsentFeedback />} />
+          <Route
+            path="/greeter/updatingwaitingtime"
+            element={<UpdatingWaitingTimeGreeters />}
+          />
+          {/* Driver Pages */}
+          <Route path="/driver/driver-dashboard" element={<Dashboard />} />
+          <Route path="/driver/driver-profile" element={<DriverProfile />} />
+          {/* School Pages */}
+          <Route
+            path="/school/school-dashboard"
+            element={<SchoolDashboard />}
+          />
+          <Route
+            path="/school/school-addstudents"
+            element={<AddStudentsPage />}
+          />
+          <Route
+            path="/school/school-studentsdetails"
+            element={<StudentDetails />}
+          />
+          <Route path="/school/school-status" element={<StatusPage />} />
+          {/* Sub Driver Pages */}
+          <Route
+            path="/subdriver/subdriver-dashboard"
+            element={<SubDriverDashboard />}
+          />
+          <Route
+            path="/subdriver/subdriver-profile"
+            element={<SubDriverProfile />}
+          />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

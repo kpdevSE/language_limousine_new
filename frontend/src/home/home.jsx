@@ -8,6 +8,7 @@ import TravelServicesSection from "@/components/Components/HomeComponents/Travel
 import LanguageLimousineLoader from "@/components/Components/Loader";
 import NavigationBar from "@/components/Components/Navigationbar";
 import ScrollToTopButton from "@/components/Components/ScrollTop";
+import ModeToggle from "@/components/mode-toggle";
 import { useEffect, useState } from "react";
 
 export default function Home() {

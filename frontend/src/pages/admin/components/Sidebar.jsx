@@ -20,7 +20,6 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import ModeToggle from "@/components/mode-toggle";
 
 export default function Sidebar() {
   const navigate = useNavigate();

@@ -16,7 +16,7 @@ const NavigationBar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   const navigationItems = [
-    { name: "Home", href: "/", isActive: true },
+    { name: "Home", href: "/", isActive: false },
     { name: "About Us", href: "/aboutus", isActive: false },
     { name: "Tracking", href: "#tracking", isActive: false },
     { name: "Privacy & Policy", href: "/privacy", isActive: false },
@@ -227,6 +227,15 @@ const NavigationBar = () => {
                       onClick={() => setIsOpen(false)}
                     >
                       School Page
+                    </Button>
+                  </Link>
+                  <Link to="/subdriver/subdriver-dashboard">
+                    <Button
+                      variant="default"
+                      className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 border-0 text-white font-medium py-3 transition-all duration-300"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Sub Driver Page
                     </Button>
                   </Link>
                 </div>
