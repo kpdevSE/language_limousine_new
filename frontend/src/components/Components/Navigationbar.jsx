@@ -10,6 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
+import AdminLogin from "./AdminLogin";
 
 const NavigationBar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -90,7 +91,7 @@ const NavigationBar = () => {
             ))}
 
             {/* Dialog Button */}
-            <Dialog>
+            {/* <Dialog>
               <DialogTrigger asChild>
                 <Button className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium border-0 shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 transform hover:scale-105">
                   Log In
@@ -106,14 +107,7 @@ const NavigationBar = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col gap-3 mt-6">
-                  <Link to="/admin/admin-dashboard">
-                    <Button
-                      variant="default"
-                      className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 border-0 text-white font-medium py-3 transition-all duration-300 transform hover:scale-105"
-                    >
-                      Admin Page
-                    </Button>
-                  </Link>
+                  <AdminLogin />
                   <Link to="/greeter/greeter-dashboard">
                     <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border-0 text-white font-medium py-3 transition-all duration-300 transform hover:scale-105">
                       Greeter Page
@@ -136,7 +130,8 @@ const NavigationBar = () => {
                   </Link>
                 </div>
               </DialogContent>
-            </Dialog>
+            </Dialog> */}
+            <AdminLogin />
           </div>
 
           {/* Mobile Menu Toggle */}

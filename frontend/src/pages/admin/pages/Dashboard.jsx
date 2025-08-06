@@ -1,6 +1,19 @@
 import React, { useState } from "react";
 import { Search, User, Car, Users, UserCheck } from "lucide-react";
 import Sidebar from "../components/Sidebar";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function AdminDashboard() {
   const stats = [
@@ -34,6 +47,58 @@ export default function AdminDashboard() {
     },
   ];
 
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [registerData, setRegisterData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    gender: "",
+    role: "",
+  });
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerError, setRegisterError] = useState("");
+  const [registerSuccess, setRegisterSuccess] = useState("");
+
+  const handleRegisterInput = (e) => {
+    const { name, value } = e.target;
+    setRegisterData((prev) => ({ ...prev, [name]: value }));
+    if (registerError) setRegisterError("");
+    if (registerSuccess) setRegisterSuccess("");
+  };
+
+  const handleRegister = async () => {
+    setRegisterLoading(true);
+    setRegisterError("");
+    setRegisterSuccess("");
+    try {
+      // Get admin token from sessionStorage
+      const token = sessionStorage.getItem("admin_token");
+      if (!token) throw new Error("Admin token not found. Please login again.");
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(registerData),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Registration failed");
+      setRegisterSuccess("User registered successfully!");
+      setRegisterData({
+        username: "",
+        email: "",
+        password: "",
+        gender: "",
+        role: "",
+      });
+    } catch (err) {
+      setRegisterError(err.message);
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-white">
       <Sidebar />
@@ -56,7 +121,7 @@ export default function AdminDashboard() {
               />
             </div>
 
-            {/* Admin User */}
+            {/* Admin User + Register Button */}
             <div className="flex items-center space-x-3 ml-6">
               <span className="hidden sm:block text-black font-medium">
                 Admin User
@@ -64,6 +129,108 @@ export default function AdminDashboard() {
               <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
+              <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-medium px-4 py-2 ml-2">
+                    Register User
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md bg-white border-gray-200">
+                  <DialogHeader>
+                    <DialogTitle>Register New User</DialogTitle>
+                    <DialogDescription>
+                      Fill in the details to register a new user.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    {registerSuccess && (
+                      <Alert className="border-green-500 bg-green-500/10">
+                        <AlertDescription className="text-green-500">
+                          {registerSuccess}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    {registerError && (
+                      <Alert className="border-red-500 bg-red-500/10">
+                        <AlertDescription className="text-red-500">
+                          {registerError}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input
+                        id="username"
+                        name="username"
+                        value={registerData.username}
+                        onChange={handleRegisterInput}
+                        disabled={registerLoading}
+                        required
+                        placeholder="Enter username"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={registerData.email}
+                        onChange={handleRegisterInput}
+                        disabled={registerLoading}
+                        required
+                        placeholder="Enter email"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        value={registerData.password}
+                        onChange={handleRegisterInput}
+                        disabled={registerLoading}
+                        required
+                        placeholder="Enter password"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="gender">Gender</Label>
+                      <Input
+                        id="gender"
+                        name="gender"
+                        value={registerData.gender}
+                        onChange={handleRegisterInput}
+                        disabled={registerLoading}
+                        required
+                        placeholder="Enter gender (Male/Female)"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Role</Label>
+                      <Input
+                        id="role"
+                        name="role"
+                        value={registerData.role}
+                        onChange={handleRegisterInput}
+                        disabled={registerLoading}
+                        required
+                        placeholder="Enter role (Admin/Driver/Greeter/School/Subdriver)"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter className="flex flex-col space-y-3 mt-4">
+                    <Button
+                      onClick={handleRegister}
+                      disabled={registerLoading}
+                      className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50"
+                    >
+                      {registerLoading ? "Registering..." : "Register"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
