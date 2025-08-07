@@ -30,12 +30,77 @@ const userSchema = new mongoose.Schema(
       enum: ["Male", "Female", "Other"],
       required: [true, "Gender is required"],
     },
+    // Greeter specific fields
     greeterID: {
       type: String,
       unique: true,
       sparse: true,
       required: function () {
         return this.role === "Greeter";
+      },
+    },
+    // Driver specific fields
+    driverID: {
+      type: String,
+      unique: true,
+      sparse: true,
+      required: function () {
+        return this.role === "Driver";
+      },
+      validate: {
+        validator: function (v) {
+          // Only validate if role is Driver
+          if (this.role === "Driver") {
+            return v && v.length > 0;
+          }
+          return true;
+        },
+        message: "DriverID is required for Driver role",
+      },
+    },
+    // SubDriver specific fields
+    subdriverID: {
+      type: String,
+      unique: true,
+      sparse: true,
+      required: function () {
+        return this.role === "Subdriver";
+      },
+    },
+    // School specific fields
+    schoolID: {
+      type: String,
+      unique: true,
+      sparse: true,
+      required: function () {
+        return this.role === "School";
+      },
+    },
+    // Vehicle number for drivers and subdrivers
+    vehicleNumber: {
+      type: String,
+      required: function () {
+        return this.role === "Driver" || this.role === "Subdriver";
+      },
+      validate: {
+        validator: function (v) {
+          // Only validate if role is Driver or Subdriver
+          if (this.role === "Driver" || this.role === "Subdriver") {
+            return v && v.length > 0;
+          }
+          return true;
+        },
+        message: "Vehicle Number is required for Driver and Subdriver roles",
+      },
+      trim: true,
+    },
+    // Status for subdrivers
+    status: {
+      type: String,
+      enum: ["Active", "Inactive", "Pending"],
+      default: "Active",
+      required: function () {
+        return this.role === "Subdriver";
       },
     },
     role: {
@@ -64,7 +129,6 @@ const userSchema = new mongoose.Schema(
 // Hash password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-
   try {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);

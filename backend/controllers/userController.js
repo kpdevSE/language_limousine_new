@@ -11,9 +11,24 @@ const generateToken = (userId) => {
 // Add new user (Admin only)
 const addUser = async (req, res) => {
   try {
-    const { username, email, password, gender, role, greeterID } = req.body;
+    // Debug: Log the received request body
+    console.log("Received request body:", req.body);
 
-    // Validation
+    const {
+      username,
+      email,
+      password,
+      gender,
+      role,
+      greeterID,
+      driverID,
+      subdriverID,
+      schoolID,
+      vehicleNumber,
+      status,
+    } = req.body;
+
+    // Basic validation
     if (!username || !email || !password || !gender || !role) {
       return res.status(400).json({
         success: false,
@@ -25,7 +40,6 @@ const addUser = async (req, res) => {
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
     });
-
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -52,16 +66,18 @@ const addUser = async (req, res) => {
       });
     }
 
-    // Validate greeterID if role is Greeter
-    if (role === "Greeter" && !greeterID) {
-      return res.status(400).json({
-        success: false,
-        message: "GreeterID is required for Greeter role",
-      });
-    }
+    // Role-specific validations
+    let roleSpecificData = {};
 
-    // Check if greeterID already exists for Greeter role
-    if (role === "Greeter" && greeterID) {
+    if (role === "Greeter") {
+      if (!greeterID) {
+        return res.status(400).json({
+          success: false,
+          message: "GreeterID is required for Greeter role",
+        });
+      }
+
+      // Check if greeterID already exists
       const existingGreeter = await User.findOne({ greeterID });
       if (existingGreeter) {
         return res.status(400).json({
@@ -69,20 +85,103 @@ const addUser = async (req, res) => {
           message: "GreeterID already exists",
         });
       }
+
+      roleSpecificData.greeterID = greeterID;
     }
 
-    // Create new user
-    const newUser = new User({
+    if (role === "Driver") {
+      if (!driverID || !vehicleNumber) {
+        return res.status(400).json({
+          success: false,
+          message: "DriverID and Vehicle Number are required for Driver role",
+        });
+      }
+
+      // Check if driverID already exists
+      const existingDriver = await User.findOne({ driverID });
+      if (existingDriver) {
+        return res.status(400).json({
+          success: false,
+          message: "DriverID already exists",
+        });
+      }
+
+      roleSpecificData.driverID = driverID;
+      roleSpecificData.vehicleNumber = vehicleNumber;
+    }
+
+    if (role === "Subdriver") {
+      if (!subdriverID || !vehicleNumber) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "SubdriverID and Vehicle Number are required for Subdriver role",
+        });
+      }
+
+      // Check if subdriverID already exists
+      const existingSubdriver = await User.findOne({ subdriverID });
+      if (existingSubdriver) {
+        return res.status(400).json({
+          success: false,
+          message: "SubdriverID already exists",
+        });
+      }
+
+      // Validate status if provided
+      const validStatuses = ["Active", "Inactive", "Pending"];
+      if (status && !validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid status. Must be one of: Active, Inactive, Pending",
+        });
+      }
+
+      roleSpecificData.subdriverID = subdriverID;
+      roleSpecificData.vehicleNumber = vehicleNumber;
+      roleSpecificData.status = status || "Active";
+    }
+
+    if (role === "School") {
+      if (!schoolID) {
+        return res.status(400).json({
+          success: false,
+          message: "SchoolID is required for School role",
+        });
+      }
+
+      // Check if schoolID already exists
+      const existingSchool = await User.findOne({ schoolID });
+      if (existingSchool) {
+        return res.status(400).json({
+          success: false,
+          message: "SchoolID already exists",
+        });
+      }
+
+      roleSpecificData.schoolID = schoolID;
+    }
+
+    // Debug: Log the data being saved
+    const userData = {
       username,
       email,
       password,
       gender,
       role,
-      greeterID: role === "Greeter" ? greeterID : undefined,
-      createdBy: req.user._id, // Admin who created the user
-    });
+      ...roleSpecificData,
+      createdBy: req.user._id,
+    };
+
+    console.log("Data being saved to database:", userData);
+
+    // Create new user
+    const newUser = new User(userData);
 
     await newUser.save();
+
+    // Debug: Log the saved user
+    console.log("Saved user:", newUser.toJSON());
 
     // Return success response (without token for admin-created users)
     res.status(201).json({
@@ -96,6 +195,11 @@ const addUser = async (req, res) => {
           role: newUser.role,
           gender: newUser.gender,
           greeterID: newUser.greeterID,
+          driverID: newUser.driverID,
+          subdriverID: newUser.subdriverID,
+          schoolID: newUser.schoolID,
+          vehicleNumber: newUser.vehicleNumber,
+          status: newUser.status,
           isActive: newUser.isActive,
           createdAt: newUser.createdAt,
         },
@@ -130,6 +234,10 @@ const getAllUsers = async (req, res) => {
         { username: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
         { greeterID: { $regex: search, $options: "i" } },
+        { driverID: { $regex: search, $options: "i" } },
+        { subdriverID: { $regex: search, $options: "i" } },
+        { schoolID: { $regex: search, $options: "i" } },
+        { vehicleNumber: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -361,6 +469,10 @@ const getUsersByRole = async (req, res) => {
         { username: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
         { greeterID: { $regex: search, $options: "i" } },
+        { driverID: { $regex: search, $options: "i" } },
+        { subdriverID: { $regex: search, $options: "i" } },
+        { schoolID: { $regex: search, $options: "i" } },
+        { vehicleNumber: { $regex: search, $options: "i" } },
       ];
     }
 

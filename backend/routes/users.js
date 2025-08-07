@@ -48,6 +48,26 @@ const validateAddUser = [
     .optional()
     .isString()
     .withMessage("GreeterID must be a string"),
+  body("driverID")
+    .optional()
+    .isString()
+    .withMessage("DriverID must be a string"),
+  body("subdriverID")
+    .optional()
+    .isString()
+    .withMessage("SubdriverID must be a string"),
+  body("schoolID")
+    .optional()
+    .isString()
+    .withMessage("SchoolID must be a string"),
+  body("vehicleNumber")
+    .optional()
+    .isString()
+    .withMessage("Vehicle Number must be a string"),
+  body("status")
+    .optional()
+    .isIn(["Active", "Inactive", "Pending"])
+    .withMessage("Status must be Active, Inactive, or Pending"),
   handleValidationErrors,
 ];
 
@@ -75,6 +95,26 @@ const validateUpdateUser = [
     .optional()
     .isString()
     .withMessage("GreeterID must be a string"),
+  body("driverID")
+    .optional()
+    .isString()
+    .withMessage("DriverID must be a string"),
+  body("subdriverID")
+    .optional()
+    .isString()
+    .withMessage("SubdriverID must be a string"),
+  body("schoolID")
+    .optional()
+    .isString()
+    .withMessage("SchoolID must be a string"),
+  body("vehicleNumber")
+    .optional()
+    .isString()
+    .withMessage("Vehicle Number must be a string"),
+  body("status")
+    .optional()
+    .isIn(["Active", "Inactive", "Pending"])
+    .withMessage("Status must be Active, Inactive, or Pending"),
   body("isActive")
     .optional()
     .isBoolean()

@@ -8,7 +8,10 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test-api": "node test-api.js",
-    "test-users": "node test-user-management.js"
+    "test-users": "node test-user-management.js",
+    "test-driver": "node test-driver-creation.js",
+    "test-frontend": "node test-frontend-integration.js",
+    "test-school-subdriver": "node test-school-subdriver-pages.js"
   },
   "keywords": [],
   "author": "",

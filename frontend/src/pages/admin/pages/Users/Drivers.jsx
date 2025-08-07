@@ -1,5 +1,13 @@
-import React, { useState } from "react";
-import { Search, User, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Search,
+  User,
+  Trash2,
+  AlertCircle,
+  CheckCircle,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +28,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Sidebar from "../../components/Sidebar";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function Drivers() {
   const [formData, setFormData] = useState({
@@ -27,18 +37,99 @@ export default function Drivers() {
     email: "",
     password: "",
     gender: "",
-    driverId: "",
-    vehicleNo: "",
-    status: "",
+    driverID: "",
+    vehicleNumber: "",
     role: "Driver",
   });
 
-  const [drivers] = useState([
-    // Empty array since screenshot shows "No Driver users found."
-  ]);
-
+  const [drivers, setDrivers] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingDrivers, setIsFetchingDrivers] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  // Get auth token from sessionStorage (matching your sidebar logout function)
+  const getAuthToken = () => {
+    return (
+      sessionStorage.getItem("admin_token") || localStorage.getItem("authToken")
+    );
+  };
+
+  // Configure axios defaults
+  const apiClient = axios.create({
+    baseURL: "http://localhost:5000/api",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  // Add request interceptor to include auth token
+  apiClient.interceptors.request.use(
+    (config) => {
+      const token = getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  // Fetch drivers on component mount and when search/pagination changes
+  useEffect(() => {
+    fetchDrivers();
+  }, [currentPage, searchTerm, entriesPerPage]);
+
+  const fetchDrivers = async () => {
+    setIsFetchingDrivers(true);
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        window.location.href = "/admin/login";
+        return;
+      }
+
+      const response = await apiClient.get("/users/role/Driver", {
+        params: {
+          page: currentPage,
+          limit: entriesPerPage,
+          search: searchTerm,
+        },
+      });
+
+      if (response.data.success) {
+        setDrivers(response.data.data.users);
+        setTotalPages(response.data.data.pagination.totalPages);
+        setTotalUsers(response.data.data.pagination.totalUsers);
+      }
+    } catch (err) {
+      console.error("Error fetching drivers:", err);
+      let errorMessage = "Failed to fetch drivers";
+
+      if (err.response?.status === 401) {
+        errorMessage = "Access token required. Please log in again.";
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsFetchingDrivers(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -46,6 +137,9 @@ export default function Drivers() {
       ...prev,
       [name]: value,
     }));
+    // Clear errors when user starts typing
+    if (error) setError("");
+    if (success) setSuccess("");
   };
 
   const handleSelectChange = (name, value) => {
@@ -53,12 +147,158 @@ export default function Drivers() {
       ...prev,
       [name]: value,
     }));
+    if (error) setError("");
+    if (success) setSuccess("");
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    // Reset previous errors
+    setError("");
+
+    if (!formData.username.trim()) {
+      setError("Username is required");
+      return false;
+    }
+    if (formData.username.trim().length < 3) {
+      setError("Username must be at least 3 characters long");
+      return false;
+    }
+    if (!formData.email.trim()) {
+      setError("Email is required");
+      return false;
+    }
+    if (!formData.email.includes("@") || !formData.email.includes(".")) {
+      setError("Please enter a valid email address");
+      return false;
+    }
+    if (!formData.password.trim()) {
+      setError("Password is required");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return false;
+    }
+    if (!formData.gender) {
+      setError("Gender is required");
+      return false;
+    }
+    if (!formData.driverID.trim()) {
+      setError("Driver ID is required");
+      return false;
+    }
+    if (!formData.vehicleNumber.trim()) {
+      setError("Vehicle Number is required");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Add your submit logic here
+
+    if (!validateForm()) {
+      return;
+    }
+
+    const token = getAuthToken();
+    if (!token) {
+      setError("Access token required. Please log in again.");
+      toast.error("Access token required. Please log in again.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await apiClient.post("/users", formData);
+
+      const data = response.data;
+
+      if (data.success) {
+        const successMessage =
+          data.message || "Driver registered successfully!";
+        setSuccess(successMessage);
+        toast.success(successMessage, {
+          position: "top-right",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+          style: {
+            borderRadius: "10px",
+            background: "#4BB543",
+            color: "#fff",
+            fontWeight: "bold",
+            fontSize: "15px",
+          },
+          icon: "✅",
+        });
+
+        // Refresh the drivers list
+        await fetchDrivers();
+        handleReset();
+      } else {
+        const errorMessage = data.message || "Registration failed";
+        setError(errorMessage);
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+
+      let errorMessage = "An unexpected error occurred. Please try again.";
+
+      // Handle axios error responses
+      if (err.response) {
+        if (err.response.status === 401) {
+          errorMessage = "Access token required. Please log in again.";
+          // Redirect to login on unauthorized
+          setTimeout(() => {
+            window.location.href = "/admin/login";
+          }, 2000);
+        } else if (err.response.status === 403) {
+          errorMessage = "You don't have permission to perform this action.";
+        } else if (err.response.data) {
+          errorMessage = err.response.data.message || "Registration failed";
+
+          // Handle validation errors
+          if (
+            err.response.data.errors &&
+            Array.isArray(err.response.data.errors)
+          ) {
+            errorMessage = err.response.data.errors
+              .map((error) => error.msg)
+              .join(", ");
+          }
+        }
+      } else if (err.request) {
+        errorMessage =
+          "Network error. Please check your connection and try again.";
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -67,11 +307,67 @@ export default function Drivers() {
       email: "",
       password: "",
       gender: "",
-      driverId: "",
-      vehicleNo: "",
-      status: "",
+      driverID: "",
+      vehicleNumber: "",
       role: "Driver",
     });
+    setError("");
+    setSuccess("");
+  };
+
+  const handleDelete = async (driverId) => {
+    if (!window.confirm("Are you sure you want to delete this driver?")) {
+      return;
+    }
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        window.location.href = "/admin/login";
+        return;
+      }
+
+      const response = await apiClient.delete(`/users/${driverId}`);
+
+      if (response.data.success) {
+        const successMessage = "Driver deleted successfully!";
+        setSuccess(successMessage);
+        toast.success(successMessage);
+
+        // Refresh the drivers list
+        await fetchDrivers();
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      let errorMessage = "Failed to delete driver";
+
+      if (err.response?.status === 401) {
+        errorMessage = "Access token required. Please log in again.";
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleEntriesPerPageChange = (value) => {
+    setEntriesPerPage(value);
+    setCurrentPage(1); // Reset to first page when changing entries per page
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
   };
 
   return (
@@ -79,7 +375,7 @@ export default function Drivers() {
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-x-hidden  md:ml-64 min-h-screen w-full ">
+      <div className="flex-1 overflow-x-hidden md:ml-64 min-h-screen w-full">
         {/* Header */}
         <div className="bg-white px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between max-w-7xl mx-auto">
@@ -89,6 +385,8 @@ export default function Drivers() {
               <Input
                 type="text"
                 placeholder="Type to search..."
+                value={searchTerm}
+                onChange={handleSearchChange}
                 className="w-full bg-gray-50 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-sm"
               />
             </div>
@@ -111,6 +409,21 @@ export default function Drivers() {
               Add Driver User
             </h1>
 
+            {/* Error/Success Messages */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                <span className="text-red-700">{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+                <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                <span className="text-green-700">{success}</span>
+              </div>
+            )}
+
             {/* Add Driver Form */}
             <Card className="bg-white border-gray-200 mb-8 shadow-sm">
               <CardContent className="p-6">
@@ -123,7 +436,7 @@ export default function Drivers() {
                         htmlFor="username"
                         className="text-gray-700 text-sm font-medium"
                       >
-                        Username
+                        Username *
                       </Label>
                       <Input
                         id="username"
@@ -133,6 +446,8 @@ export default function Drivers() {
                         onChange={handleInputChange}
                         className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         placeholder="Enter username"
+                        disabled={isLoading}
+                        required
                       />
                     </div>
 
@@ -142,7 +457,7 @@ export default function Drivers() {
                         htmlFor="email"
                         className="text-gray-700 text-sm font-medium"
                       >
-                        Email
+                        Email *
                       </Label>
                       <Input
                         id="email"
@@ -152,6 +467,8 @@ export default function Drivers() {
                         onChange={handleInputChange}
                         className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         placeholder="Enter email"
+                        disabled={isLoading}
+                        required
                       />
                     </div>
 
@@ -161,29 +478,47 @@ export default function Drivers() {
                         htmlFor="password"
                         className="text-gray-700 text-sm font-medium"
                       >
-                        Password
+                        Password *
                       </Label>
-                      <Input
-                        id="password"
-                        name="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Enter password"
-                      />
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500 pr-10"
+                          placeholder="Enter password"
+                          disabled={isLoading}
+                          minLength={6}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          disabled={isLoading}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Gender */}
                     <div className="space-y-2">
                       <Label className="text-gray-700 text-sm font-medium">
-                        Gender
+                        Gender *
                       </Label>
                       <Select
                         value={formData.gender}
                         onValueChange={(value) =>
                           handleSelectChange("gender", value)
                         }
+                        disabled={isLoading}
                       >
                         <SelectTrigger className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                           <SelectValue placeholder="Select Gender" />
@@ -213,86 +548,47 @@ export default function Drivers() {
                   </div>
 
                   {/* Second Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Driver ID */}
                     <div className="space-y-2">
                       <Label
-                        htmlFor="driverId"
+                        htmlFor="driverID"
                         className="text-gray-700 text-sm font-medium"
                       >
-                        Driver ID
+                        Driver ID *
                       </Label>
                       <Input
-                        id="driverId"
-                        name="driverId"
+                        id="driverID"
+                        name="driverID"
                         type="text"
-                        value={formData.driverId}
+                        value={formData.driverID}
                         onChange={handleInputChange}
                         className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         placeholder="Enter driver ID"
+                        disabled={isLoading}
+                        required
                       />
                     </div>
 
-                    {/* Vehicle No */}
+                    {/* Vehicle Number */}
                     <div className="space-y-2">
                       <Label
-                        htmlFor="vehicleNo"
+                        htmlFor="vehicleNumber"
                         className="text-gray-700 text-sm font-medium"
                       >
-                        Vehicle No
+                        Vehicle Number *
                       </Label>
                       <Input
-                        id="vehicleNo"
-                        name="vehicleNo"
+                        id="vehicleNumber"
+                        name="vehicleNumber"
                         type="text"
-                        value={formData.vehicleNo}
+                        value={formData.vehicleNumber}
                         onChange={handleInputChange}
                         className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         placeholder="Enter vehicle number"
+                        disabled={isLoading}
+                        required
                       />
-                    </div>
-
-                    {/* Status */}
-                    <div className="space-y-2">
-                      <Label className="text-gray-700 text-sm font-medium">
-                        Status
-                      </Label>
-                      <Select
-                        value={formData.status}
-                        onValueChange={(value) =>
-                          handleSelectChange("status", value)
-                        }
-                      >
-                        <SelectTrigger className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                          <SelectValue placeholder="Select Status" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200">
-                          <SelectItem
-                            value="active"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            Active
-                          </SelectItem>
-                          <SelectItem
-                            value="inactive"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            Inactive
-                          </SelectItem>
-                          <SelectItem
-                            value="onduty"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            On Duty
-                          </SelectItem>
-                          <SelectItem
-                            value="offduty"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            Off Duty
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
 
                     {/* Role */}
@@ -319,14 +615,16 @@ export default function Drivers() {
                   <div className="flex justify-center space-x-4 pt-4">
                     <Button
                       type="submit"
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium"
+                      disabled={isLoading}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
                     >
-                      Submit
+                      {isLoading ? "Submitting..." : "Submit"}
                     </Button>
                     <Button
                       type="button"
                       onClick={handleReset}
-                      className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-3 rounded-lg font-medium"
+                      disabled={isLoading}
+                      className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
                     >
                       Reset
                     </Button>
@@ -344,7 +642,8 @@ export default function Drivers() {
                     <span className="text-gray-700 text-sm">Show</span>
                     <Select
                       value={entriesPerPage}
-                      onValueChange={setEntriesPerPage}
+                      onValueChange={handleEntriesPerPageChange}
+                      disabled={isFetchingDrivers}
                     >
                       <SelectTrigger className="w-20 bg-white text-gray-900 border-gray-300">
                         <SelectValue />
@@ -371,6 +670,9 @@ export default function Drivers() {
                       </SelectContent>
                     </Select>
                     <span className="text-gray-700 text-sm">entries</span>
+                    <span className="text-gray-500 text-sm ml-4">
+                      (Total: {totalUsers} drivers)
+                    </span>
                   </div>
 
                   <div className="flex items-center space-x-2">
@@ -378,9 +680,10 @@ export default function Drivers() {
                     <Input
                       type="text"
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={handleSearchChange}
                       className="bg-white text-gray-900 border-gray-300 text-sm w-48"
                       placeholder="Search drivers..."
+                      disabled={isFetchingDrivers}
                     />
                   </div>
                 </div>
@@ -407,7 +710,7 @@ export default function Drivers() {
                         Driver ID
                       </TableHead>
                       <TableHead className="text-gray-700 font-medium">
-                        Vehicle No
+                        Vehicle Number
                       </TableHead>
                       <TableHead className="text-gray-700 font-medium">
                         Status
@@ -418,7 +721,16 @@ export default function Drivers() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {drivers.length === 0 ? (
+                    {isFetchingDrivers ? (
+                      <TableRow className="border-gray-200">
+                        <TableCell
+                          colSpan={8}
+                          className="text-gray-700 text-center py-8"
+                        >
+                          Loading drivers...
+                        </TableCell>
+                      </TableRow>
+                    ) : drivers.length === 0 ? (
                       <TableRow className="border-gray-200">
                         <TableCell
                           colSpan={8}
@@ -430,11 +742,13 @@ export default function Drivers() {
                     ) : (
                       drivers.map((driver, index) => (
                         <TableRow
-                          key={driver.id}
+                          key={driver._id}
                           className="border-gray-200 hover:bg-gray-50"
                         >
                           <TableCell className="text-gray-700">
-                            {index + 1}
+                            {(currentPage - 1) * parseInt(entriesPerPage) +
+                              index +
+                              1}
                           </TableCell>
                           <TableCell className="text-gray-700">
                             {driver.username}
@@ -446,19 +760,29 @@ export default function Drivers() {
                             {driver.gender}
                           </TableCell>
                           <TableCell className="text-gray-700">
-                            {driver.driverId}
+                            {driver.driverID}
                           </TableCell>
                           <TableCell className="text-gray-700">
-                            {driver.vehicleNo}
+                            {driver.vehicleNumber}
                           </TableCell>
                           <TableCell className="text-gray-700">
-                            {driver.status}
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                                driver.isActive
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {driver.isActive ? "Active" : "Inactive"}
+                            </span>
                           </TableCell>
                           <TableCell>
                             <Button
                               variant="destructive"
                               size="sm"
-                              className="bg-red-500 hover:bg-red-600 text-white"
+                              onClick={() => handleDelete(driver._id)}
+                              className="bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
+                              disabled={isFetchingDrivers}
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
                               Delete
@@ -470,6 +794,39 @@ export default function Drivers() {
                   </TableBody>
                 </Table>
               </CardContent>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                      Showing page {currentPage} of {totalPages}
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1 || isFetchingDrivers}
+                        variant="outline"
+                        size="sm"
+                        className="disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={
+                          currentPage === totalPages || isFetchingDrivers
+                        }
+                        variant="outline"
+                        size="sm"
+                        className="disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </Card>
           </div>
         </div>

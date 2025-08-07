@@ -202,11 +202,20 @@ export default function Greeters() {
         setSuccess(successMessage);
         toast.success(successMessage, {
           position: "top-right",
-          autoClose: 5000,
+          autoClose: 4000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
+          theme: "colored",
+          style: {
+            borderRadius: "10px",
+            background: "#4BB543",
+            color: "#fff",
+            fontWeight: "bold",
+            fontSize: "15px",
+          },
+          icon: "✅",
         });
 
         // Refresh the greeters list

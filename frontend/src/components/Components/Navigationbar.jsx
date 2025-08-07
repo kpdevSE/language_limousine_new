@@ -138,7 +138,6 @@ const NavigationBar = () => {
                 </div>
               </DialogContent>
             </Dialog> */}
-            <AdminLogin />
           </div>
 
           {/* Mobile Menu Toggle */}
