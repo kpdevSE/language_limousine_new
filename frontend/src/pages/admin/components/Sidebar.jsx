@@ -117,15 +117,26 @@ export default function Sidebar() {
     }
   };
 
+  // Logout function
+  const handleLogout = () => {
+    // Clear admin tokens from sessionStorage
+    sessionStorage.removeItem("admin_token");
+    sessionStorage.removeItem("admin_user");
+
+    // Close mobile menu if open
+    if (isMobile) {
+      setIsMobileOpen(false);
+    }
+
+    // Redirect to admin login page
+    navigate("/admin/login");
+  };
+
   const handleNavigation = (itemId, path) => {
     setActiveItem(itemId);
 
     if (itemId === "logout") {
-      // Note: localStorage usage removed for Claude.ai compatibility
-      // localStorage.removeItem("authToken");
-      // localStorage.removeItem("userData");
-
-      navigate("/login");
+      handleLogout();
       return;
     }
 
@@ -278,6 +289,8 @@ export default function Sidebar() {
           } py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
             isActive
               ? "bg-blue-600 text-white shadow-md hover:bg-blue-700"
+              : item.id === "logout"
+              ? "text-red-600 hover:bg-red-50 hover:text-red-700"
               : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
           } ${className}`}
           onClick={onClick}

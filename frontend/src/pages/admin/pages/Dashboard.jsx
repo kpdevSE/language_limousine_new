@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, User, Car, Users, UserCheck } from "lucide-react";
+import { Search, User, Car, Users, UserCheck, LogOut } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +58,15 @@ export default function AdminDashboard() {
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState("");
   const [registerSuccess, setRegisterSuccess] = useState("");
+
+  // Logout function
+  const handleLogout = () => {
+    // Clear admin tokens
+    sessionStorage.removeItem("admin_token");
+    sessionStorage.removeItem("admin_user");
+    // Redirect to admin login
+    window.location.href = "/admin/login";
+  };
 
   const handleRegisterInput = (e) => {
     const { name, value } = e.target;
@@ -121,7 +130,7 @@ export default function AdminDashboard() {
               />
             </div>
 
-            {/* Admin User + Register Button */}
+            {/* Admin User + Register Button + Logout */}
             <div className="flex items-center space-x-3 ml-6">
               <span className="hidden sm:block text-black font-medium">
                 Admin User
@@ -129,6 +138,17 @@ export default function AdminDashboard() {
               <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
+
+              {/* Logout Button */}
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="border-red-500 text-red-600 hover:bg-red-500 hover:text-white transition-all duration-200"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+
               <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-medium px-4 py-2 ml-2">

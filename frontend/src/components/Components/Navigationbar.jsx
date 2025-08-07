@@ -90,6 +90,13 @@ const NavigationBar = () => {
               </a>
             ))}
 
+            {/* Admin Login Link */}
+            <Link to="/admin/login">
+              <Button className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium border-0 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 transform hover:scale-105">
+                Admin Login
+              </Button>
+            </Link>
+
             {/* Dialog Button */}
             {/* <Dialog>
               <DialogTrigger asChild>
@@ -172,6 +179,16 @@ const NavigationBar = () => {
               {item.name}
             </a>
           ))}
+
+          {/* Admin Login Link (Mobile) */}
+          <Link to="/admin/login">
+            <Button
+              className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium border-0 shadow-lg transition-all duration-300"
+              onClick={() => setIsOpen(false)}
+            >
+              Admin Login
+            </Button>
+          </Link>
 
           {/* Dialog Button (Mobile) */}
           <div className="pt-4 border-t border-slate-700/50">

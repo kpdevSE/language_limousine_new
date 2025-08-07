@@ -35,7 +35,13 @@ app.use(limiter);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+// Import routes
+const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/users");
+
 // Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 // Health check route
 app.get("/api/health", (req, res) => {

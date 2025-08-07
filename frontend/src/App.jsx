@@ -1,6 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./home/home";
+import AdminAuth from "./components/Components/AdminAuth";
+import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/admin/pages/Dashboard";
 import Greeters from "./pages/admin/pages/Users/Greeters";
 import Drivers from "./pages/admin/pages/Users/Drivers";
@@ -54,30 +56,131 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/aboutus" element={<AboutUs />} />
           <Route path="/privacy" element={<Privacy />} />
-          {/* Admin Pages */}
-          <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
+          {/* Admin Authentication */}
+          <Route path="/admin/login" element={<AdminAuth />} />
+          {/* Protected Admin Pages */}
+          <Route
+            path="/admin/admin-dashboard"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
           {/* Admin Users */}
-          <Route path="/admin/admin-users/greeters" element={<Greeters />} />
-          <Route path="/admin/admin-users/drivers" element={<Drivers />} />
-          <Route path="/admin/admin-users/school" element={<Schools />} />
+          <Route
+            path="/admin/admin-users/greeters"
+            element={
+              <ProtectedRoute>
+                <Greeters />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/admin-users/drivers"
+            element={
+              <ProtectedRoute>
+                <Drivers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/admin-users/school"
+            element={
+              <ProtectedRoute>
+                <Schools />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin/admin-users/subdrivers"
-            element={<SubDrivers />}
+            element={
+              <ProtectedRoute>
+                <SubDrivers />
+              </ProtectedRoute>
+            }
           />
           {/* Admin Students */}
-          <Route path="/admin/admin-students/add" element={<Add />} />
-          <Route path="/admin/admin-students/download" element={<Download />} />
-          <Route path="/admin/admin-students/upload" element={<Upload />} />
-          <Route path="/admin/admin-students/update" element={<Update />} />
-          <Route path="/admin/admin-students/view" element={<View />} />
+          <Route
+            path="/admin/admin-students/add"
+            element={
+              <ProtectedRoute>
+                <Add />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/admin-students/download"
+            element={
+              <ProtectedRoute>
+                <Download />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/admin-students/upload"
+            element={
+              <ProtectedRoute>
+                <Upload />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/admin-students/update"
+            element={
+              <ProtectedRoute>
+                <Update />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/admin-students/view"
+            element={
+              <ProtectedRoute>
+                <View />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin/admin-waitingtime"
-            element={<UpdatingWaitingTime />}
+            element={
+              <ProtectedRoute>
+                <UpdatingWaitingTime />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/admin/assigndrivers" element={<AssignDrivers />} />
-          <Route path="/admin/map" element={<Map />} />
-          <Route path="/admin/profile" element={<Profile />} />
-          <Route path="/admin/printmap" element={<PrintMap />} />
+          <Route
+            path="/admin/assigndrivers"
+            element={
+              <ProtectedRoute>
+                <AssignDrivers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/map"
+            element={
+              <ProtectedRoute>
+                <Map />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/printmap"
+            element={
+              <ProtectedRoute>
+                <PrintMap />
+              </ProtectedRoute>
+            }
+          />
           {/* Greeter Pages */}
           <Route
             path="/greeter/greeter-dashboard"
