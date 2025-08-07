@@ -19,6 +19,7 @@ This document details the implementation of the School and Subdriver frontend pa
 ## School Page Features
 
 ### Required Fields
+
 - **Username** (required, min 3 characters)
 - **Email** (required, valid email format)
 - **Password** (required, min 6 characters)
@@ -26,6 +27,7 @@ This document details the implementation of the School and Subdriver frontend pa
 - **School ID** (required, unique identifier)
 
 ### Functionality
+
 - ✅ Add new School users
 - ✅ View all School users in a paginated table
 - ✅ Search School users by username, email, or School ID
@@ -36,6 +38,7 @@ This document details the implementation of the School and Subdriver frontend pa
 - ✅ Responsive design
 
 ### Form Structure
+
 ```javascript
 const [formData, setFormData] = useState({
   username: "",
@@ -48,6 +51,7 @@ const [formData, setFormData] = useState({
 ```
 
 ### Table Columns
+
 1. **#** - Sequential number
 2. **Username** - User's username
 3. **Email** - User's email address
@@ -59,6 +63,7 @@ const [formData, setFormData] = useState({
 ## Subdriver Page Features
 
 ### Required Fields
+
 - **Username** (required, min 3 characters)
 - **Email** (required, valid email format)
 - **Password** (required, min 6 characters)
@@ -68,6 +73,7 @@ const [formData, setFormData] = useState({
 - **Status** (required, Active/Inactive/Pending)
 
 ### Functionality
+
 - ✅ Add new Subdriver users
 - ✅ View all Subdriver users in a paginated table
 - ✅ Search Subdriver users by username, email, Subdriver ID, or Vehicle Number
@@ -78,6 +84,7 @@ const [formData, setFormData] = useState({
 - ✅ Responsive design
 
 ### Form Structure
+
 ```javascript
 const [formData, setFormData] = useState({
   username: "",
@@ -92,6 +99,7 @@ const [formData, setFormData] = useState({
 ```
 
 ### Table Columns
+
 1. **#** - Sequential number
 2. **Username** - User's username
 3. **Email** - User's email address
@@ -104,6 +112,7 @@ const [formData, setFormData] = useState({
 ## Backend Integration
 
 ### API Endpoints Used
+
 - `POST /api/users` - Create new users
 - `GET /api/users/role/School` - Get School users with pagination and search
 - `GET /api/users/role/Subdriver` - Get Subdriver users with pagination and search
@@ -111,18 +120,22 @@ const [formData, setFormData] = useState({
 - `POST /api/auth/login` - User authentication
 
 ### Authentication
+
 - All operations require admin authentication via JWT token
 - Token is retrieved from `sessionStorage.getItem("admin_token")` or `localStorage.getItem("authToken")`
 - Unauthorized requests redirect to `/admin/login`
 
 ### Search Functionality
+
 The backend search includes all relevant fields:
+
 - **School users**: username, email, schoolID
 - **Subdriver users**: username, email, subdriverID, vehicleNumber
 
 ## Testing
 
 ### Test Script
+
 Run the comprehensive test script to verify functionality:
 
 ```bash
@@ -130,7 +143,9 @@ npm run test-school-subdriver
 ```
 
 ### Test Coverage
+
 The test script verifies:
+
 1. ✅ Admin login
 2. ✅ School user creation
 3. ✅ Subdriver user creation
@@ -140,6 +155,7 @@ The test script verifies:
 7. ✅ Data cleanup
 
 ### Manual Testing Steps
+
 1. **Start the backend server**: `npm start`
 2. **Start the frontend**: `cd frontend && npm start`
 3. **Login as admin**: Navigate to `/admin/login`
@@ -150,6 +166,7 @@ The test script verifies:
 ## User Model Requirements
 
 ### School Users
+
 ```javascript
 {
   username: String,      // Required, unique, min 3 chars
@@ -164,6 +181,7 @@ The test script verifies:
 ```
 
 ### Subdriver Users
+
 ```javascript
 {
   username: String,      // Required, unique, min 3 chars
@@ -182,12 +200,14 @@ The test script verifies:
 ## Error Handling
 
 ### Frontend Error Handling
+
 - Form validation errors displayed inline
 - API error responses shown as toast notifications
 - Network errors handled gracefully
 - Authentication errors redirect to login
 
 ### Backend Error Handling
+
 - Validation errors returned with field-specific messages
 - Duplicate email/username errors handled
 - Role-specific field validation
@@ -196,16 +216,19 @@ The test script verifies:
 ## Security Features
 
 ### Authentication
+
 - JWT token-based authentication
 - Token expiration handling
 - Automatic redirect on authentication failure
 
 ### Authorization
+
 - Admin-only access to user management
 - Role-based field validation
 - Secure password hashing
 
 ### Input Validation
+
 - Client-side form validation
 - Server-side validation with express-validator
 - SQL injection prevention via Mongoose
@@ -214,16 +237,19 @@ The test script verifies:
 ## Performance Features
 
 ### Pagination
+
 - Server-side pagination for large datasets
 - Configurable page sizes (10, 25, 50)
 - Efficient database queries
 
 ### Search
+
 - Real-time search functionality
 - Case-insensitive search
 - Multiple field search support
 
 ### Loading States
+
 - Loading indicators during API calls
 - Disabled form controls during submission
 - Skeleton loading for tables
@@ -231,12 +257,14 @@ The test script verifies:
 ## Responsive Design
 
 ### Mobile Support
+
 - Responsive grid layouts
 - Mobile-friendly form controls
 - Touch-friendly buttons
 - Optimized table display
 
 ### Desktop Support
+
 - Full-featured interface
 - Hover effects
 - Keyboard navigation
@@ -245,6 +273,7 @@ The test script verifies:
 ## Future Enhancements
 
 ### Potential Improvements
+
 1. **Edit functionality** - Allow updating existing users
 2. **Bulk operations** - Select multiple users for bulk actions
 3. **Export functionality** - Export user data to CSV/Excel
@@ -253,6 +282,7 @@ The test script verifies:
 6. **Audit logs** - Log all user management actions
 
 ### Integration Opportunities
+
 1. **Email notifications** - Send welcome emails to new users
 2. **SMS integration** - Send verification codes
 3. **File upload** - Profile picture upload
@@ -264,18 +294,22 @@ The test script verifies:
 ### Common Issues
 
 1. **"School ID is required" error**
+
    - Ensure the schoolID field is filled in the form
    - Check that the field name matches exactly: `schoolID`
 
 2. **"Vehicle Number is required" error**
+
    - Ensure the vehicleNumber field is filled in the form
    - Check that the field name matches exactly: `vehicleNumber`
 
 3. **"Status is required" error**
+
    - Ensure the status field is selected in the form
    - Valid values: "Active", "Inactive", "Pending"
 
 4. **Authentication errors**
+
    - Check that admin is logged in
    - Verify JWT token is valid
    - Clear browser storage if needed
@@ -286,6 +320,7 @@ The test script verifies:
    - Ensure search terms match expected format
 
 ### Debug Steps
+
 1. Check browser console for JavaScript errors
 2. Check network tab for failed API requests
 3. Verify backend server is running

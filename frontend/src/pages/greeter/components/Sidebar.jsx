@@ -22,6 +22,7 @@ import {
   MessageSquareX,
 } from "lucide-react";
 import ModeToggle from "@/components/mode-toggle";
+import { toast } from "react-toastify";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -123,11 +124,16 @@ export default function Sidebar() {
     setActiveItem(itemId);
 
     if (itemId === "logout") {
-      // Note: localStorage usage removed for Claude.ai compatibility
-      // localStorage.removeItem("authToken");
-      // localStorage.removeItem("userData");
+      // Clear session storage
+      sessionStorage.removeItem("user_token");
+      sessionStorage.removeItem("user_data");
 
-      navigate("/login");
+      toast.success("Logged out successfully", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+
+      navigate("/");
       return;
     }
 

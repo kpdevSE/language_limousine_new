@@ -1,7 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./home/home";
-import AdminAuth from "./components/Components/AdminAuth";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/admin/pages/Dashboard";
 import Greeters from "./pages/admin/pages/Users/Greeters";
@@ -56,8 +55,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/aboutus" element={<AboutUs />} />
           <Route path="/privacy" element={<Privacy />} />
-          {/* Admin Authentication */}
-          <Route path="/admin/login" element={<AdminAuth />} />
+
           {/* Protected Admin Pages */}
           <Route
             path="/admin/admin-dashboard"

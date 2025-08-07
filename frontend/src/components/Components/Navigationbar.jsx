@@ -1,16 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
-import AdminLogin from "./AdminLogin";
+import RoleLogin from "./RoleLogin";
 
 const NavigationBar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,7 +20,6 @@ const NavigationBar = () => {
       const scrollTop = window.scrollY;
       setIsScrolled(scrollTop > 50);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -89,55 +80,8 @@ const NavigationBar = () => {
                 ></span>
               </a>
             ))}
-
-            {/* Admin Login Link */}
-            <Link to="/admin/login">
-              <Button className="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium border-0 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 transform hover:scale-105">
-                Admin Login
-              </Button>
-            </Link>
-
-            {/* Dialog Button */}
-            {/* <Dialog>
-              <DialogTrigger asChild>
-                <Button className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium border-0 shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 transform hover:scale-105">
-                  Log In
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-slate-900 border border-cyan-500/30 text-white max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                    Welcome to Language Limousine
-                  </DialogTitle>
-                  <DialogDescription className="text-gray-400">
-                    Choose your dashboard to access your account
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col gap-3 mt-6">
-                  <AdminLogin />
-                  <Link to="/greeter/greeter-dashboard">
-                    <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border-0 text-white font-medium py-3 transition-all duration-300 transform hover:scale-105">
-                      Greeter Page
-                    </Button>
-                  </Link>
-                  <Link to="/driver/driver-dashboard">
-                    <Button className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 border-0 text-white font-medium py-3 transition-all duration-300 transform hover:scale-105">
-                      Driver Page
-                    </Button>
-                  </Link>
-                  <Link to="/school/school-dashboard">
-                    <Button className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 border-0 text-white font-medium py-3 transition-all duration-300 transform hover:scale-105">
-                      School Page
-                    </Button>
-                  </Link>
-                  <Link to="/subdriver/subdriver-dashboard">
-                    <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border-0 text-white font-medium py-3 transition-all duration-300 transform hover:scale-105">
-                      Sub Driver Page
-                    </Button>
-                  </Link>
-                </div>
-              </DialogContent>
-            </Dialog> */}
+            {/* Role-based Login Component */}
+            <RoleLogin />
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -178,80 +122,9 @@ const NavigationBar = () => {
               {item.name}
             </a>
           ))}
-
-          {/* Admin Login Link (Mobile) */}
-          <Link to="/admin/login">
-            <Button
-              className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium border-0 shadow-lg transition-all duration-300"
-              onClick={() => setIsOpen(false)}
-            >
-              Admin Login
-            </Button>
-          </Link>
-
-          {/* Dialog Button (Mobile) */}
-          <div className="pt-4 border-t border-slate-700/50">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium border-0 shadow-lg transition-all duration-300">
-                  Log In
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-slate-900 border border-cyan-500/30 text-white max-w-sm mx-4">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                    Welcome to Language Limousine
-                  </DialogTitle>
-                  <DialogDescription className="text-gray-400 text-sm">
-                    Choose your dashboard to access your account
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col gap-3 mt-4">
-                  <Link to="/admin/admin-dashboard">
-                    <Button
-                      variant="default"
-                      className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 border-0 text-white font-medium py-3 transition-all duration-300"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Admin Page
-                    </Button>
-                  </Link>
-                  <Link to="/greeter/greeter-dashboard">
-                    <Button
-                      className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border-0 text-white font-medium py-3 transition-all duration-300"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Greeter Page
-                    </Button>
-                  </Link>
-                  <Link to="/driver/driver-dashboard">
-                    <Button
-                      className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 border-0 text-white font-medium py-3 transition-all duration-300"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Driver Page
-                    </Button>
-                  </Link>
-                  <Link to="/school/school-dashboard">
-                    <Button
-                      className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 border-0 text-white font-medium py-3 transition-all duration-300"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      School Page
-                    </Button>
-                  </Link>
-                  <Link to="/subdriver/subdriver-dashboard">
-                    <Button
-                      variant="default"
-                      className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 border-0 text-white font-medium py-3 transition-all duration-300"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Sub Driver Page
-                    </Button>
-                  </Link>
-                </div>
-              </DialogContent>
-            </Dialog>
+          {/* Role-based Login Component (Mobile) */}
+          <div className="w-full">
+            <RoleLogin />
           </div>
         </div>
       </div>

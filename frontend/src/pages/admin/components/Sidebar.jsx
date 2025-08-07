@@ -20,6 +20,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -119,17 +120,22 @@ export default function Sidebar() {
 
   // Logout function
   const handleLogout = () => {
-    // Clear admin tokens from sessionStorage
-    sessionStorage.removeItem("admin_token");
-    sessionStorage.removeItem("admin_user");
+    // Clear session storage (unified with RoleLogin)
+    sessionStorage.removeItem("user_token");
+    sessionStorage.removeItem("user_data");
 
     // Close mobile menu if open
     if (isMobile) {
       setIsMobileOpen(false);
     }
 
-    // Redirect to admin login page
-    navigate("/admin/login");
+    toast.success("Logged out successfully", {
+      position: "top-right",
+      autoClose: 2000,
+    });
+
+    // Redirect to home page
+    navigate("/");
   };
 
   const handleNavigation = (itemId, path) => {

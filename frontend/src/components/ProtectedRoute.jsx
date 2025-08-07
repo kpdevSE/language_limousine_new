@@ -65,7 +65,7 @@ export default function ProtectedRoute({ children, requiredRole = "Admin" }) {
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect to login
+    return null;
   }
 
   return children;

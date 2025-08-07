@@ -11,7 +11,9 @@
     "test-users": "node test-user-management.js",
     "test-driver": "node test-driver-creation.js",
     "test-frontend": "node test-frontend-integration.js",
-    "test-school-subdriver": "node test-school-subdriver-pages.js"
+    "test-school-subdriver": "node test-school-subdriver-pages.js",
+    "test-user-login": "node test-user-login-integration.js",
+    "test-logout": "node test-logout-functionality.js"
   },
   "keywords": [],
   "author": "",

@@ -12,30 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-// Custom Select component using HTML select
-const Select = ({ value, onValueChange, disabled, children, placeholder }) => {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onValueChange(e.target.value)}
-      disabled={disabled}
-      className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-purple-500 focus:outline-none"
-    >
-      <option value="" disabled className="bg-slate-800">
-        {placeholder}
-      </option>
-      {children}
-    </select>
-  );
-};
-
-const SelectOption = ({ value, children }) => {
-  return (
-    <option value={value} className="bg-slate-800 text-white">
-      {children}
-    </option>
-  );
-};
 import {
   Eye,
   EyeOff,
@@ -44,66 +20,76 @@ import {
   AlertCircle,
   CheckCircle,
   LogIn,
-  Shield,
-  UserCog,
   Car,
   Users,
   GraduationCap,
+  UserCog,
+  Shield,
 } from "lucide-react";
+import axios from "axios";
+import { toast } from "react-toastify";
 
-// Using fetch instead of axios for API calls
-const api = {
-  post: async (url, data) => {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    return {
-      data: await response.json(),
-      status: response.status,
-    };
+const ROLES = {
+  Admin: {
+    label: "Admin",
+    icon: Shield,
+    color: "from-red-500 to-pink-500",
+    dashboard: "/admin/admin-dashboard",
+    endpoint: "admin",
   },
-
-  get: async (url, token) => {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-    return {
-      data: await response.json(),
-      status: response.status,
-    };
+  Greeter: {
+    label: "Greeter",
+    icon: Users,
+    color: "from-blue-500 to-cyan-500",
+    dashboard: "/greeter/greeter-dashboard",
+    endpoint: "user",
+  },
+  Driver: {
+    label: "Driver",
+    icon: Car,
+    color: "from-green-500 to-emerald-500",
+    dashboard: "/driver/driver-dashboard",
+    endpoint: "user",
+  },
+  Subdriver: {
+    label: "Sub Driver",
+    icon: UserCog,
+    color: "from-orange-500 to-yellow-500",
+    dashboard: "/subdriver/subdriver-dashboard",
+    endpoint: "user",
+  },
+  School: {
+    label: "School",
+    icon: GraduationCap,
+    color: "from-purple-500 to-indigo-500",
+    dashboard: "/school/school-dashboard",
+    endpoint: "user",
   },
 };
 
-// Token Management Utilities
 const TOKEN_KEY = "user_token";
 const USER_KEY = "user_data";
+const ADMIN_TOKEN_KEY = "admin_token";
+const ADMIN_USER_KEY = "admin_user";
 
 const tokenManager = {
-  setToken: (token) => {
+  setToken: (token, isAdmin = false) => {
     sessionStorage.setItem(TOKEN_KEY, token);
+    if (isAdmin) sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
   },
-
-  getToken: () => {
-    return sessionStorage.getItem(TOKEN_KEY);
-  },
-
-  removeToken: () => {
+  getToken: () => sessionStorage.getItem(TOKEN_KEY),
+  removeToken: (isAdmin = false) => {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
+    if (isAdmin) {
+      sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+      sessionStorage.removeItem(ADMIN_USER_KEY);
+    }
   },
-
-  setUser: (user) => {
+  setUser: (user, isAdmin = false) => {
     sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    if (isAdmin) sessionStorage.setItem(ADMIN_USER_KEY, JSON.stringify(user));
   },
-
   getUser: () => {
     const user = sessionStorage.getItem(USER_KEY);
     if (!user) return null;
@@ -116,48 +102,11 @@ const tokenManager = {
   },
 };
 
-// Role configuration
-const ROLES = {
-  Admin: {
-    label: "Admin",
-    icon: Shield,
-    color: "from-red-500 to-pink-500",
-    dashboard: "/admin/admin-dashboard",
-  },
-  Greeter: {
-    label: "Greeter",
-    icon: Users,
-    color: "from-blue-500 to-cyan-500",
-    dashboard: "/greeter/greeter-dashboard",
-  },
-  Driver: {
-    label: "Driver",
-    icon: Car,
-    color: "from-green-500 to-emerald-500",
-    dashboard: "/driver/dashboard",
-  },
-  Subdriver: {
-    label: "Sub Driver",
-    icon: UserCog,
-    color: "from-orange-500 to-yellow-500",
-    dashboard: "/subdriver/dashboard",
-  },
-  School: {
-    label: "School",
-    icon: GraduationCap,
-    color: "from-purple-500 to-indigo-500",
-    dashboard: "/school/dashboard",
-  },
-};
-
-const setupApiInterceptors = () => {
-  console.log("API setup complete - using fetch with manual token handling");
-};
-
-export default function MultiRoleLoginDialog() {
+export default function RoleLoginDialog() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    role: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -167,110 +116,92 @@ export default function MultiRoleLoginDialog() {
   const [userSession, setUserSession] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Check if user is already logged in
   useEffect(() => {
-    setupApiInterceptors();
-
     const token = tokenManager.getToken();
     const user = tokenManager.getUser();
-
     if (token && user) {
       setUserSession({ token, user });
       setIsLoggedIn(true);
-      verifyToken();
     }
   }, []);
 
-  // Verify token validity
-  const verifyToken = async () => {
-    try {
-      const token = tokenManager.getToken();
-      if (!token) return;
-
-      const response = await api.get(
-        "http://localhost:5000/api/auth/verify",
-        token
-      );
-
-      if (response.data.success) {
-        setIsLoggedIn(true);
-        setUserSession({
-          token,
-          user: response.data.user,
-        });
-        tokenManager.setUser(response.data.user);
-      }
-    } catch (error) {
-      console.error("Token verification failed:", error);
-      tokenManager.removeToken();
-      setIsLoggedIn(false);
-      setUserSession(null);
-    }
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (error) setError("");
+  };
+
+  const handleRoleChange = (e) => {
+    setFormData((prev) => ({ ...prev, role: e.target.value }));
     if (error) setError("");
   };
 
   const handleSubmit = async () => {
     setIsLoading(true);
     setError("");
-
     try {
-      if (!formData.email || !formData.password) {
-        throw new Error("Please fill in all fields");
+      if (!formData.email || !formData.password || !formData.role) {
+        throw new Error("Please fill in all fields including role");
       }
-
-      const response = await api.post("http://localhost:5000/api/auth/login", {
+      const roleConfig = ROLES[formData.role];
+      if (!roleConfig) throw new Error("Invalid role selected");
+      let endpoint = "";
+      if (formData.role === "Admin") {
+        endpoint = "/api/auth/login";
+      } else {
+        endpoint = "/api/auth/user/login";
+      }
+      const response = await axios.post(`http://localhost:5000${endpoint}`, {
         email: formData.email,
         password: formData.password,
       });
-
       if (response.data.success) {
         const { token, user } = response.data.data;
-
+        const isAdmin = user.role === "Admin";
         // Store token and user data
-        tokenManager.setToken(token);
-        tokenManager.setUser(user);
-
+        tokenManager.setToken(token, isAdmin);
+        tokenManager.setUser(user, isAdmin);
         setUserSession({ token, user });
         setIsLoggedIn(true);
         setSuccess(true);
-
+        toast.success(`Welcome back, ${user.username}!`, {
+          position: "top-right",
+          autoClose: 3000,
+        });
         setTimeout(() => {
           setIsDialogOpen(false);
           resetForm();
-
           // Redirect based on user role
-          const roleConfig = ROLES[user.role];
-          if (roleConfig) {
-            window.location.href = roleConfig.dashboard;
+          const roleCfg = ROLES[user.role];
+          if (roleCfg) {
+            window.location.href = roleCfg.dashboard;
           } else {
             window.location.href = "/dashboard";
           }
-
-          console.log("Login successful! User:", user);
         }, 2000);
       }
     } catch (err) {
       const errorMessage =
         err.response?.data?.message || err.message || "Login failed";
       setError(errorMessage);
-      console.error("Login error:", err);
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleLogout = () => {
-    tokenManager.removeToken();
+    const isAdmin = userSession?.user?.role === "Admin";
+    tokenManager.removeToken(isAdmin);
     setUserSession(null);
     setIsLoggedIn(false);
+    toast.success("Logged out successfully", {
+      position: "top-right",
+      autoClose: 2000,
+    });
     window.location.href = "/";
   };
 
@@ -279,65 +210,11 @@ export default function MultiRoleLoginDialog() {
   };
 
   const resetForm = () => {
-    setFormData({ email: "", password: "" });
+    setFormData({ email: "", password: "", role: "" });
     setError("");
     setSuccess(false);
     setIsLoading(false);
   };
-
-  const handleDialogClose = () => {
-    if (!isLoading) {
-      setIsDialogOpen(false);
-      resetForm();
-    }
-  };
-
-  // Get role configuration for logged in user
-  const getUserRoleConfig = () => {
-    if (userSession?.user?.role) {
-      return ROLES[userSession.user.role] || ROLES.Admin;
-    }
-    return ROLES.Admin;
-  };
-
-  // If user is logged in, show logout option instead
-  if (isLoggedIn && userSession) {
-    const roleConfig = getUserRoleConfig();
-    const RoleIcon = roleConfig.icon;
-
-    return (
-      <div className="text-center space-y-6">
-        <div
-          className={`bg-gradient-to-r ${roleConfig.color}/20 border border-white/20 rounded-lg p-4`}
-        >
-          <div className="flex items-center justify-center space-x-2 mb-2">
-            <RoleIcon className="w-5 h-5 text-white" />
-            <span className="text-white font-medium">
-              Logged in as {roleConfig.label}
-            </span>
-          </div>
-          <p className="text-gray-300 text-sm mb-3">
-            Welcome, {userSession.user.username}!
-          </p>
-          <div className="flex space-x-2 justify-center">
-            <Button
-              onClick={() => (window.location.href = roleConfig.dashboard)}
-              className={`bg-gradient-to-r ${roleConfig.color} hover:opacity-90 text-white`}
-            >
-              Go to Dashboard
-            </Button>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
-            >
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="text-center space-y-6">
@@ -345,26 +222,24 @@ export default function MultiRoleLoginDialog() {
         <DialogTrigger asChild>
           <Button
             size="lg"
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium px-8 py-3"
+            className="bg-gradient-to-r from-blue-500 to-pink-500 hover:from-blue-600 hover:to-pink-600 text-white font-medium px-8 py-3"
           >
             <LogIn className="w-5 h-5 mr-2" />
-            Admin Login
+            Login
           </Button>
         </DialogTrigger>
-
         <DialogContent className="sm:max-w-md bg-slate-900/95 backdrop-blur-md border-white/20">
           <DialogHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-12 h-12 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
               <User className="w-6 h-6 text-white" />
             </div>
             <DialogTitle className="text-2xl font-bold text-white">
-              Admin Login
+              Role-based Login
             </DialogTitle>
             <DialogDescription className="text-gray-300">
-              Enter your admin credentials
+              Select your role and enter your credentials
             </DialogDescription>
           </DialogHeader>
-
           <div className="space-y-4">
             {success && (
               <Alert className="border-green-500 bg-green-500/10">
@@ -374,7 +249,6 @@ export default function MultiRoleLoginDialog() {
                 </AlertDescription>
               </Alert>
             )}
-
             {error && (
               <Alert className="border-red-500 bg-red-500/10">
                 <AlertCircle className="h-4 w-4 text-red-500" />
@@ -383,7 +257,32 @@ export default function MultiRoleLoginDialog() {
                 </AlertDescription>
               </Alert>
             )}
-
+            <div className="space-y-2">
+              <Label htmlFor="role" className="text-white">
+                Select Role
+              </Label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleRoleChange}
+                disabled={isLoading || success}
+                className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-purple-500 focus:outline-none"
+              >
+                <option value="" disabled>
+                  Choose your role
+                </option>
+                {Object.entries(ROLES).map(([key, role]) => (
+                  <option
+                    key={key}
+                    value={key}
+                    className="bg-slate-800 text-white"
+                  >
+                    {role.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-white">
                 Email Address
@@ -400,7 +299,6 @@ export default function MultiRoleLoginDialog() {
                 required
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="password" className="text-white">
                 Password
@@ -431,12 +329,11 @@ export default function MultiRoleLoginDialog() {
                 </button>
               </div>
             </div>
-
             <DialogFooter className="flex flex-col space-y-3">
               <Button
                 onClick={handleSubmit}
                 disabled={isLoading || success}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-blue-500 to-pink-500 hover:from-blue-600 hover:to-pink-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center space-x-2">
@@ -457,19 +354,7 @@ export default function MultiRoleLoginDialog() {
               </Button>
             </DialogFooter>
           </div>
-
           {/* Demo Credentials */}
-          <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-            <p className="text-yellow-400 text-xs font-medium mb-2">
-              Admin Demo Credentials:
-            </p>
-            <div className="space-y-1">
-              <p className="text-yellow-300 text-xs">
-                Email: admin@example.com
-              </p>
-              <p className="text-yellow-300 text-xs">Password: admin123</p>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -206,6 +206,14 @@ const userLogin = async (req, res) => {
       });
     }
 
+    // Check if user is admin (prevent admin login through user endpoint)
+    if (user.role === "Admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Please use admin login for admin accounts",
+      });
+    }
+
     // Compare password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
@@ -234,6 +242,11 @@ const userLogin = async (req, res) => {
           role: user.role,
           gender: user.gender,
           greeterID: user.greeterID,
+          driverID: user.driverID,
+          subdriverID: user.subdriverID,
+          schoolID: user.schoolID,
+          vehicleNumber: user.vehicleNumber,
+          status: user.status,
           isActive: user.isActive,
           lastLogin: user.lastLogin,
         },
