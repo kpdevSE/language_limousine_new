@@ -39,11 +39,13 @@ app.use(express.urlencoded({ extended: true }));
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const studentRoutes = require("./routes/students");
+const assignmentRoutes = require("./routes/assignments");
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/students", studentRoutes);
+app.use("/api/assignments", assignmentRoutes);
 
 // Health check route
 app.get("/api/health", (req, res) => {
