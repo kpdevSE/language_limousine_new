@@ -10,7 +10,7 @@ const {
   cancelAssignment,
 } = require("../controllers/studentAssignmentController");
 
-// All routes require admin authentication
+// Admin routes (require admin authentication)
 router.use(authenticateToken, requireAdmin);
 
 // Assign students to driver/subdriver

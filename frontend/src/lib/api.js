@@ -12,7 +12,9 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    // Check both localStorage (for admin) and sessionStorage (for other roles)
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("user_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,7 +35,9 @@ api.interceptors.response.use(
       // Token expired or invalid
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      window.location.href = "/login";
+      sessionStorage.removeItem("user_token");
+      sessionStorage.removeItem("user_data");
+      window.location.href = "/";
     }
     return Promise.reject(error);
   }
@@ -69,6 +73,40 @@ export const assignmentAPI = {
   // Cancel assignment
   cancelAssignment: (assignmentId) => {
     return api.delete(`/assignments/${assignmentId}`);
+  },
+
+  // Driver-specific functions
+  // Get driver's assignments for today
+  getDriverAssignments: (params = {}) => {
+    return api.get("/driver/my-assignments", { params });
+  },
+
+  // Get driver's completed tasks
+  getDriverCompletedTasks: (params = {}) => {
+    return api.get("/driver/completed-tasks", { params });
+  },
+
+  // Update pickup status
+  updatePickupStatus: (assignmentId, data) => {
+    return api.put(`/driver/update-pickup/${assignmentId}`, data);
+  },
+
+  // Update delivery status
+  updateDeliveryStatus: (assignmentId, data) => {
+    return api.put(`/driver/update-delivery/${assignmentId}`, data);
+  },
+
+  // Driver profile functions
+  getDriverProfile: () => {
+    return api.get("/driver/profile");
+  },
+
+  updateDriverProfile: (data) => {
+    return api.put("/driver/profile", data);
+  },
+
+  getDriverStats: (params = {}) => {
+    return api.get("/driver/stats", { params });
   },
 };
 

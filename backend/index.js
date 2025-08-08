@@ -40,12 +40,14 @@ const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const studentRoutes = require("./routes/students");
 const assignmentRoutes = require("./routes/assignments");
+const driverRoutes = require("./routes/driver");
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/assignments", assignmentRoutes);
+app.use("/api/driver", driverRoutes);
 
 // Health check route
 app.get("/api/health", (req, res) => {

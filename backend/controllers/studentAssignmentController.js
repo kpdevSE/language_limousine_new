@@ -32,7 +32,11 @@ const assignStudents = async (req, res) => {
     // Validate driver/subdriver exists and has correct role
     let assignedTo = null;
     if (driverId) {
-      assignedTo = await User.findOne({ _id: driverId, role: "Driver", isActive: true });
+      assignedTo = await User.findOne({
+        _id: driverId,
+        role: "Driver",
+        isActive: true,
+      });
       if (!assignedTo) {
         return res.status(404).json({
           success: false,
@@ -40,7 +44,11 @@ const assignStudents = async (req, res) => {
         });
       }
     } else if (subdriverId) {
-      assignedTo = await User.findOne({ _id: subdriverId, role: "Subdriver", isActive: true });
+      assignedTo = await User.findOne({
+        _id: subdriverId,
+        role: "Subdriver",
+        isActive: true,
+      });
       if (!assignedTo) {
         return res.status(404).json({
           success: false,
@@ -69,7 +77,9 @@ const assignStudents = async (req, res) => {
     });
 
     if (existingAssignments.length > 0) {
-      const assignedStudentIds = existingAssignments.map(a => a.studentId.toString());
+      const assignedStudentIds = existingAssignments.map((a) =>
+        a.studentId.toString()
+      );
       return res.status(400).json({
         success: false,
         message: `Students already assigned: ${assignedStudentIds.join(", ")}`,
@@ -77,7 +87,7 @@ const assignStudents = async (req, res) => {
     }
 
     // Create assignments
-    const assignments = studentIds.map(studentId => ({
+    const assignments = studentIds.map((studentId) => ({
       studentId,
       driverId: driverId || null,
       subdriverId: subdriverId || null,
@@ -89,9 +99,12 @@ const assignStudents = async (req, res) => {
 
     // Populate the created assignments with student and driver/subdriver details
     const populatedAssignments = await StudentAssignment.find({
-      _id: { $in: createdAssignments.map(a => a._id) },
+      _id: { $in: createdAssignments.map((a) => a._id) },
     })
-      .populate("studentId", "studentNo studentGivenName studentFamilyName arrivalTime flight")
+      .populate(
+        "studentId",
+        "studentNo studentGivenName studentFamilyName arrivalTime flight"
+      )
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber")
       .populate("assignedBy", "username");
@@ -135,7 +148,10 @@ const getAssignments = async (req, res) => {
     const skip = (page - 1) * limit;
     const [assignments, total] = await Promise.all([
       StudentAssignment.find(query)
-        .populate("studentId", "studentNo studentGivenName studentFamilyName arrivalTime flight")
+        .populate(
+          "studentId",
+          "studentNo studentGivenName studentFamilyName arrivalTime flight"
+        )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
         .populate("assignedBy", "username")
@@ -175,8 +191,9 @@ const getUnassignedStudents = async (req, res) => {
     const date = req.query.date;
 
     // Get all assigned student IDs
-    const assignedStudentIds = await StudentAssignment.find({ isActive: true })
-      .distinct("studentId");
+    const assignedStudentIds = await StudentAssignment.find({
+      isActive: true,
+    }).distinct("studentId");
 
     // Build query for unassigned students
     const query = {
@@ -200,10 +217,7 @@ const getUnassignedStudents = async (req, res) => {
 
     const skip = (page - 1) * limit;
     const [students, total] = await Promise.all([
-      Student.find(query)
-        .sort({ arrivalTime: 1 })
-        .skip(skip)
-        .limit(limit),
+      Student.find(query).sort({ arrivalTime: 1 }).skip(skip).limit(limit),
       Student.countDocuments(query),
     ]);
 
@@ -287,7 +301,10 @@ const updateAssignment = async (req, res) => {
     await assignment.save();
 
     const populatedAssignment = await StudentAssignment.findById(assignmentId)
-      .populate("studentId", "studentNo studentGivenName studentFamilyName arrivalTime flight")
+      .populate(
+        "studentId",
+        "studentNo studentGivenName studentFamilyName arrivalTime flight"
+      )
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber")
       .populate("assignedBy", "username");
@@ -340,6 +357,229 @@ const cancelAssignment = async (req, res) => {
   }
 };
 
+// GET /api/assignments/driver/my-assignments - Get assignments for logged-in driver
+const getDriverAssignments = async (req, res) => {
+  try {
+    const driverId = req.user._id;
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "10", 10);
+    const date = req.query.date || new Date().toISOString().split("T")[0]; // Today by default
+
+    // Build date filter
+    const startDate = new Date(date);
+    const endDate = new Date(date);
+    endDate.setDate(endDate.getDate() + 1);
+
+    const query = {
+      $or: [{ driverId: driverId }, { subdriverId: driverId }],
+      isActive: true,
+      assignmentDate: { $gte: startDate, $lt: endDate },
+    };
+
+    const skip = (page - 1) * limit;
+    const [assignments, total] = await Promise.all([
+      StudentAssignment.find(query)
+        .populate(
+          "studentId",
+          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone"
+        )
+        .populate("driverId", "username driverID vehicleNumber")
+        .populate("subdriverId", "username subdriverID vehicleNumber")
+        .sort({ assignmentDate: -1 })
+        .skip(skip)
+        .limit(limit),
+      StudentAssignment.countDocuments(query),
+    ]);
+
+    return res.json({
+      success: true,
+      data: {
+        assignments,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          totalAssignments: total,
+          limit,
+        },
+      },
+    });
+  } catch (err) {
+    console.error("getDriverAssignments error", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// GET /api/driver/completed-tasks - Get completed assignments for logged-in driver
+const getDriverCompletedTasks = async (req, res) => {
+  try {
+    const driverId = req.user._id;
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "10", 10);
+    const date = req.query.date || new Date().toISOString().split("T")[0]; // Today by default
+
+    // Build date filter
+    const startDate = new Date(date);
+    const endDate = new Date(date);
+    endDate.setDate(endDate.getDate() + 1);
+
+    const query = {
+      $or: [{ driverId: driverId }, { subdriverId: driverId }],
+      isActive: true,
+      assignmentDate: { $gte: startDate, $lt: endDate },
+      $or: [{ pickupStatus: "Completed" }, { deliveryStatus: "Completed" }],
+    };
+
+    const skip = (page - 1) * limit;
+    const [assignments, total] = await Promise.all([
+      StudentAssignment.find(query)
+        .populate(
+          "studentId",
+          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone"
+        )
+        .populate("driverId", "username driverID vehicleNumber")
+        .populate("subdriverId", "username subdriverID vehicleNumber")
+        .sort({ assignmentDate: -1 })
+        .skip(skip)
+        .limit(limit),
+      StudentAssignment.countDocuments(query),
+    ]);
+
+    return res.json({
+      success: true,
+      data: {
+        assignments,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          totalAssignments: total,
+          limit,
+        },
+      },
+    });
+  } catch (err) {
+    console.error("getDriverCompletedTasks error", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// PUT /api/assignments/driver/update-pickup - Update pickup status
+const updatePickupStatus = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const { pickupStatus } = req.body;
+    const driverId = req.user._id;
+
+    if (!["Pending", "Completed"].includes(pickupStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid pickup status. Must be Pending or Completed",
+      });
+    }
+
+    const assignment = await StudentAssignment.findOne({
+      _id: assignmentId,
+      $or: [{ driverId: driverId }, { subdriverId: driverId }],
+      isActive: true,
+    });
+
+    if (!assignment) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Assignment not found or you don't have permission to update it",
+      });
+    }
+
+    assignment.pickupStatus = pickupStatus;
+    if (pickupStatus === "Completed") {
+      assignment.pickupTime = new Date();
+    }
+    await assignment.save();
+
+    const populatedAssignment = await StudentAssignment.findById(assignmentId)
+      .populate(
+        "studentId",
+        "studentNo studentGivenName studentFamilyName arrivalTime flight"
+      )
+      .populate("driverId", "username driverID vehicleNumber")
+      .populate("subdriverId", "username subdriverID vehicleNumber");
+
+    return res.json({
+      success: true,
+      message: "Pickup status updated successfully",
+      data: { assignment: populatedAssignment },
+    });
+  } catch (err) {
+    console.error("updatePickupStatus error", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// PUT /api/assignments/driver/update-delivery - Update delivery status
+const updateDeliveryStatus = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const { deliveryStatus } = req.body;
+    const driverId = req.user._id;
+
+    if (!["Pending", "Completed"].includes(deliveryStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid delivery status. Must be Pending or Completed",
+      });
+    }
+
+    const assignment = await StudentAssignment.findOne({
+      _id: assignmentId,
+      $or: [{ driverId: driverId }, { subdriverId: driverId }],
+      isActive: true,
+    });
+
+    if (!assignment) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Assignment not found or you don't have permission to update it",
+      });
+    }
+
+    assignment.deliveryStatus = deliveryStatus;
+    if (deliveryStatus === "Completed") {
+      assignment.deliveryTime = new Date();
+    }
+    await assignment.save();
+
+    const populatedAssignment = await StudentAssignment.findById(assignmentId)
+      .populate(
+        "studentId",
+        "studentNo studentGivenName studentFamilyName arrivalTime flight"
+      )
+      .populate("driverId", "username driverID vehicleNumber")
+      .populate("subdriverId", "username subdriverID vehicleNumber");
+
+    return res.json({
+      success: true,
+      message: "Delivery status updated successfully",
+      data: { assignment: populatedAssignment },
+    });
+  } catch (err) {
+    console.error("updateDeliveryStatus error", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   assignStudents,
   getAssignments,
@@ -347,4 +587,8 @@ module.exports = {
   getDriversAndSubdrivers,
   updateAssignment,
   cancelAssignment,
+  getDriverAssignments,
+  getDriverCompletedTasks,
+  updatePickupStatus,
+  updateDeliveryStatus,
 };

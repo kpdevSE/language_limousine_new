@@ -35,6 +35,22 @@ const studentAssignmentSchema = new mongoose.Schema(
       enum: ["Assigned", "Completed", "Cancelled"],
       default: "Assigned",
     },
+    pickupStatus: {
+      type: String,
+      enum: ["Pending", "Completed"],
+      default: "Pending",
+    },
+    deliveryStatus: {
+      type: String,
+      enum: ["Pending", "Completed"],
+      default: "Pending",
+    },
+    pickupTime: {
+      type: Date,
+    },
+    deliveryTime: {
+      type: Date,
+    },
     notes: {
       type: String,
       trim: true,

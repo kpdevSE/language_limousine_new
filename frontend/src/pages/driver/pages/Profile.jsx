@@ -1,20 +1,59 @@
 import Sidebar from "../components/Sidebar";
-import { useState } from "react";
-import { User, Menu } from "lucide-react";
+import { useState, useEffect } from "react";
+import { User, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { assignmentAPI } from "@/lib/api";
+import { toast } from "react-toastify";
 
 export default function DriverProfile() {
   const [formData, setFormData] = useState({
-    username: "kpdevdriver",
-    email: "kpdevdriver@gmail.com",
+    username: "",
+    email: "",
     gender: "Male",
     password: "••••••••••••",
-    driverId: "D1",
-    vehicleNo: "kj-5567",
+    driverID: "",
+    vehicleNumber: "",
     status: "Off Duty",
   });
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [originalData, setOriginalData] = useState(null);
+
+  // Fetch driver profile on component mount
+  useEffect(() => {
+    fetchDriverProfile();
+  }, []);
+
+  const fetchDriverProfile = async () => {
+    setIsLoading(true);
+    try {
+      const response = await assignmentAPI.getDriverProfile();
+
+      if (response.data.success) {
+        const driver = response.data.data.driver;
+        const profileData = {
+          username: driver.username || "",
+          email: driver.email || "",
+          gender: driver.gender || "Male",
+          password: "••••••••••••",
+          driverID: driver.driverID || "",
+          vehicleNumber: driver.vehicleNumber || "",
+          status: driver.status || "Off Duty",
+        };
+
+        setFormData(profileData);
+        setOriginalData(profileData);
+      }
+    } catch (error) {
+      console.error("Error fetching driver profile:", error);
+      toast.error("Failed to fetch profile data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -23,22 +62,45 @@ export default function DriverProfile() {
     }));
   };
 
-  const handleUpdateProfile = () => {
-    console.log("Updating profile:", formData);
-    // Handle profile update logic here
+  const handleUpdateProfile = async () => {
+    setIsUpdating(true);
+    try {
+      const response = await assignmentAPI.updateDriverProfile(formData);
+
+      if (response.data.success) {
+        toast.success("Profile updated successfully!");
+        setOriginalData(formData);
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      const errorMessage =
+        error.response?.data?.message || "Failed to update profile";
+      toast.error(errorMessage);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleReset = () => {
-    setFormData({
-      username: "kpdevdriver",
-      email: "kpdevdriver@gmail.com",
-      gender: "Male",
-      password: "••••••••••••",
-      driverId: "D1",
-      vehicleNo: "kj-5567",
-      status: "Off Duty",
-    });
+    if (originalData) {
+      setFormData(originalData);
+      toast.info("Profile reset to original values");
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen bg-white overflow-x-hidden">
+        <Sidebar />
+        <div className="flex-1 overflow-x-hidden ml-0 md:ml-64 min-h-screen w-full flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
+            <p className="text-gray-600">Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-white overflow-x-hidden">
@@ -57,7 +119,7 @@ export default function DriverProfile() {
               Edit Profile
             </h1>
 
-            {/* Admin User */}
+            {/* Driver User */}
             <div className="flex items-center space-x-3">
               <span className="text-gray-900 font-medium text-sm md:text-base">
                 Driver User
@@ -135,6 +197,7 @@ export default function DriverProfile() {
                       onChange={(e) =>
                         handleInputChange("password", e.target.value)
                       }
+                      placeholder="Enter new password to change"
                       className="w-full bg-white text-gray-900 px-4 py-3 rounded border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
@@ -146,9 +209,9 @@ export default function DriverProfile() {
                     </label>
                     <Input
                       type="text"
-                      value={formData.driverId}
+                      value={formData.driverID}
                       onChange={(e) =>
-                        handleInputChange("driverId", e.target.value)
+                        handleInputChange("driverID", e.target.value)
                       }
                       className="w-full bg-white text-gray-900 px-4 py-3 rounded border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -161,9 +224,9 @@ export default function DriverProfile() {
                     </label>
                     <Input
                       type="text"
-                      value={formData.vehicleNo}
+                      value={formData.vehicleNumber}
                       onChange={(e) =>
-                        handleInputChange("vehicleNo", e.target.value)
+                        handleInputChange("vehicleNumber", e.target.value)
                       }
                       className="w-full bg-white text-gray-900 px-4 py-3 rounded border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -193,13 +256,22 @@ export default function DriverProfile() {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
                   <Button
                     onClick={handleUpdateProfile}
-                    className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded font-medium transition-colors"
+                    disabled={isUpdating}
+                    className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded font-medium transition-colors disabled:opacity-50"
                   >
-                    Update Profile
+                    {isUpdating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Update Profile"
+                    )}
                   </Button>
                   <Button
                     onClick={handleReset}
-                    className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded font-medium transition-colors"
+                    disabled={isUpdating}
+                    className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded font-medium transition-colors disabled:opacity-50"
                   >
                     Reset
                   </Button>

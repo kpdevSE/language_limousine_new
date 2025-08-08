@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./home/home";
 import ProtectedRoute from "./components/ProtectedRoute";
+import DriverProtectedRoute from "./components/DriverProtectedRoute";
 import AdminDashboard from "./pages/admin/pages/Dashboard";
 import Greeters from "./pages/admin/pages/Users/Greeters";
 import Drivers from "./pages/admin/pages/Users/Drivers";
@@ -190,8 +191,22 @@ function App() {
             element={<UpdatingWaitingTimeGreeters />}
           />
           {/* Driver Pages */}
-          <Route path="/driver/driver-dashboard" element={<Dashboard />} />
-          <Route path="/driver/driver-profile" element={<DriverProfile />} />
+          <Route
+            path="/driver/driver-dashboard"
+            element={
+              <DriverProtectedRoute>
+                <Dashboard />
+              </DriverProtectedRoute>
+            }
+          />
+          <Route
+            path="/driver/driver-profile"
+            element={
+              <DriverProtectedRoute>
+                <DriverProfile />
+              </DriverProtectedRoute>
+            }
+          />
           {/* School Pages */}
           <Route
             path="/school/school-dashboard"
