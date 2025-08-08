@@ -517,48 +517,37 @@ export default function Dashboard() {
                                 <div className="flex space-x-2">
                                   <Button
                                     size="sm"
-                                    variant={
-                                      assignment.pickupStatus === "Completed"
-                                        ? "outline"
-                                        : "default"
-                                    }
+                                    variant="default"
                                     onClick={() =>
                                       handlePickupStatusUpdate(
                                         assignment._id,
-                                        assignment.pickupStatus === "Completed"
-                                          ? "Pending"
-                                          : "Completed"
+                                        "Completed"
                                       )
                                     }
-                                    disabled={isUpdating}
+                                    disabled={
+                                      isUpdating ||
+                                      assignment.pickupStatus === "Completed"
+                                    }
                                     className="text-xs"
                                   >
-                                    {assignment.pickupStatus === "Completed"
-                                      ? "Undo Pickup"
-                                      : "Mark Picked Up"}
+                                    Mark Picked Up
                                   </Button>
                                   <Button
                                     size="sm"
-                                    variant={
-                                      assignment.deliveryStatus === "Completed"
-                                        ? "outline"
-                                        : "default"
-                                    }
+                                    variant="default"
                                     onClick={() =>
                                       handleDeliveryStatusUpdate(
                                         assignment._id,
-                                        assignment.deliveryStatus ===
-                                          "Completed"
-                                          ? "Pending"
-                                          : "Completed"
+                                        "Completed"
                                       )
                                     }
-                                    disabled={isUpdating}
+                                    disabled={
+                                      isUpdating ||
+                                      assignment.deliveryStatus === "Completed"
+                                    }
                                     className="text-xs"
                                   >
-                                    {assignment.deliveryStatus === "Completed"
-                                      ? "Undo Delivery"
-                                      : "Mark Delivered"}
+                                    Mark Delivered
                                   </Button>
                                 </div>
                               </td>
