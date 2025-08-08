@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Search, User, Calendar } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, User, Calendar, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Sidebar from "../../components/Sidebar";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function Add() {
   const [formData, setFormData] = useState({
@@ -34,132 +36,99 @@ export default function Add() {
     client: "",
   });
 
-  const [students, setStudents] = useState([
-    {
-      id: 1,
-      date: "2025-07-28",
-      trip: "1",
-      actualArrivalTime: "03:00:00",
-      arrivalTime: "AM 695",
-      flight: "I",
-      dOrI: "M",
-      mOrF: "MXM3353312",
-      studentNumber: "Ruben",
-      studentGivenName: "B",
-    },
-    {
-      id: 2,
-      date: "2025-07-28",
-      trip: "2",
-      actualArrivalTime: "05:25:00",
-      arrivalTime: "AM 694",
-      flight: "I",
-      dOrI: "F",
-      mOrF: "202400098",
-      studentNumber: "Gabriela",
-      studentGivenName: "M",
-    },
-    {
-      id: 3,
-      date: "2025-07-28",
-      trip: "3",
-      actualArrivalTime: "05:25:00",
-      arrivalTime: "AM 694",
-      flight: "I",
-      dOrI: "F",
-      mOrF: "N/A/UBC/1",
-      studentNumber: "Renata",
-      studentGivenName: "F",
-    },
-    {
-      id: 4,
-      date: "2025-07-28",
-      trip: "4",
-      actualArrivalTime: "05:25:00",
-      arrivalTime: "AM 694",
-      flight: "I",
-      dOrI: "M",
-      mOrF: "N/A/UBC/2",
-      studentNumber: "Davi",
-      studentGivenName: "A",
-    },
-    {
-      id: 5,
-      date: "2025-07-28",
-      trip: "5",
-      actualArrivalTime: "05:25:00",
-      arrivalTime: "AM 694",
-      flight: "I",
-      dOrI: "M",
-      mOrF: "312110",
-      studentNumber: "Guilherme Yui",
-      studentGivenName: "T",
-    },
-    {
-      id: 6,
-      date: "2025-07-28",
-      trip: "6",
-      actualArrivalTime: "05:27:00",
-      arrivalTime: "AM 694",
-      flight: "I",
-      dOrI: "F",
-      mOrF: "311143",
-      studentNumber: "Maria Clara",
-      studentGivenName: "G",
-    },
-    {
-      id: 7,
-      date: "2025-07-28",
-      trip: "7",
-      actualArrivalTime: "05:27:00",
-      arrivalTime: "AM 694",
-      flight: "I",
-      dOrI: "F",
-      mOrF: "311144",
-      studentNumber: "Lara",
-      studentGivenName: "Z",
-    },
-    {
-      id: 8,
-      date: "2025-07-28",
-      trip: "8",
-      actualArrivalTime: "05:27:00",
-      arrivalTime: "AM 694",
-      flight: "I",
-      dOrI: "M",
-      mOrF: "308882",
-      studentNumber: "LUCCA",
-      studentGivenName: "N",
-    },
-    {
-      id: 9,
-      date: "2025-07-28",
-      trip: "9",
-      actualArrivalTime: "05:55:00",
-      arrivalTime: "ZG 021",
-      flight: "I",
-      dOrI: "F",
-      mOrF: "JPT3324373",
-      studentNumber: "UNGYON",
-      studentGivenName: "C",
-    },
-    {
-      id: 10,
-      date: "2025-07-28",
-      trip: "10",
-      actualArrivalTime: "07:40:00",
-      arrivalTime: "ZG 022",
-      flight: "I",
-      dOrI: "M",
-      mOrF: "202401108",
-      studentNumber: "Kai",
-      studentGivenName: "H",
-    },
-  ]);
-
+  const [students, setStudents] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingStudents, setIsFetchingStudents] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalStudents, setTotalStudents] = useState(0);
+
+  // Get auth token from sessionStorage or localStorage
+  const getAuthToken = () => {
+    return (
+      sessionStorage.getItem("admin_token") ||
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("admin_token")
+    );
+  };
+
+  // Configure axios client
+  const apiClient = axios.create({
+    baseURL: "http://localhost:5000/api/students",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  // Add request interceptor to include auth token
+  apiClient.interceptors.request.use(
+    (config) => {
+      const token = getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  // Fetch students on component mount and when search/pagination changes
+  useEffect(() => {
+    fetchStudents();
+  }, [currentPage, searchTerm, entriesPerPage]);
+
+  const fetchStudents = async () => {
+    setIsFetchingStudents(true);
+    setError("");
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+        return;
+      }
+
+      const response = await apiClient.get("/", {
+        params: {
+          page: currentPage,
+          limit: entriesPerPage,
+          search: searchTerm,
+        },
+      });
+
+      if (response.data.success) {
+        setStudents(response.data.data.students);
+        setTotalPages(response.data.data.pagination.totalPages);
+        setTotalStudents(response.data.data.pagination.totalStudents);
+      }
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      let errorMessage = "Failed to fetch students";
+
+      if (err.response?.status === 401) {
+        errorMessage = "Access token required. Please log in again.";
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsFetchingStudents(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -167,6 +136,8 @@ export default function Add() {
       ...prev,
       [name]: value,
     }));
+    if (error) setError("");
+    if (success) setSuccess("");
   };
 
   const handleSelectChange = (name, value) => {
@@ -174,11 +145,97 @@ export default function Add() {
       ...prev,
       [name]: value,
     }));
+    if (error) setError("");
+    if (success) setSuccess("");
   };
 
-  const handleSubmit = () => {
-    console.log("Form submitted:", formData);
-    // Add your submit logic here
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+        return;
+      }
+
+      const response = await apiClient.post("/", formData);
+
+      if (response.data.success) {
+        const successMessage = "Student added successfully!";
+        setSuccess(successMessage);
+        toast.success(successMessage, {
+          position: "top-right",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+          style: {
+            borderRadius: "10px",
+            background: "#4BB543",
+            color: "#fff",
+            fontWeight: "bold",
+            fontSize: "15px",
+          },
+          icon: "✅",
+        });
+
+        await fetchStudents();
+        handleReset();
+      } else {
+        const errorMessage = response.data.message || "Failed to add student";
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
+    } catch (err) {
+      console.error("Add student error:", err);
+      let errorMessage = "An unexpected error occurred. Please try again.";
+
+      if (err.response) {
+        if (err.response.status === 401) {
+          errorMessage = "Access token required. Please log in again.";
+          setTimeout(() => {
+            window.location.href = "/admin/login";
+          }, 2000);
+        } else if (err.response.status === 403) {
+          errorMessage = "You don't have permission to perform this action.";
+        } else if (err.response.data) {
+          errorMessage = err.response.data.message || "Failed to add student";
+
+          // Handle validation errors
+          if (
+            err.response.data.errors &&
+            Array.isArray(err.response.data.errors)
+          ) {
+            errorMessage = err.response.data.errors
+              .map((error) => error.msg)
+              .join(", ");
+          }
+        }
+      } else if (err.request) {
+        errorMessage =
+          "Network error. Please check your connection and try again.";
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -201,33 +258,59 @@ export default function Add() {
       school: "",
       client: "",
     });
+    setError("");
+    setSuccess("");
   };
 
-  const handleDelete = (id) => {
-    setStudents(students.filter((student) => student.id !== id));
+  const handleDelete = async (studentId) => {
+    if (!window.confirm("Are you sure you want to delete this student?")) {
+      return;
+    }
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+        return;
+      }
+
+      const response = await apiClient.delete(`/${studentId}`);
+
+      if (response.data.success) {
+        const successMessage = "Student deleted successfully!";
+        setSuccess(successMessage);
+        toast.success(successMessage);
+
+        await fetchStudents();
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      let errorMessage = "Failed to delete student";
+
+      if (err.response?.status === 401) {
+        errorMessage = "Access token required. Please log in again.";
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
   };
 
-  const filteredStudents = students.filter(
-    (student) =>
-      student.trip.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.studentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.arrivalTime.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(
-    filteredStudents.length / parseInt(entriesPerPage)
-  );
   const startIndex = (currentPage - 1) * parseInt(entriesPerPage);
-  const paginatedStudents = filteredStudents.slice(
-    startIndex,
-    startIndex + parseInt(entriesPerPage)
-  );
 
   return (
     <div className="flex min-h-screen bg-white">
       <Sidebar />
 
-      {/* Main Content Area - Adjusted for fixed sidebar */}
+      {/* Main Content Area */}
       <div className="flex-1 md:ml-64 min-h-screen w-full">
         {/* Header */}
         <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
@@ -238,6 +321,8 @@ export default function Add() {
               <Input
                 type="text"
                 placeholder="Type to search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-white text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-sm"
               />
             </div>
@@ -255,6 +340,25 @@ export default function Add() {
         {/* Scrollable Main Content */}
         <div className="p-6 overflow-y-auto bg-gray-50 min-h-screen">
           <div className="max-w-7xl mx-auto">
+            {/* Error and Success Messages */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                  <span className="text-red-700">{error}</span>
+                </div>
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                  <span className="text-green-700">{success}</span>
+                </div>
+              </div>
+            )}
+
             {/* Add Student Form */}
             <Card className="bg-white border-gray-200 mb-8 shadow-sm">
               <CardContent className="p-6">
@@ -345,14 +449,30 @@ export default function Add() {
                       <Label className="text-gray-900 text-sm font-medium">
                         D or I
                       </Label>
-                      <Input
-                        name="dOrI"
-                        type="text"
+                      <Select
                         value={formData.dOrI}
-                        onChange={handleInputChange}
-                        className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="D or I"
-                      />
+                        onValueChange={(value) =>
+                          handleSelectChange("dOrI", value)
+                        }
+                      >
+                        <SelectTrigger className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                          <SelectValue placeholder="Select D or I" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300">
+                          <SelectItem
+                            value="D"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            D
+                          </SelectItem>
+                          <SelectItem
+                            value="I"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            I
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* M or F */}
@@ -360,14 +480,30 @@ export default function Add() {
                       <Label className="text-gray-900 text-sm font-medium">
                         M or F
                       </Label>
-                      <Input
-                        name="mOrF"
-                        type="text"
+                      <Select
                         value={formData.mOrF}
-                        onChange={handleInputChange}
-                        className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="M or F"
-                      />
+                        onValueChange={(value) =>
+                          handleSelectChange("mOrF", value)
+                        }
+                      >
+                        <SelectTrigger className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                          <SelectValue placeholder="Select M or F" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300">
+                          <SelectItem
+                            value="M"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            M
+                          </SelectItem>
+                          <SelectItem
+                            value="F"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            F
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* Student No */}
@@ -514,7 +650,7 @@ export default function Add() {
                     {/* Client */}
                     <div className="space-y-2">
                       <Label className="text-gray-900 text-sm font-medium">
-                        client
+                        Client
                       </Label>
                       <Select
                         value={formData.client}
@@ -548,14 +684,16 @@ export default function Add() {
                     <Button
                       type="button"
                       onClick={handleSubmit}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium"
+                      disabled={isLoading}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50"
                     >
-                      Submit
+                      {isLoading ? "Adding..." : "Submit"}
                     </Button>
                     <Button
                       type="button"
                       onClick={handleReset}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-medium"
+                      disabled={isLoading}
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50"
                     >
                       Reset
                     </Button>
@@ -646,37 +784,39 @@ export default function Add() {
                           M or F
                         </th>
                         <th className="text-gray-900 font-medium text-left px-3 py-2 border-b border-gray-200 text-xs">
-                          student number
+                          Student Number
                         </th>
                         <th className="text-gray-900 font-medium text-left px-3 py-2 border-b border-gray-200 text-xs">
-                          student given name
+                          Student Given Name
                         </th>
                         <th className="text-gray-900 font-medium text-left px-3 py-2 border-b border-gray-200 text-xs">
-                          s
+                          Student Family Name
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {paginatedStudents.length === 0 ? (
+                      {students.length === 0 ? (
                         <tr className="border-gray-200">
                           <td
                             colSpan={11}
                             className="text-gray-900 text-center py-8 px-4 border-b border-gray-200"
                           >
-                            No students found.
+                            {isFetchingStudents
+                              ? "Loading students..."
+                              : "No students found."}
                           </td>
                         </tr>
                       ) : (
-                        paginatedStudents.map((student) => (
+                        students.map((student) => (
                           <tr
-                            key={student.id}
+                            key={student._id}
                             className="border-gray-200 hover:bg-gray-50"
                           >
                             <td className="px-3 py-2 border-b border-gray-200">
                               <Button
                                 variant="destructive"
                                 size="sm"
-                                onClick={() => handleDelete(student.id)}
+                                onClick={() => handleDelete(student._id)}
                                 className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1"
                               >
                                 Delete
@@ -704,12 +844,14 @@ export default function Add() {
                               {student.mOrF}
                             </td>
                             <td className="text-gray-900 px-3 py-2 border-b border-gray-200 text-xs">
-                              {student.studentNumber}
+                              {student.studentNo}
                             </td>
                             <td className="text-gray-900 px-3 py-2 border-b border-gray-200 text-xs">
                               {student.studentGivenName}
                             </td>
-                            <td className="text-gray-900 px-3 py-2 border-b border-gray-200 text-xs"></td>
+                            <td className="text-gray-900 px-3 py-2 border-b border-gray-200 text-xs">
+                              {student.studentFamilyName}
+                            </td>
                           </tr>
                         ))
                       )}
@@ -723,11 +865,8 @@ export default function Add() {
             <div className="mt-4 flex justify-between items-center text-gray-900 text-sm">
               <span>
                 Showing {startIndex + 1} to{" "}
-                {Math.min(
-                  startIndex + parseInt(entriesPerPage),
-                  filteredStudents.length
-                )}{" "}
-                of {filteredStudents.length} entries
+                {Math.min(startIndex + parseInt(entriesPerPage), totalStudents)}{" "}
+                of {totalStudents} entries
               </span>
               <div className="flex space-x-1">
                 <Button
@@ -739,7 +878,10 @@ export default function Add() {
                 >
                   Prev
                 </Button>
-                {[1, 2, 3, 4, 5].map((page) => (
+                {Array.from(
+                  { length: Math.min(5, totalPages) },
+                  (_, i) => i + 1
+                ).map((page) => (
                   <Button
                     key={page}
                     variant="outline"
@@ -754,20 +896,25 @@ export default function Add() {
                     {page}
                   </Button>
                 ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
-                >
-                  ...
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
-                >
-                  11
-                </Button>
+                {totalPages > 5 && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                    >
+                      ...
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                    >
+                      {totalPages}
+                    </Button>
+                  </>
+                )}
                 <Button
                   variant="outline"
                   size="sm"

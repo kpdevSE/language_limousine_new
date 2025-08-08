@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, User, Calendar, Edit } from "lucide-react";
+import { Search, User, Calendar, Edit, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Sidebar from "../../components/Sidebar";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function Update() {
   const [selectedDate, setSelectedDate] = useState("");
@@ -35,85 +37,174 @@ export default function Update() {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState("");
 
-  // Sample student data
-  const [students] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john.doe@email.com",
-      grade: "Grade 10",
-      school: "Central High School",
-      startDate: "2024-01-15",
-      endDate: "2024-06-15",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane.smith@email.com",
-      grade: "Grade 11",
-      school: "North High School",
-      startDate: "2024-01-20",
-      endDate: "2024-06-20",
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      email: "mike.johnson@email.com",
-      grade: "Grade 9",
-      school: "East High School",
-      startDate: "2024-01-10",
-      endDate: "2024-06-10",
-      status: "Inactive",
-    },
-  ]);
+  // Get auth token from sessionStorage or localStorage
+  const getAuthToken = () => {
+    return (
+      sessionStorage.getItem("admin_token") ||
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("admin_token")
+    );
+  };
 
-  const [updateForm, setUpdateForm] = useState({
-    name: "",
-    email: "",
-    grade: "",
-    school: "",
-    startDate: "",
-    endDate: "",
-    status: "",
+  // Configure axios client
+  const apiClient = axios.create({
+    baseURL: "http://localhost:5000/api/students",
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 
-  const handleDateFilter = () => {
-    if (selectedDate) {
-      // Filter students based on selected date
-      const filtered = students.filter((student) => {
-        const startDate = new Date(student.startDate);
-        const endDate = new Date(student.endDate);
-        const filterDate = new Date(selectedDate);
-        return filterDate >= startDate && filterDate <= endDate;
+  // Add request interceptor to include auth token
+  apiClient.interceptors.request.use(
+    (config) => {
+      const token = getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  const [updateForm, setUpdateForm] = useState({
+    date: "",
+    trip: "",
+    actualArrivalTime: "",
+    arrivalTime: "",
+    flight: "",
+    dOrI: "",
+    mOrF: "",
+    studentNo: "",
+    studentGivenName: "",
+    studentFamilyName: "",
+    hostGivenName: "",
+    hostFamilyName: "",
+    phone: "",
+    address: "",
+    city: "",
+    school: "",
+    client: "",
+  });
+
+  const handleDateFilter = async () => {
+    if (!selectedDate) {
+      toast.error("Please select a date first");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+        return;
+      }
+
+      const response = await apiClient.get("/", {
+        params: {
+          date: selectedDate,
+          limit: 100, // Get all students for the date
+        },
       });
-      setFilteredStudents(filtered);
-    } else {
-      setFilteredStudents([]);
+
+      if (response.data.success) {
+        setFilteredStudents(response.data.data.students);
+        toast.success(`Found ${response.data.data.students.length} students for ${selectedDate}`);
+      }
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      let errorMessage = "Failed to fetch students";
+
+      if (err.response?.status === 401) {
+        errorMessage = "Access token required. Please log in again.";
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleUpdateClick = (student) => {
     setSelectedStudent(student);
     setUpdateForm({
-      name: student.name,
-      email: student.email,
-      grade: student.grade,
+      date: student.date,
+      trip: student.trip,
+      actualArrivalTime: student.actualArrivalTime,
+      arrivalTime: student.arrivalTime,
+      flight: student.flight,
+      dOrI: student.dOrI,
+      mOrF: student.mOrF,
+      studentNo: student.studentNo,
+      studentGivenName: student.studentGivenName,
+      studentFamilyName: student.studentFamilyName,
+      hostGivenName: student.hostGivenName,
+      hostFamilyName: student.hostFamilyName,
+      phone: student.phone,
+      address: student.address,
+      city: student.city,
       school: student.school,
-      startDate: student.startDate,
-      endDate: student.endDate,
-      status: student.status,
+      client: student.client,
     });
     setIsDialogOpen(true);
   };
 
-  const handleUpdateSubmit = (e) => {
+  const handleUpdateSubmit = async (e) => {
     e.preventDefault();
-    console.log("Updating student:", selectedStudent.id, updateForm);
-    // Add your update logic here
-    setIsDialogOpen(false);
+    setIsUpdating(true);
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+        return;
+      }
+
+      const response = await apiClient.put(`/${selectedStudent._id}`, updateForm);
+
+      if (response.data.success) {
+        toast.success("Student updated successfully!");
+        setIsDialogOpen(false);
+        // Refresh the student list
+        await handleDateFilter();
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      let errorMessage = "Failed to update student";
+
+      if (err.response?.status === 401) {
+        errorMessage = "Access token required. Please log in again.";
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -134,9 +225,12 @@ export default function Update() {
   // Filter students based on search term
   const displayedStudents = filteredStudents.filter(
     (student) =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.school.toLowerCase().includes(searchTerm.toLowerCase())
+      student.studentGivenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.studentFamilyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.studentNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.trip?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.flight?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.school?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -173,8 +267,18 @@ export default function Update() {
           <div className="max-w-7xl mx-auto">
             {/* Page Title */}
             <h1 className="text-2xl font-semibold text-blue-500 mb-6">
-              Update Student Dates
+              Update Student Information
             </h1>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                  <span className="text-red-700">{error}</span>
+                </div>
+              </div>
+            )}
 
             {/* Date Filter Section */}
             <Card className="bg-white border-gray-200 mb-8">
@@ -201,9 +305,10 @@ export default function Update() {
                   </div>
                   <Button
                     onClick={handleDateFilter}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium"
+                    disabled={isLoading || !selectedDate}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50"
                   >
-                    Filter Students
+                    {isLoading ? "Loading..." : "Filter Students"}
                   </Button>
                 </div>
               </CardContent>
@@ -255,25 +360,22 @@ export default function Update() {
                           #
                         </TableHead>
                         <TableHead className="text-gray-700 font-medium">
+                          Student No
+                        </TableHead>
+                        <TableHead className="text-gray-700 font-medium">
                           Name
                         </TableHead>
                         <TableHead className="text-gray-700 font-medium">
-                          Email
+                          Trip
                         </TableHead>
                         <TableHead className="text-gray-700 font-medium">
-                          Grade
+                          Arrival Time
+                        </TableHead>
+                        <TableHead className="text-gray-700 font-medium">
+                          Flight
                         </TableHead>
                         <TableHead className="text-gray-700 font-medium">
                           School
-                        </TableHead>
-                        <TableHead className="text-gray-700 font-medium">
-                          Start Date
-                        </TableHead>
-                        <TableHead className="text-gray-700 font-medium">
-                          End Date
-                        </TableHead>
-                        <TableHead className="text-gray-700 font-medium">
-                          Status
                         </TableHead>
                         <TableHead className="text-gray-700 font-medium">
                           Action
@@ -283,46 +385,35 @@ export default function Update() {
                     <TableBody>
                       {displayedStudents.map((student, index) => (
                         <TableRow
-                          key={student.id}
+                          key={student._id}
                           className="border-gray-200 hover:bg-gray-50"
                         >
                           <TableCell className="text-gray-800">
                             {index + 1}
                           </TableCell>
                           <TableCell className="text-gray-800">
-                            {student.name}
+                            {student.studentNo}
                           </TableCell>
                           <TableCell className="text-gray-800">
-                            {student.email}
+                            {student.studentGivenName} {student.studentFamilyName}
                           </TableCell>
                           <TableCell className="text-gray-800">
-                            {student.grade}
+                            {student.trip}
+                          </TableCell>
+                          <TableCell className="text-gray-800">
+                            {student.arrivalTime}
+                          </TableCell>
+                          <TableCell className="text-gray-800">
+                            {student.flight}
                           </TableCell>
                           <TableCell className="text-gray-800">
                             {student.school}
-                          </TableCell>
-                          <TableCell className="text-gray-800">
-                            {student.startDate}
-                          </TableCell>
-                          <TableCell className="text-gray-800">
-                            {student.endDate}
-                          </TableCell>
-                          <TableCell className="text-gray-800">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                student.status === "Active"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {student.status}
-                            </span>
                           </TableCell>
                           <TableCell>
                             <Dialog
                               open={
                                 isDialogOpen &&
-                                selectedStudent?.id === student.id
+                                selectedStudent?._id === student._id
                               }
                               onOpenChange={(open) => {
                                 if (!open) setIsDialogOpen(false);
@@ -350,37 +441,154 @@ export default function Update() {
                                   className="space-y-4"
                                 >
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {/* Start Date */}
+                                    {/* Date */}
                                     <div className="space-y-2">
                                       <Label
-                                        htmlFor="update-start-date"
+                                        htmlFor="update-date"
                                         className="text-gray-700 text-sm font-medium"
                                       >
-                                        Start Date
+                                        Date
                                       </Label>
                                       <Input
-                                        id="update-start-date"
-                                        name="startDate"
-                                        type="date"
-                                        value={updateForm.startDate}
+                                        id="update-date"
+                                        name="date"
+                                        type="text"
+                                        value={updateForm.date}
+                                        onChange={handleInputChange}
+                                        className="bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="MM/DD/YYYY"
+                                      />
+                                    </div>
+
+                                    {/* Trip */}
+                                    <div className="space-y-2">
+                                      <Label
+                                        htmlFor="update-trip"
+                                        className="text-gray-700 text-sm font-medium"
+                                      >
+                                        Trip
+                                      </Label>
+                                      <Input
+                                        id="update-trip"
+                                        name="trip"
+                                        type="text"
+                                        value={updateForm.trip}
                                         onChange={handleInputChange}
                                         className="bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                       />
                                     </div>
 
-                                    {/* End Date */}
+                                    {/* Arrival Time */}
                                     <div className="space-y-2">
                                       <Label
-                                        htmlFor="update-end-date"
+                                        htmlFor="update-arrival-time"
                                         className="text-gray-700 text-sm font-medium"
                                       >
-                                        End Date
+                                        Arrival Time
                                       </Label>
                                       <Input
-                                        id="update-end-date"
-                                        name="endDate"
-                                        type="date"
-                                        value={updateForm.endDate}
+                                        id="update-arrival-time"
+                                        name="arrivalTime"
+                                        type="time"
+                                        value={updateForm.arrivalTime}
+                                        onChange={handleInputChange}
+                                        className="bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                      />
+                                    </div>
+
+                                    {/* Flight */}
+                                    <div className="space-y-2">
+                                      <Label
+                                        htmlFor="update-flight"
+                                        className="text-gray-700 text-sm font-medium"
+                                      >
+                                        Flight
+                                      </Label>
+                                      <Input
+                                        id="update-flight"
+                                        name="flight"
+                                        type="text"
+                                        value={updateForm.flight}
+                                        onChange={handleInputChange}
+                                        className="bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                      />
+                                    </div>
+
+                                    {/* D or I */}
+                                    <div className="space-y-2">
+                                      <Label className="text-gray-700 text-sm font-medium">
+                                        D or I
+                                      </Label>
+                                      <Select
+                                        value={updateForm.dOrI}
+                                        onValueChange={(value) =>
+                                          handleSelectChange("dOrI", value)
+                                        }
+                                      >
+                                        <SelectTrigger className="bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                          <SelectValue placeholder="Select D or I" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white border-gray-300">
+                                          <SelectItem
+                                            value="D"
+                                            className="text-gray-800 hover:bg-gray-100"
+                                          >
+                                            D
+                                          </SelectItem>
+                                          <SelectItem
+                                            value="I"
+                                            className="text-gray-800 hover:bg-gray-100"
+                                          >
+                                            I
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+
+                                    {/* M or F */}
+                                    <div className="space-y-2">
+                                      <Label className="text-gray-700 text-sm font-medium">
+                                        M or F
+                                      </Label>
+                                      <Select
+                                        value={updateForm.mOrF}
+                                        onValueChange={(value) =>
+                                          handleSelectChange("mOrF", value)
+                                        }
+                                      >
+                                        <SelectTrigger className="bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                          <SelectValue placeholder="Select M or F" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white border-gray-300">
+                                          <SelectItem
+                                            value="M"
+                                            className="text-gray-800 hover:bg-gray-100"
+                                          >
+                                            M
+                                          </SelectItem>
+                                          <SelectItem
+                                            value="F"
+                                            className="text-gray-800 hover:bg-gray-100"
+                                          >
+                                            F
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+
+                                    {/* School */}
+                                    <div className="space-y-2">
+                                      <Label
+                                        htmlFor="update-school"
+                                        className="text-gray-700 text-sm font-medium"
+                                      >
+                                        School
+                                      </Label>
+                                      <Input
+                                        id="update-school"
+                                        name="school"
+                                        type="text"
+                                        value={updateForm.school}
                                         onChange={handleInputChange}
                                         className="bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                       />
@@ -399,9 +607,10 @@ export default function Update() {
                                     </Button>
                                     <Button
                                       type="submit"
-                                      className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2"
+                                      disabled={isUpdating}
+                                      className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 disabled:opacity-50"
                                     >
-                                      Update Student
+                                      {isUpdating ? "Updating..." : "Update Student"}
                                     </Button>
                                   </div>
                                 </form>
@@ -424,7 +633,7 @@ export default function Update() {
             )}
 
             {/* No Results Message */}
-            {selectedDate && filteredStudents.length === 0 && (
+            {selectedDate && filteredStudents.length === 0 && !isLoading && (
               <Card className="bg-white border-gray-200">
                 <CardContent className="p-8 text-center">
                   <p className="text-gray-500">

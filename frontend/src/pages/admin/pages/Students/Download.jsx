@@ -1,27 +1,119 @@
 import { useState } from "react";
-import { Search, User, Calendar } from "lucide-react";
+import {
+  Search,
+  User,
+  Calendar,
+  Download as DownloadIcon,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "../../components/Sidebar";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function Download() {
   const [selectedDate, setSelectedDate] = useState("");
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Get auth token from sessionStorage or localStorage
+  const getAuthToken = () => {
+    return (
+      sessionStorage.getItem("admin_token") ||
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("admin_token")
+    );
+  };
+
+  // Configure axios client
+  const apiClient = axios.create({
+    baseURL: "http://localhost:5000/api/students",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  // Add request interceptor to include auth token
+  apiClient.interceptors.request.use(
+    (config) => {
+      const token = getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
 
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!selectedDate) {
-      alert("Please select a date first");
+      toast.error("Please select a date first");
       return;
     }
 
-    console.log("Downloading data for date:", selectedDate);
-    // Handle download logic here
-    alert("Download started successfully!");
+    setIsDownloading(true);
+    setError("");
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+        return;
+      }
+
+      // Create a temporary link element to trigger download
+      const link = document.createElement("a");
+      link.href = `${apiClient.defaults.baseURL}/export/pdf?date=${selectedDate}`;
+      link.download = `students_${selectedDate.replace(/-/g, "_")}.pdf`;
+
+      // Add authorization header to the URL (not ideal but works for GET requests)
+      // For production, consider using a different approach
+      const response = await apiClient.get(`/export/pdf?date=${selectedDate}`, {
+        responseType: "blob",
+      });
+
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      link.href = url;
+      link.click();
+
+      // Clean up
+      window.URL.revokeObjectURL(url);
+
+      toast.success("PDF downloaded successfully!");
+    } catch (err) {
+      console.error("Download error:", err);
+      let errorMessage = "Failed to download PDF";
+
+      if (err.response?.status === 401) {
+        errorMessage = "Access token required. Please log in again.";
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+      } else if (err.response?.status === 400) {
+        errorMessage = "No students found for the selected date";
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -61,6 +153,16 @@ export default function Download() {
               Download Student Data
             </h1>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                  <span className="text-red-700">{error}</span>
+                </div>
+              </div>
+            )}
+
             {/* Download Form */}
             <Card className="bg-white border-gray-200 mb-8 shadow-sm">
               <CardContent className="p-6">
@@ -88,22 +190,20 @@ export default function Download() {
                     <div>
                       <Button
                         onClick={handleDownload}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
+                        disabled={isDownloading || !selectedDate}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2 disabled:opacity-50"
                       >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                        <span>Download</span>
+                        {isDownloading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Downloading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <DownloadIcon className="h-4 w-4" />
+                            <span>Download PDF</span>
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -115,32 +215,21 @@ export default function Download() {
             <Card className="bg-white border-gray-200 shadow-sm">
               <CardContent className="p-6">
                 <div className="text-center py-8">
-                  <svg
-                    className="mx-auto h-16 w-16 text-gray-400 mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
+                  <DownloadIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Download Student Data
+                    Download Student Data as PDF
                   </h3>
                   <p className="text-gray-500 mb-4">
-                    Select a date to download the student attendance data for
-                    that specific day.
+                    Select a date to download the student data for that specific
+                    day as a PDF file.
                   </p>
                   <div className="text-sm text-gray-400 space-y-1">
-                    <p>Download format: Excel (.xlsx)</p>
+                    <p>Download format: PDF (.pdf)</p>
                     <p>
-                      File includes: Student names, attendance status, and
-                      timestamps
+                      File includes: Student numbers, names, trip details,
+                      arrival times, flights, and schools
                     </p>
+                    <p>Students are sorted alphabetically by family name</p>
                   </div>
                 </div>
               </CardContent>

@@ -1,55 +1,51 @@
 import Sidebar from "../../components/Sidebar";
-import { useState } from "react";
-import { Search, User, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, User, Calendar, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function View() {
   const [selectedDate, setSelectedDate] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState([]);
   const [showTable, setShowTable] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // Sample student data - replace with your actual data source
-  const sampleStudents = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@example.com",
-      status: "Present",
-      time: "09:00 AM",
+  // Get auth token from sessionStorage or localStorage
+  const getAuthToken = () => {
+    return (
+      sessionStorage.getItem("admin_token") ||
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("admin_token")
+    );
+  };
+
+  // Configure axios client
+  const apiClient = axios.create({
+    baseURL: "http://localhost:5000/api/students",
+    headers: {
+      "Content-Type": "application/json",
     },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane@example.com",
-      status: "Present",
-      time: "09:15 AM",
+  });
+
+  // Add request interceptor to include auth token
+  apiClient.interceptors.request.use(
+    (config) => {
+      const token = getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
     },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      email: "mike@example.com",
-      status: "Absent",
-      time: "-",
-    },
-    {
-      id: 4,
-      name: "Sarah Wilson",
-      email: "sarah@example.com",
-      status: "Present",
-      time: "08:45 AM",
-    },
-    {
-      id: 5,
-      name: "David Brown",
-      email: "david@example.com",
-      status: "Late",
-      time: "09:30 AM",
-    },
-  ];
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
 
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
@@ -59,22 +55,73 @@ export default function View() {
     setSearchTerm(e.target.value);
   };
 
-  const handleViewStudents = () => {
-    if (selectedDate) {
-      console.log("Viewing students for date:", selectedDate);
-      // Here you would typically fetch students for the selected date
-      setStudents(sampleStudents);
-      setShowTable(true);
-    } else {
-      alert("Please select a date first");
+  const handleViewStudents = async () => {
+    if (!selectedDate) {
+      toast.error("Please select a date first");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setShowTable(false);
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+        return;
+      }
+
+      const response = await apiClient.get("/", {
+        params: {
+          date: selectedDate,
+          limit: 100, // Get all students for the date
+        },
+      });
+
+      if (response.data.success) {
+        setStudents(response.data.data.students);
+        setShowTable(true);
+        toast.success(
+          `Found ${response.data.data.students.length} students for ${selectedDate}`
+        );
+      }
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      let errorMessage = "Failed to fetch students";
+
+      if (err.response?.status === 401) {
+        errorMessage = "Access token required. Please log in again.";
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Filter students based on search term
   const filteredStudents = students.filter(
     (student) =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase())
+      student.studentGivenName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      student.studentFamilyName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      student.studentNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.trip?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.flight?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.school?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusColor = (status) => {
@@ -127,6 +174,16 @@ export default function View() {
               View Students
             </h1>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                  <span className="text-red-700">{error}</span>
+                </div>
+              </div>
+            )}
+
             {/* Search and Date Selection Form */}
             <Card className="bg-white border-gray-200 mb-8 shadow-sm">
               <CardContent className="p-6">
@@ -142,7 +199,7 @@ export default function View() {
                         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                         <Input
                           type="text"
-                          placeholder="Search by name or email..."
+                          placeholder="Search by name, number, trip, flight, or school..."
                           value={searchTerm}
                           onChange={handleSearchChange}
                           className="w-full bg-white text-gray-900 pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-400 text-sm"
@@ -171,9 +228,10 @@ export default function View() {
                     <div>
                       <Button
                         onClick={handleViewStudents}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12"
+                        disabled={isLoading || !selectedDate}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12 disabled:opacity-50"
                       >
-                        View Students
+                        {isLoading ? "Loading..." : "View Students"}
                       </Button>
                     </div>
                   </div>
@@ -210,16 +268,28 @@ export default function View() {
                             #
                           </th>
                           <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                            Student No
+                          </th>
+                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
                             Student Name
                           </th>
                           <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            Email
+                            Trip
                           </th>
                           <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            Status
+                            Arrival Time
                           </th>
                           <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            Check-in Time
+                            Flight
+                          </th>
+                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                            School
+                          </th>
+                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                            D/I
+                          </th>
+                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                            M/F
                           </th>
                         </tr>
                       </thead>
@@ -227,39 +297,48 @@ export default function View() {
                         {filteredStudents.length > 0 ? (
                           filteredStudents.map((student, index) => (
                             <tr
-                              key={student.id}
+                              key={student._id}
                               className="border-gray-200 hover:bg-gray-50"
                             >
                               <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
                                 {index + 1}
                               </td>
                               <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                                {student.name}
+                                {student.studentNo}
                               </td>
                               <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                                {student.email}
-                              </td>
-                              <td className="px-4 py-3 border-b border-gray-200">
-                                <span
-                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                                    student.status
-                                  )}`}
-                                >
-                                  {student.status}
-                                </span>
+                                {student.studentGivenName}{" "}
+                                {student.studentFamilyName}
                               </td>
                               <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                                {student.time}
+                                {student.trip}
+                              </td>
+                              <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                {student.arrivalTime}
+                              </td>
+                              <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                {student.flight}
+                              </td>
+                              <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                {student.school}
+                              </td>
+                              <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                {student.dOrI}
+                              </td>
+                              <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                {student.mOrF}
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr className="border-gray-200">
                             <td
-                              colSpan={5}
+                              colSpan={9}
                               className="text-gray-700 text-center py-8 px-4 border-b border-gray-200"
                             >
-                              No students found matching your search criteria.
+                              {students.length === 0
+                                ? "No students found for this date."
+                                : "No students found matching your search criteria."}
                             </td>
                           </tr>
                         )}
@@ -278,7 +357,7 @@ export default function View() {
                     </h3>
                     <p className="text-gray-500">
                       Choose a date from the date picker above and click "View
-                      Students" to see the attendance data.
+                      Students" to see the student data.
                     </p>
                   </div>
                 </CardContent>
