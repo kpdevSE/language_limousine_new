@@ -381,7 +381,7 @@ const getDriverAssignments = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone"
+          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -390,6 +390,21 @@ const getDriverAssignments = async (req, res) => {
         .limit(limit),
       StudentAssignment.countDocuments(query),
     ]);
+
+    console.log(
+      "🔍 getDriverAssignments - Query:",
+      JSON.stringify(query, null, 2)
+    );
+    console.log(
+      "🔍 getDriverAssignments - Found assignments:",
+      assignments.length
+    );
+    if (assignments.length > 0) {
+      console.log(
+        "🔍 Sample assignment:",
+        JSON.stringify(assignments[0], null, 2)
+      );
+    }
 
     return res.json({
       success: true,
@@ -426,10 +441,14 @@ const getDriverCompletedTasks = async (req, res) => {
     endDate.setDate(endDate.getDate() + 1);
 
     const query = {
-      $or: [{ driverId: driverId }, { subdriverId: driverId }],
-      isActive: true,
-      assignmentDate: { $gte: startDate, $lt: endDate },
-      $or: [{ pickupStatus: "Completed" }, { deliveryStatus: "Completed" }],
+      $and: [
+        { $or: [{ driverId: driverId }, { subdriverId: driverId }] },
+        { isActive: true },
+        { assignmentDate: { $gte: startDate, $lt: endDate } },
+        {
+          $or: [{ pickupStatus: "Completed" }, { deliveryStatus: "Completed" }],
+        },
+      ],
     };
 
     const skip = (page - 1) * limit;
@@ -437,7 +456,7 @@ const getDriverCompletedTasks = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone"
+          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")

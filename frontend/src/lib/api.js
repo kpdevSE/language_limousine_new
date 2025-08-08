@@ -108,6 +108,40 @@ export const assignmentAPI = {
   getDriverStats: (params = {}) => {
     return api.get("/driver/stats", { params });
   },
+
+  // Subdriver-specific functions
+  // Get subdriver's assignments for today
+  getSubdriverAssignments: (params = {}) => {
+    return api.get("/subdriver/my-assignments", { params });
+  },
+
+  // Get subdriver's completed tasks
+  getSubdriverCompletedTasks: (params = {}) => {
+    return api.get("/subdriver/completed-tasks", { params });
+  },
+
+  // Update pickup status for subdriver
+  updateSubdriverPickupStatus: (assignmentId, data) => {
+    return api.put(`/subdriver/update-pickup/${assignmentId}`, data);
+  },
+
+  // Update delivery status for subdriver
+  updateSubdriverDeliveryStatus: (assignmentId, data) => {
+    return api.put(`/subdriver/update-delivery/${assignmentId}`, data);
+  },
+
+  // Subdriver profile functions
+  getSubdriverProfile: () => {
+    return api.get("/subdriver/profile");
+  },
+
+  updateSubdriverProfile: (data) => {
+    return api.put("/subdriver/profile", data);
+  },
+
+  getSubdriverStats: (params = {}) => {
+    return api.get("/subdriver/stats", { params });
+  },
 };
 
 // Student API functions

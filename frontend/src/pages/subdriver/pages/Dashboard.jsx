@@ -1,81 +1,222 @@
 import Sidebar from "../components/Sidebar";
-import { useState } from "react";
-import { Search, User, Settings } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Search,
+  User,
+  Settings,
+  Loader2,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { assignmentAPI } from "@/lib/api";
 
-export default function SubDriverDashboard() {
+// Utility function to format time to 12-hour format with AM/PM
+const formatTimeToAMPM = (timeString) => {
+  if (!timeString) return "N/A";
+
+  try {
+    // If it's already in 12-hour format, return as is
+    if (timeString.includes("AM") || timeString.includes("PM")) {
+      return timeString;
+    }
+
+    // If it's in 24-hour format, convert to 12-hour
+    if (timeString.includes(":")) {
+      const [hours, minutes] = timeString.split(":");
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes} ${ampm}`;
+    }
+
+    return timeString;
+  } catch (error) {
+    return timeString;
+  }
+};
+
+export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [assignments, setAssignments] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [totalAssignments, setTotalAssignments] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [showCompletedTasks, setShowCompletedTasks] = useState(true);
 
-  // Empty data to show "No records found" state
-  const studentsData = [];
+  useEffect(() => {
+    fetchAssignments();
+  }, [currentPage, entriesPerPage, selectedDate, showCompletedTasks]);
+
+  const fetchAssignments = async () => {
+    setIsLoading(true);
+    try {
+      const apiFunction = showCompletedTasks
+        ? assignmentAPI.getSubdriverCompletedTasks
+        : assignmentAPI.getSubdriverAssignments;
+
+      const response = await apiFunction({
+        page: currentPage,
+        limit: entriesPerPage,
+        date: selectedDate,
+      });
+
+      if (response.data.success) {
+        console.log(
+          "📋 Subdriver assignments data:",
+          response.data.data.assignments
+        );
+        if (response.data.data.assignments.length > 0) {
+          console.log(
+            "📚 Sample assignment student data:",
+            response.data.data.assignments[0].studentId
+          );
+        }
+        setAssignments(response.data.data.assignments);
+        setTotalAssignments(response.data.data.pagination.totalAssignments);
+        setTotalPages(response.data.data.pagination.totalPages);
+      }
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+      alert("Failed to fetch assignments. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  // Filter students based on search term
-  const filteredStudents = studentsData.filter(
-    (student) =>
-      student.studentGivenName
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      student.studentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.flight.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Pagination
-  const totalEntries = filteredStudents.length;
-  const totalPages = Math.ceil(totalEntries / entriesPerPage);
-  const startIndex = (currentPage - 1) * entriesPerPage;
-  const endIndex = startIndex + entriesPerPage;
-  const currentStudents = filteredStudents.slice(startIndex, endIndex);
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleEntriesPerPageChange = (e) => {
-    setEntriesPerPage(parseInt(e.target.value));
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value);
     setCurrentPage(1);
   };
 
+  const handlePickupStatusUpdate = async (assignmentId, newStatus) => {
+    setIsUpdating(true);
+    try {
+      const response = await assignmentAPI.updateSubdriverPickupStatus(
+        assignmentId,
+        {
+          pickupStatus: newStatus,
+        }
+      );
+
+      if (response.data.success) {
+        setAssignments((prev) =>
+          prev.map((assignment) =>
+            assignment._id === assignmentId
+              ? { ...assignment, pickupStatus: newStatus }
+              : assignment
+          )
+        );
+        alert(`Pickup status updated to ${newStatus}`);
+      }
+    } catch (error) {
+      console.error("Error updating pickup status:", error);
+      alert(error.response?.data?.message || "Failed to update pickup status");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDeliveryStatusUpdate = async (assignmentId, newStatus) => {
+    setIsUpdating(true);
+    try {
+      const response = await assignmentAPI.updateSubdriverDeliveryStatus(
+        assignmentId,
+        {
+          deliveryStatus: newStatus,
+        }
+      );
+
+      if (response.data.success) {
+        setAssignments((prev) =>
+          prev.map((assignment) =>
+            assignment._id === assignmentId
+              ? { ...assignment, deliveryStatus: newStatus }
+              : assignment
+          )
+        );
+        alert(`Delivery status updated to ${newStatus}`);
+      }
+    } catch (error) {
+      console.error("Error updating delivery status:", error);
+      alert(
+        error.response?.data?.message || "Failed to update delivery status"
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Completed":
+        return "text-green-600 bg-green-100";
+      case "In Progress":
+        return "text-yellow-600 bg-yellow-100";
+      case "Pending":
+        return "text-gray-600 bg-gray-100";
+      default:
+        return "text-gray-600 bg-gray-100";
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "Completed":
+        return <CheckCircle className="w-4 h-4" />;
+      case "In Progress":
+        return <Loader2 className="w-4 h-4 animate-spin" />;
+      case "Pending":
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <XCircle className="w-4 h-4" />;
+    }
+  };
+
+  // Filter assignments based on search term
+  const filteredAssignments = assignments.filter((assignment) => {
+    const studentName =
+      assignment.studentId?.studentGivenName &&
+      assignment.studentId?.studentFamilyName
+        ? `${assignment.studentId.studentGivenName} ${assignment.studentId.studentFamilyName}`.toLowerCase()
+        : "";
+    const studentNo = assignment.studentId?.studentNo?.toLowerCase() || "";
+    const flight = assignment.studentId?.flight?.toLowerCase() || "";
+
+    return (
+      studentName.includes(searchTerm.toLowerCase()) ||
+      studentNo.includes(searchTerm.toLowerCase()) ||
+      flight.includes(searchTerm.toLowerCase())
+    );
+  });
+
   return (
-    <div className="flex min-h-screen bg-white overflow-x-hidden">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
 
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-x-hidden ml-0 md:ml-64 min-h-screen w-full">
+      <div className="flex-1 overflow-x-hidden ml-0 md:ml-64 min-h-screen">
         {/* Header */}
         <div className="bg-white px-4 md:px-6 py-4 border-b border-gray-200">
-          <div className="flex flex-col sm:flex-row items-center justify-between max-w-7xl mx-auto gap-4">
-            {/* Title */}
+          <div className="flex items-center justify-between max-w-7xl mx-auto">
             <h1 className="text-xl md:text-2xl font-semibold text-gray-900">
-              Sub Driver Dashboard
+              Subdriver Dashboard
             </h1>
-
-            {/* Search Bar */}
-            <div className="relative flex-1 w-full max-w-md">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                type="text"
-                placeholder="Type to search..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="w-full bg-gray-50 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-sm"
-              />
-            </div>
-
-            {/* Admin User */}
-            <div className="flex items-center space-x-3">
-              <span className="text-gray-900 font-medium text-sm md:text-base">
-                Sub Driver
-              </span>
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                <User className="h-5 w-5 text-white" />
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <User className="w-5 h-5 text-gray-500" />
+                <span className="text-sm text-gray-600">Subdriver</span>
               </div>
             </div>
           </div>
@@ -84,152 +225,398 @@ export default function SubDriverDashboard() {
         {/* Main Content */}
         <div className="p-4 md:p-6 overflow-x-hidden bg-white">
           <div className="max-w-7xl mx-auto">
-            {/* Control Section */}
-            <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-900 text-sm">Show</span>
-                <select
-                  value={entriesPerPage}
-                  onChange={handleEntriesPerPageChange}
-                  className="bg-white text-gray-900 border border-gray-300 rounded px-3 py-1 text-sm"
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
-                <span className="text-gray-900 text-sm">entries</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-gray-900 text-sm">Search:</span>
-                <Input
-                  type="text"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="bg-white text-gray-900 border border-gray-300 rounded px-3 py-1 text-sm w-full sm:w-48"
-                />
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-blue-600">
+                        {showCompletedTasks
+                          ? "Total Completed"
+                          : "Total Assignments"}
+                      </p>
+                      <p className="text-2xl font-bold text-blue-900">
+                        {totalAssignments}
+                      </p>
+                    </div>
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {showCompletedTasks ? (
+                <>
+                  <Card className="bg-green-50 border-green-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-green-600">
+                            Pickups Completed
+                          </p>
+                          <p className="text-2xl font-bold text-green-900">
+                            {
+                              assignments.filter(
+                                (a) => a.pickupStatus === "Completed"
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-purple-50 border-purple-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-purple-600">
+                            Deliveries Completed
+                          </p>
+                          <p className="text-2xl font-bold text-purple-900">
+                            {
+                              assignments.filter(
+                                (a) => a.deliveryStatus === "Completed"
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-orange-50 border-orange-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-orange-600">
+                            Fully Completed
+                          </p>
+                          <p className="text-2xl font-bold text-orange-900">
+                            {
+                              assignments.filter(
+                                (a) =>
+                                  a.pickupStatus === "Completed" &&
+                                  a.deliveryStatus === "Completed"
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <>
+                  <Card className="bg-yellow-50 border-yellow-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-yellow-600">
+                            Pending Pickup
+                          </p>
+                          <p className="text-2xl font-bold text-yellow-900">
+                            {
+                              assignments.filter(
+                                (a) => a.pickupStatus === "Pending"
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                          <XCircle className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-green-50 border-green-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-green-600">
+                            Completed Pickup
+                          </p>
+                          <p className="text-2xl font-bold text-green-900">
+                            {
+                              assignments.filter(
+                                (a) => a.pickupStatus === "Completed"
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-purple-50 border-purple-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-purple-600">
+                            Completed Delivery
+                          </p>
+                          <p className="text-2xl font-bold text-purple-900">
+                            {
+                              assignments.filter(
+                                (a) => a.deliveryStatus === "Completed"
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+
+            {/* Search and Filter Section */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+              <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      type="text"
+                      placeholder="Search students, flights..."
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      className="pl-10 w-full sm:w-64"
+                    />
+                  </div>
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={handleDateChange}
+                    className="w-full sm:w-auto"
+                  />
+                </div>
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant={showCompletedTasks ? "outline" : "default"}
+                    onClick={() => setShowCompletedTasks(false)}
+                    className="text-sm"
+                  >
+                    Active Tasks
+                  </Button>
+                  <Button
+                    variant={showCompletedTasks ? "default" : "outline"}
+                    onClick={() => setShowCompletedTasks(true)}
+                    className="text-sm"
+                  >
+                    Completed Tasks
+                  </Button>
+                </div>
               </div>
             </div>
 
-            {/* Students Table */}
-            <Card className="bg-white border-gray-200 overflow-hidden shadow-sm">
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[800px]">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm">ID</span>
-                            <span className="text-gray-400 text-xs">↑↓</span>
-                          </div>
-                        </th>
-                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm">Pick Up</span>
-                            <span className="text-gray-400 text-xs">↑↓</span>
-                          </div>
-                        </th>
-                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm">
-                              Delivered
-                            </span>
-                            <span className="text-gray-400 text-xs">↑↓</span>
-                          </div>
-                        </th>
-                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm">Flight</span>
-                            <span className="text-gray-400 text-xs">↑↓</span>
-                          </div>
-                        </th>
-                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm">
-                              Arrival Time
-                            </span>
-                            <span className="text-gray-400 text-xs">↑↓</span>
-                          </div>
-                        </th>
-                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm">
-                              Student Number
-                            </span>
-                            <span className="text-gray-400 text-xs">↑↓</span>
-                          </div>
-                        </th>
-                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs md:text-sm">
-                              Student Given Name
-                            </span>
-                            <span className="text-gray-400 text-xs">↑↓</span>
-                          </div>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-gray-200">
-                        <td
-                          colSpan={7}
-                          className="text-gray-700 text-center py-8 px-4 border-b border-gray-200 text-sm"
-                        >
-                          No records found for today.
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+            {/* Assignments Table */}
+            <Card className="bg-white border-gray-200 shadow-sm">
+              <CardHeader className="border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {showCompletedTasks
+                      ? "Completed Tasks"
+                      : "Active Assignments"}
+                  </h2>
                 </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                    <span className="ml-2 text-gray-600">
+                      {showCompletedTasks
+                        ? "Loading completed tasks..."
+                        : "Loading assignments..."}
+                    </span>
+                  </div>
+                ) : filteredAssignments.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">
+                      {searchTerm
+                        ? "No completed tasks found matching your search."
+                        : showCompletedTasks
+                        ? "No completed tasks found for this date."
+                        : "No active assignments found for this date."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Student
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Flight Number
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Arrival Time
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Pickup Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Delivery Status
+                          </th>
+                          {!showCompletedTasks && (
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Actions
+                            </th>
+                          )}
+                          {showCompletedTasks && (
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Completion Time
+                            </th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredAssignments.map((assignment) => (
+                          <tr key={assignment._id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {assignment.studentId?.studentGivenName &&
+                                  assignment.studentId?.studentFamilyName
+                                    ? `${assignment.studentId.studentGivenName} ${assignment.studentId.studentFamilyName}`
+                                    : "N/A"}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {assignment.studentId?.studentNo || "N/A"}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {assignment.studentId?.flight || "N/A"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {formatTimeToAMPM(
+                                  assignment.studentId?.arrivalTime
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                                  assignment.pickupStatus
+                                )}`}
+                              >
+                                {getStatusIcon(assignment.pickupStatus)}
+                                <span className="ml-1">
+                                  {assignment.pickupStatus || "Pending"}
+                                </span>
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                                  assignment.deliveryStatus
+                                )}`}
+                              >
+                                {getStatusIcon(assignment.deliveryStatus)}
+                                <span className="ml-1">
+                                  {assignment.deliveryStatus || "Pending"}
+                                </span>
+                              </span>
+                            </td>
+                            {!showCompletedTasks && (
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex space-x-2">
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() =>
+                                      handlePickupStatusUpdate(
+                                        assignment._id,
+                                        "Completed"
+                                      )
+                                    }
+                                    disabled={
+                                      isUpdating ||
+                                      assignment.pickupStatus === "Completed"
+                                    }
+                                    className="text-xs"
+                                  >
+                                    Mark Picked Up
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() =>
+                                      handleDeliveryStatusUpdate(
+                                        assignment._id,
+                                        "Completed"
+                                      )
+                                    }
+                                    disabled={
+                                      isUpdating ||
+                                      assignment.deliveryStatus === "Completed"
+                                    }
+                                    className="text-xs"
+                                  >
+                                    Mark Delivered
+                                  </Button>
+                                </div>
+                              </td>
+                            )}
+                            {showCompletedTasks && (
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="text-xs">
+                                  {assignment.pickupTime && (
+                                    <div className="mb-1">
+                                      <span className="font-medium">
+                                        Pickup:
+                                      </span>{" "}
+                                      {new Date(
+                                        assignment.pickupTime
+                                      ).toLocaleTimeString()}
+                                    </div>
+                                  )}
+                                  {assignment.deliveryTime && (
+                                    <div>
+                                      <span className="font-medium">
+                                        Delivery:
+                                      </span>{" "}
+                                      {new Date(
+                                        assignment.deliveryTime
+                                      ).toLocaleTimeString()}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </CardContent>
             </Card>
-
-            {/* Mobile Cards - Show detailed info on small screens */}
-            <div className="md:hidden mt-6 space-y-4">
-              <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-                <div className="text-gray-500 text-sm">
-                  No records found for today.
-                </div>
-              </div>
-            </div>
-
-            {/* Pagination */}
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-gray-700 text-sm order-2 sm:order-1">
-                Showing 0 to 0 of 0 entries
-              </div>
-              <div className="flex items-center space-x-1 sm:space-x-2 order-1 sm:order-2">
-                <Button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={true}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm disabled:opacity-50"
-                >
-                  Prev
-                </Button>
-                <Button
-                  onClick={() => handlePageChange(1)}
-                  className="bg-gray-200 text-gray-700 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm opacity-50"
-                >
-                  1
-                </Button>
-                <Button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={true}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm disabled:opacity-50"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="bg-white border-t border-gray-200 px-6 py-4 mt-8">
-          <div className="max-w-7xl mx-auto">
-            <p className="text-center text-gray-500 text-sm">
-              Copyright © 2024. All rights reserved.
-            </p>
           </div>
         </div>
       </div>

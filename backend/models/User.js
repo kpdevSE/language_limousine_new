@@ -94,13 +94,21 @@ const userSchema = new mongoose.Schema(
       },
       trim: true,
     },
-    // Status for subdrivers
+    // Status field - allow all possible statuses for flexibility
     status: {
       type: String,
-      enum: ["Active", "Inactive", "Pending"],
+      enum: [
+        "On Duty",
+        "Off Duty",
+        "Available",
+        "Busy",
+        "Active",
+        "Inactive",
+        "Pending",
+      ],
       default: "Active",
       required: function () {
-        return this.role === "Subdriver";
+        return this.role === "Driver" || this.role === "Subdriver";
       },
     },
     role: {
@@ -136,6 +144,18 @@ userSchema.pre("save", async function (next) {
   } catch (error) {
     next(error);
   }
+});
+
+// Set default status based on role
+userSchema.pre("save", function (next) {
+  if (this.isNew && !this.status) {
+    if (this.role === "Driver") {
+      this.status = "Off Duty";
+    } else if (this.role === "Subdriver") {
+      this.status = "Active";
+    }
+  }
+  next();
 });
 
 // Compare password method
