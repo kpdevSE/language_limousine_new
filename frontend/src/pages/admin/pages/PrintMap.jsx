@@ -205,10 +205,21 @@ export default function PrintMap() {
           task.studentId?.studentNo || "N/A",
           task.studentId?.school || "N/A",
           task.pickupStatus || "N/A",
-          task.deliveryStatus || "N/A",
-          task.assignmentDate
-            ? new Date(task.assignmentDate).toLocaleDateString()
+          task.pickupTime
+            ? new Date(task.pickupTime).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })
             : "N/A",
+          task.deliveryTime
+            ? new Date(task.deliveryTime).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })
+            : "N/A",
+          task.deliveryStatus || "N/A",
         ]);
 
         autoTable(doc, {
@@ -220,8 +231,9 @@ export default function PrintMap() {
               "Student No",
               "School",
               "Pickup Status",
+              "Pickup Time",
+              "Delivery Time",
               "Delivery Status",
-              "Date",
             ],
           ],
           body: tableData,
@@ -282,10 +294,21 @@ export default function PrintMap() {
           task.studentId?.studentNo || "N/A",
           task.studentId?.school || "N/A",
           task.pickupStatus || "N/A",
-          task.deliveryStatus || "N/A",
-          task.assignmentDate
-            ? new Date(task.assignmentDate).toLocaleDateString()
+          task.pickupTime
+            ? new Date(task.pickupTime).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })
             : "N/A",
+          task.deliveryTime
+            ? new Date(task.deliveryTime).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })
+            : "N/A",
+          task.deliveryStatus || "N/A",
         ]);
 
         autoTable(doc, {
@@ -297,8 +320,9 @@ export default function PrintMap() {
               "Student No",
               "School",
               "Pickup Status",
+              "Pickup Time",
+              "Delivery Time",
               "Delivery Status",
-              "Date",
             ],
           ],
           body: tableData,
@@ -644,6 +668,12 @@ export default function PrintMap() {
                               Pickup
                             </th>
                             <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Pickup Time
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Delivery Time
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
                               Delivery
                             </th>
                           </tr>
@@ -674,6 +704,28 @@ export default function PrintMap() {
                                 >
                                   {task.pickupStatus}
                                 </span>
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {task.pickupTime
+                                  ? new Date(
+                                      task.pickupTime
+                                    ).toLocaleTimeString("en-US", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                    })
+                                  : "N/A"}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {task.deliveryTime
+                                  ? new Date(
+                                      task.deliveryTime
+                                    ).toLocaleTimeString("en-US", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                    })
+                                  : "N/A"}
                               </td>
                               <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
                                 <span
@@ -786,6 +838,12 @@ export default function PrintMap() {
                               Pickup
                             </th>
                             <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Pickup Time
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Delivery Time
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
                               Delivery
                             </th>
                           </tr>
@@ -818,8 +876,30 @@ export default function PrintMap() {
                                 </span>
                               </td>
                               <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {task.pickupTime
+                                  ? new Date(
+                                      task.pickupTime
+                                    ).toLocaleTimeString("en-US", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                    })
+                                  : "N/A"}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {task.deliveryTime
+                                  ? new Date(
+                                      task.deliveryTime
+                                    ).toLocaleTimeString("en-US", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                    })
+                                  : "N/A"}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
                                 <span
-                                  className={`px-2 py-1 rounded-full text-xs ${
+                                  className={`px-2 py-2 text-xs ${
                                     task.deliveryStatus === "Completed"
                                       ? "bg-green-100 text-green-800"
                                       : "bg-yellow-100 text-yellow-800"
