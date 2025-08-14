@@ -433,14 +433,28 @@ export default function Dashboard() {
                           </span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">D/I</span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                           <span className="text-xs md:text-sm">
                             Student Number
                           </span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                           <span className="text-xs md:text-sm">
-                            Student Name
+                            Student Given Name
                           </span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">
+                            Student Family Name
+                          </span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">Address</span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">City</span>
                         </th>
                         {!showCompletedTasks && (
                           <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
@@ -460,7 +474,7 @@ export default function Dashboard() {
                       {isLoading ? (
                         <tr className="border-gray-200">
                           <td
-                            colSpan={8}
+                            colSpan={12}
                             className="text-gray-700 text-center py-8 px-4 border-b border-gray-200 text-sm"
                           >
                             <div className="flex items-center justify-center">
@@ -507,10 +521,22 @@ export default function Dashboard() {
                               {assignment.studentId?.arrivalTime}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              {assignment.studentId?.dOrI}
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               {assignment.studentId?.studentNo}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               {assignment.studentId?.studentGivenName}
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              {assignment.studentId?.studentFamilyName}
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              {assignment.studentId?.address}
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              {assignment.studentId?.city}
                             </td>
                             {!showCompletedTasks && (
                               <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
@@ -583,7 +609,7 @@ export default function Dashboard() {
                       ) : (
                         <tr className="border-gray-200">
                           <td
-                            colSpan={8}
+                            colSpan={12}
                             className="text-gray-700 text-center py-8 px-4 border-b border-gray-200 text-sm"
                           >
                             {totalAssignments === 0

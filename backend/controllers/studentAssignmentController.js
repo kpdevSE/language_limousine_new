@@ -103,7 +103,7 @@ const assignStudents = async (req, res) => {
     })
       .populate(
         "studentId",
-        "studentNo studentGivenName studentFamilyName arrivalTime flight"
+        "studentNo studentGivenName studentFamilyName arrivalTime flight address city"
       )
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -154,7 +154,7 @@ const getAssignments = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school"
+          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -307,7 +307,7 @@ const updateAssignment = async (req, res) => {
     const populatedAssignment = await StudentAssignment.findById(assignmentId)
       .populate(
         "studentId",
-        "studentNo studentGivenName studentFamilyName arrivalTime flight"
+        "studentNo studentGivenName studentFamilyName arrivalTime flight address city"
       )
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -385,7 +385,7 @@ const getDriverAssignments = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school"
+          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -460,7 +460,7 @@ const getDriverCompletedTasks = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school"
+          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -528,7 +528,7 @@ const updatePickupStatus = async (req, res) => {
     const populatedAssignment = await StudentAssignment.findById(assignmentId)
       .populate(
         "studentId",
-        "studentNo studentGivenName studentFamilyName arrivalTime flight"
+        "studentNo studentGivenName studentFamilyName arrivalTime flight address city"
       )
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber");
@@ -584,7 +584,7 @@ const updateDeliveryStatus = async (req, res) => {
     const populatedAssignment = await StudentAssignment.findById(assignmentId)
       .populate(
         "studentId",
-        "studentNo studentGivenName studentFamilyName arrivalTime flight"
+        "studentNo studentGivenName studentFamilyName arrivalTime flight address city"
       )
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber");
