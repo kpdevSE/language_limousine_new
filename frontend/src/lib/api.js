@@ -14,7 +14,9 @@ api.interceptors.request.use(
   (config) => {
     // Check both localStorage (for admin) and sessionStorage (for other roles)
     const token =
-      localStorage.getItem("token") || sessionStorage.getItem("user_token");
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("user_token") ||
+      sessionStorage.getItem("admin_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -37,6 +39,8 @@ api.interceptors.response.use(
       localStorage.removeItem("user");
       sessionStorage.removeItem("user_token");
       sessionStorage.removeItem("user_data");
+      sessionStorage.removeItem("admin_token");
+      sessionStorage.removeItem("admin_user");
       window.location.href = "/";
     }
     return Promise.reject(error);
@@ -231,6 +235,10 @@ export const userAPI = {
   // Public admin registration
   registerAdmin: (data) => {
     return api.post("/users/register-admin", data);
+  },
+  // Get user statistics
+  getUserStats: () => {
+    return api.get("/users/stats");
   },
 };
 
