@@ -35,6 +35,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Admins from "./pages/admin/pages/Users/Admins";
+import AdminRegister from "./pages/admin/AdminRegister";
 
 function App() {
   return (
@@ -57,6 +58,9 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/aboutus" element={<AboutUs />} />
           <Route path="/privacy" element={<Privacy />} />
+
+          {/* Public Admin Registration */}
+          <Route path="/admin/register" element={<AdminRegister />} />
 
           {/* Protected Admin Pages */}
           <Route

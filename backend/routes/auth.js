@@ -23,7 +23,23 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// Validation middleware
+// Validation middleware for admin registration (simplified)
+const validateAdminRegistration = [
+  body("username")
+    .trim()
+    .isLength({ min: 3 })
+    .withMessage("Username must be at least 3 characters long"),
+  body("email")
+    .isEmail()
+    .normalizeEmail()
+    .withMessage("Please enter a valid email"),
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+  handleValidationErrors,
+];
+
+// Validation middleware for other user types
 const validateRegistration = [
   body("username")
     .trim()
@@ -73,7 +89,7 @@ const validateProfileUpdate = [
 ];
 
 // Admin Registration Route
-router.post("/register", validateRegistration, adminRegister);
+router.post("/register", validateAdminRegistration, adminRegister);
 
 // Admin Login Route
 router.post("/login", validateLogin, adminLogin);

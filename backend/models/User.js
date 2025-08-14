@@ -25,10 +25,79 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters long"],
     },
+    firstName: {
+      type: String,
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
-      required: [true, "Gender is required"],
+      default: "Other",
+    },
+    dateOfBirth: {
+      type: Date,
+    },
+    address: {
+      type: String,
+      trim: true,
+    },
+    city: {
+      type: String,
+      trim: true,
+    },
+    state: {
+      type: String,
+      trim: true,
+    },
+    zipCode: {
+      type: String,
+      trim: true,
+    },
+    country: {
+      type: String,
+      trim: true,
+    },
+    companyName: {
+      type: String,
+      trim: true,
+    },
+    position: {
+      type: String,
+      trim: true,
+    },
+    department: {
+      type: String,
+      trim: true,
+    },
+    employeeId: {
+      type: String,
+      trim: true,
+    },
+    emergencyContact: {
+      name: {
+        type: String,
+        trim: true,
+      },
+      relationship: {
+        type: String,
+        trim: true,
+      },
+      phone: {
+        type: String,
+        trim: true,
+      },
+      email: {
+        type: String,
+        trim: true,
+      },
     },
     // Greeter specific fields
     greeterID: {
@@ -152,6 +221,8 @@ userSchema.pre("save", function (next) {
     if (this.role === "Driver") {
       this.status = "Off Duty";
     } else if (this.role === "Subdriver") {
+      this.status = "Active";
+    } else if (this.role === "Admin") {
       this.status = "Active";
     }
   }

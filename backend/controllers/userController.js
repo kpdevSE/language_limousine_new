@@ -667,6 +667,62 @@ const addAdmin = async (req, res) => {
   }
 };
 
+// Public admin registration (no authentication required)
+const registerAdmin = async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Basic validation
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Required fields: username, email, and password",
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User with this email or username already exists",
+      });
+    }
+
+    // Create new admin user as active
+    const newAdmin = new User({
+      username,
+      email,
+      password,
+      role: "Admin",
+      gender: "Other", // Default gender for admin
+      isActive: true, // Active immediately
+      status: "Active", // Active status
+      createdBy: null, // No creator for public registration
+    });
+
+    await newAdmin.save();
+
+    // Return success response (without password)
+    const adminData = newAdmin.toJSON();
+    delete adminData.password;
+
+    res.status(201).json({
+      success: true,
+      message: "Admin registration successful! You can now log in.",
+      data: { admin: adminData },
+    });
+  } catch (error) {
+    console.error("Error registering admin:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   addUser,
   getAllUsers,
@@ -678,4 +734,5 @@ module.exports = {
   getUserStats,
   getAllAdmins,
   addAdmin,
+  registerAdmin,
 };

@@ -12,13 +12,13 @@ const generateToken = (userId) => {
 // Admin Register Controller
 const adminRegister = async (req, res) => {
   try {
-    const { username, email, password, gender, role } = req.body;
+    const { username, email, password } = req.body;
 
     // Validation
-    if (!username || !email || !password || !gender || !role) {
+    if (!username || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        message: "Username, email, and password are required",
       });
     }
 
@@ -34,32 +34,15 @@ const adminRegister = async (req, res) => {
       });
     }
 
-    // Validate role
-    const validRoles = ["Admin", "Greeter", "Driver", "Subdriver", "School"];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid role. Must be one of: Admin, Greeter, Driver, Subdriver, School",
-      });
-    }
-
-    // Validate gender
-    const validGenders = ["Male", "Female", "Other"];
-    if (!validGenders.includes(gender)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid gender. Must be one of: Male, Female, Other",
-      });
-    }
-
-    // Create new user
+    // Create new admin user as active
     const newUser = new User({
       username,
       email,
       password,
-      gender,
-      role,
+      role: "Admin",
+      gender: "Other", // Default gender for admin
+      isActive: true, // Active immediately
+      status: "Active", // Active status
       createdBy: req.user ? req.user._id : null, // If admin is creating the user
     });
 
@@ -71,7 +54,7 @@ const adminRegister = async (req, res) => {
     // Return success response
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: "Admin registered successfully",
       data: {
         user: {
           id: newUser._id,

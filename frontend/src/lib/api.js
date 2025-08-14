@@ -228,6 +228,10 @@ export const userAPI = {
   addAdmin: (data) => {
     return api.post("/users/admins", data);
   },
+  // Public admin registration
+  registerAdmin: (data) => {
+    return api.post("/users/register-admin", data);
+  },
 };
 
 // Auth API functions

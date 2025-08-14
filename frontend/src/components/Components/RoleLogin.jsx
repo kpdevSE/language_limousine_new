@@ -239,6 +239,17 @@ export default function RoleLoginDialog() {
             <DialogDescription className="text-gray-300">
               Select your role and enter your credentials
             </DialogDescription>
+            <div className="text-center">
+              <p className="text-gray-400 text-sm mb-2">
+                New admin?{" "}
+                <a
+                  href="/admin/register"
+                  className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                >
+                  Register here
+                </a>
+              </p>
+            </div>
           </DialogHeader>
           <div className="space-y-4">
             {success && (

@@ -12,6 +12,7 @@ const {
   getUserStats,
   getAllAdmins,
   addAdmin,
+  registerAdmin,
 } = require("../controllers/userController");
 const { authenticateToken, requireAdmin } = require("../middleware/auth");
 
@@ -124,6 +125,26 @@ const validateUpdateUser = [
     .withMessage("isActive must be a boolean"),
   handleValidationErrors,
 ];
+
+// Public admin registration route (no authentication required)
+router.post(
+  "/register-admin",
+  [
+    body("username")
+      .trim()
+      .isLength({ min: 3 })
+      .withMessage("Username must be at least 3 characters long"),
+    body("email")
+      .isEmail()
+      .normalizeEmail()
+      .withMessage("Please enter a valid email"),
+    body("password")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters long"),
+    handleValidationErrors,
+  ],
+  registerAdmin
+);
 
 // All routes require admin authentication
 router.use(authenticateToken, requireAdmin);
