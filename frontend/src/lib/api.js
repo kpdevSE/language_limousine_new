@@ -151,6 +151,11 @@ export const studentAPI = {
     return api.get("/students", { params });
   },
 
+  // Get students by school (for school users)
+  getStudentsBySchool: (schoolUsername, params = {}) => {
+    return api.get(`/school-students/${schoolUsername}`, { params });
+  },
+
   // Get student by ID
   getStudentById: (studentId) => {
     return api.get(`/students/${studentId}`);

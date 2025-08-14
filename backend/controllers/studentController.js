@@ -36,15 +36,21 @@ const addStudent = async (req, res) => {
 
     for (const field of required) {
       if (!req.body[field]) {
-        return res.status(400).json({ success: false, message: `${field} is required` });
+        return res
+          .status(400)
+          .json({ success: false, message: `${field} is required` });
       }
     }
 
     if (!["D", "I"].includes(req.body.dOrI)) {
-      return res.status(400).json({ success: false, message: "dOrI must be 'D' or 'I'" });
+      return res
+        .status(400)
+        .json({ success: false, message: "dOrI must be 'D' or 'I'" });
     }
     if (!["M", "F"].includes(req.body.mOrF)) {
-      return res.status(400).json({ success: false, message: "mOrF must be 'M' or 'F'" });
+      return res
+        .status(400)
+        .json({ success: false, message: "mOrF must be 'M' or 'F'" });
     }
 
     const exists = await Student.findOne({
@@ -53,7 +59,10 @@ const addStudent = async (req, res) => {
       date: req.body.date,
     });
     if (exists) {
-      return res.status(400).json({ success: false, message: "Student already exists for this date" });
+      return res.status(400).json({
+        success: false,
+        message: "Student already exists for this date",
+      });
     }
 
     const createdBy = req.user?._id;
@@ -62,7 +71,9 @@ const addStudent = async (req, res) => {
     return res.status(201).json({ success: true, data: { student } });
   } catch (err) {
     console.error("addStudent error", err);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -109,7 +120,9 @@ const getAllStudents = async (req, res) => {
     });
   } catch (err) {
     console.error("getAllStudents error", err);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -118,12 +131,16 @@ const getStudentById = async (req, res) => {
   try {
     const student = await Student.findById(req.params.studentId);
     if (!student || !student.isActive) {
-      return res.status(404).json({ success: false, message: "Student not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
     }
     return res.json({ success: true, data: { student } });
   } catch (err) {
     console.error("getStudentById error", err);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -132,14 +149,20 @@ const updateStudent = async (req, res) => {
   try {
     const student = await Student.findById(req.params.studentId);
     if (!student || !student.isActive) {
-      return res.status(404).json({ success: false, message: "Student not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
     }
 
     if (req.body.dOrI && !["D", "I"].includes(req.body.dOrI)) {
-      return res.status(400).json({ success: false, message: "dOrI must be 'D' or 'I'" });
+      return res
+        .status(400)
+        .json({ success: false, message: "dOrI must be 'D' or 'I'" });
     }
     if (req.body.mOrF && !["M", "F"].includes(req.body.mOrF)) {
-      return res.status(400).json({ success: false, message: "mOrF must be 'M' or 'F'" });
+      return res
+        .status(400)
+        .json({ success: false, message: "mOrF must be 'M' or 'F'" });
     }
 
     if (req.body.studentNo && req.body.studentNo !== student.studentNo) {
@@ -150,7 +173,9 @@ const updateStudent = async (req, res) => {
         _id: { $ne: student._id },
       });
       if (dup) {
-        return res.status(400).json({ success: false, message: "Duplicate student for date" });
+        return res
+          .status(400)
+          .json({ success: false, message: "Duplicate student for date" });
       }
     }
 
@@ -159,7 +184,9 @@ const updateStudent = async (req, res) => {
     return res.json({ success: true, data: { student: saved } });
   } catch (err) {
     console.error("updateStudent error", err);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -168,14 +195,72 @@ const deleteStudent = async (req, res) => {
   try {
     const student = await Student.findById(req.params.studentId);
     if (!student || !student.isActive) {
-      return res.status(404).json({ success: false, message: "Student not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
     }
     student.isActive = false;
     await student.save();
     return res.json({ success: true, message: "Student deleted" });
   } catch (err) {
     console.error("deleteStudent error", err);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+// GET /api/students/school/:schoolUsername - Get students by school username (for school users)
+const getStudentsBySchool = async (req, res) => {
+  try {
+    const { schoolUsername } = req.params;
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "10", 10);
+    const search = req.query.search || "";
+    const dateQuery = normalizeDateQuery(req.query.date);
+
+    const query = {
+      isActive: true,
+      school: schoolUsername, // Filter by school username
+    };
+
+    if (dateQuery) {
+      query.date = dateQuery;
+    }
+
+    if (search) {
+      query.$or = [
+        { trip: { $regex: search, $options: "i" } },
+        { studentNo: { $regex: search, $options: "i" } },
+        { studentGivenName: { $regex: search, $options: "i" } },
+        { studentFamilyName: { $regex: search, $options: "i" } },
+        { flight: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+    const [students, total] = await Promise.all([
+      Student.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Student.countDocuments(query),
+    ]);
+
+    return res.json({
+      success: true,
+      data: {
+        students,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          totalStudents: total,
+          limit,
+        },
+      },
+    });
+  } catch (err) {
+    console.error("getStudentsBySchool error", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -184,14 +269,22 @@ const exportStudentsPdf = async (req, res) => {
   try {
     const dateQuery = normalizeDateQuery(req.query.date);
     if (!dateQuery) {
-      return res.status(400).json({ success: false, message: "date query param is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "date query param is required" });
     }
 
-    const students = await Student.find({ isActive: true, date: dateQuery }).sort({ studentFamilyName: 1, studentGivenName: 1 });
+    const students = await Student.find({
+      isActive: true,
+      date: dateQuery,
+    }).sort({ studentFamilyName: 1, studentGivenName: 1 });
 
     const doc = new PDFDocument({ margin: 40 });
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=students_${dateQuery.replace(/\//g, "-")}.pdf`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=students_${dateQuery.replace(/\//g, "-")}.pdf`
+    );
 
     doc.fontSize(18).text(`Students - ${dateQuery}`, { align: "center" });
     doc.moveDown();
@@ -229,7 +322,9 @@ const exportStudentsPdf = async (req, res) => {
     doc.pipe(res);
   } catch (err) {
     console.error("exportStudentsPdf error", err);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -240,4 +335,5 @@ module.exports = {
   updateStudent,
   deleteStudent,
   exportStudentsPdf,
+  getStudentsBySchool,
 };

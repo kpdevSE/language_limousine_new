@@ -92,6 +92,34 @@ const requireAdmin = async (req, res, next) => {
   }
 };
 
+// School Authorization Middleware
+const requireSchool = async (req, res, next) => {
+  try {
+    // Check if user exists and is a school
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    if (req.user.role !== "School") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. School privileges required",
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("School authorization error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Authorization failed",
+    });
+  }
+};
+
 // Optional Authentication Middleware (for routes that can work with or without auth)
 const optionalAuth = async (req, res, next) => {
   try {
@@ -120,5 +148,6 @@ const optionalAuth = async (req, res, next) => {
 module.exports = {
   authenticateToken,
   requireAdmin,
+  requireSchool,
   optionalAuth,
 };

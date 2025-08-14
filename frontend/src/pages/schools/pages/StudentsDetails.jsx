@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   User,
@@ -6,25 +6,95 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  Loader,
 } from "lucide-react";
 import Sidebar from "../components/Siebar";
+import { studentAPI } from "@/lib/api";
+import { toast } from "react-toastify";
 
 export default function StudentDetails() {
-  const [selectedDate, setSelectedDate] = useState("08/04/2025");
+  const [selectedDate, setSelectedDate] = useState(""); // Empty by default to show all students
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [studentsData, setStudentsData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [schoolUsername, setSchoolUsername] = useState("");
 
-  // Sample empty data to match the "No students found" state
-  const studentsData = [];
-
-  const totalPages = Math.ceil(studentsData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = studentsData.slice(startIndex, endIndex);
 
+  // Get school username from session storage
+  useEffect(() => {
+    const userData = sessionStorage.getItem("user_data");
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.role === "School") {
+          setSchoolUsername(user.username);
+        }
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+  }, []);
+
+  // Fetch students when component mounts or filters change
+  useEffect(() => {
+    if (schoolUsername) {
+      fetchStudents();
+    }
+  }, [schoolUsername, selectedDate, currentPage, itemsPerPage, searchTerm]);
+
+  const fetchStudents = async () => {
+    if (!schoolUsername) return;
+
+    setIsLoading(true);
+    try {
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchTerm,
+      };
+
+      // Only add date parameter if a date is selected
+      if (selectedDate && selectedDate.trim() !== "") {
+        params.date = selectedDate;
+      }
+
+      const response = await studentAPI.getStudentsBySchool(
+        schoolUsername,
+        params
+      );
+
+      if (response.data.success) {
+        setStudentsData(response.data.data.students);
+        setTotalStudents(response.data.data.pagination.totalStudents);
+        setTotalPages(response.data.data.pagination.totalPages);
+      }
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      toast.error("Failed to fetch students");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleFilter = () => {
-    console.log("Filter applied for date:", selectedDate);
-    // Add filter logic here
+    setCurrentPage(1); // Reset to first page when filtering
+    fetchStudents();
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -49,7 +119,7 @@ export default function StudentDetails() {
                   Student Details
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Search and view student information by date
+                  View all students or filter by specific date
                 </p>
               </div>
             </div>
@@ -57,8 +127,10 @@ export default function StudentDetails() {
             {/* User Profile */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-gray-900">Admin</p>
-                <p className="text-xs text-gray-500">Administrator</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {schoolUsername || "School User"}
+                </p>
+                <p className="text-xs text-gray-500">School Administrator</p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer">
                 <User className="h-5 w-5 text-white" />
@@ -85,21 +157,53 @@ export default function StudentDetails() {
                 <div className="flex-1 space-y-2">
                   <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Select the Date
+                    Select the Date (Optional)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      placeholder="MM/DD/YYYY (leave empty for all students)"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    {selectedDate && selectedDate.trim() !== "" && (
+                      <button
+                        onClick={() => {
+                          setSelectedDate("");
+                          setCurrentPage(1);
+                        }}
+                        className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                        title="Clear date filter"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1 space-y-2">
+                  <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <Search className="h-4 w-4" />
+                    Search Students
                   </label>
                   <input
                     type="text"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    placeholder="MM/DD/YYYY"
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    placeholder="Search by name, number, trip, or flight..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <button
                   onClick={handleFilter}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium px-8 py-2 h-10 rounded-md transition-colors"
+                  disabled={isLoading}
+                  className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium px-8 py-2 h-10 rounded-md transition-colors"
                 >
-                  Filter
+                  {isLoading ? (
+                    <Loader className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Filter"
+                  )}
                 </button>
               </div>
             </div>
@@ -112,7 +216,9 @@ export default function StudentDetails() {
                 Student Results
               </h2>
               <p className="text-sm text-gray-500">
-                Search results for {selectedDate}
+                {selectedDate && selectedDate.trim() !== ""
+                  ? `Students for ${selectedDate}`
+                  : "All students"}
               </p>
             </div>
 
@@ -170,20 +276,89 @@ export default function StudentDetails() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td colSpan="15" className="p-8 text-center">
-                        <div className="flex flex-col items-center gap-3 text-gray-500">
-                          <Search className="h-12 w-12 text-gray-300" />
-                          <p className="text-lg font-medium">
-                            No students found.
-                          </p>
-                          <p className="text-sm">
-                            Try selecting a different date or check if students
-                            are registered for this date.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan="15" className="p-8 text-center">
+                          <div className="flex flex-col items-center gap-3 text-gray-500">
+                            <Loader className="h-12 w-12 text-gray-300 animate-spin" />
+                            <p className="text-lg font-medium">
+                              Loading students...
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : currentData.length === 0 ? (
+                      <tr>
+                        <td colSpan="15" className="p-8 text-center">
+                          <div className="flex flex-col items-center gap-3 text-gray-500">
+                            <Search className="h-12 w-12 text-gray-300" />
+                            <p className="text-lg font-medium">
+                              No students found.
+                            </p>
+                            <p className="text-sm">
+                              {selectedDate && selectedDate.trim() !== ""
+                                ? "Try selecting a different date or check if students are registered for this date."
+                                : "No students are currently registered for this school."}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      currentData.map((student, index) => (
+                        <tr
+                          key={student._id}
+                          className="border-gray-200 hover:bg-gray-50"
+                        >
+                          <td className="p-3 border-r border-gray-200">
+                            <button className="text-blue-600 hover:text-blue-800 text-xs">
+                              View
+                            </button>
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {startIndex + index + 1}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.actualArrivalTime || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.arrivalTime || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.flight || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.dOrI || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.mOrF || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.studentNo || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.studentGivenName || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.studentFamilyName || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.hostGivenName || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.hostFamilyName || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.phone || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.address || "N/A"}
+                          </td>
+                          <td className="p-3 text-xs text-gray-800">
+                            {student.city || "N/A"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -191,27 +366,52 @@ export default function StudentDetails() {
               {/* Pagination */}
               <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
                 <div className="text-sm text-gray-500">
-                  Showing 0 to 0 of 0 entries
+                  Showing {startIndex + 1} to{" "}
+                  {Math.min(endIndex, totalStudents)} of {totalStudents} entries
                 </div>
                 <div className="flex gap-2">
                   <button
-                    disabled={true}
-                    className="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-400 cursor-not-allowed"
+                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Previous
                   </button>
 
-                  <button
-                    disabled={true}
-                    className="w-8 h-8 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-400 cursor-not-allowed"
-                  >
-                    1
-                  </button>
+                  {Array.from(
+                    { length: Math.min(5, totalPages) },
+                    (_, i) => i + 1
+                  ).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`w-8 h-8 text-sm border border-gray-300 rounded-md ${
+                        page === currentPage
+                          ? "bg-blue-500 text-white border-blue-500"
+                          : "bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  {totalPages > 5 && (
+                    <>
+                      <span className="px-2 py-1 text-gray-500">...</span>
+                      <button
+                        onClick={() => handlePageChange(totalPages)}
+                        className="w-8 h-8 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50"
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
 
                   <button
-                    disabled={true}
-                    className="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-400 cursor-not-allowed"
+                    disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
                   >
                     Next
                     <ChevronRight className="h-4 w-4" />
