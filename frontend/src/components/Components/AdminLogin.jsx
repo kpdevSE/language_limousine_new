@@ -292,7 +292,6 @@ export default function MultiRoleLoginDialog() {
     }
   };
 
-  // Get role configuration for logged in user
   const getUserRoleConfig = () => {
     if (userSession?.user?.role) {
       return ROLES[userSession.user.role] || ROLES.Admin;
@@ -300,7 +299,6 @@ export default function MultiRoleLoginDialog() {
     return ROLES.Admin;
   };
 
-  // If user is logged in, show logout option instead
   if (isLoggedIn && userSession) {
     const roleConfig = getUserRoleConfig();
     const RoleIcon = roleConfig.icon;

@@ -1,28 +1,67 @@
 import Sidebar from "../components/Sidebar";
-import { useState } from "react";
-import { Search, User, Calendar, Printer } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Search,
+  User,
+  Calendar,
+  Printer,
+  Download,
+  FileText,
+  Users,
+  CheckCircle,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
+  Car,
+  Loader,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { assignmentAPI, userAPI } from "@/lib/api";
+import { toast } from "react-toastify";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function PrintMap() {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedDriver, setSelectedDriver] = useState("");
   const [selectedSubDriver, setSelectedSubDriver] = useState("");
+  const [drivers, setDrivers] = useState([]);
+  const [subDrivers, setSubDrivers] = useState([]);
+  const [driverData, setDriverData] = useState(null);
+  const [subDriverData, setSubDriverData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
-  // Sample driver data - replace with your actual data source
-  const drivers = [
-    { id: 1, name: "Driver 1" },
-    { id: 2, name: "Driver 2" },
-    { id: 3, name: "Driver 3" },
-  ];
+  // Fetch drivers and subdrivers on component mount
+  useEffect(() => {
+    fetchDriversAndSubdrivers();
+  }, []);
 
-  const subDrivers = [
-    { id: 1, name: "Sub-Driver 1" },
-    { id: 2, name: "Sub-Driver 2" },
-    { id: 3, name: "Sub-Driver 3" },
-  ];
+  const fetchDriversAndSubdrivers = async () => {
+    try {
+      setIsLoading(true);
+      const [driversResponse, subDriversResponse] = await Promise.all([
+        userAPI.getUsersByRole("Driver"),
+        userAPI.getUsersByRole("Subdriver"),
+      ]);
+
+      if (driversResponse.data.success) {
+        setDrivers(driversResponse.data.data.users);
+      }
+      if (subDriversResponse.data.success) {
+        setSubDrivers(subDriversResponse.data.data.users);
+      }
+    } catch (error) {
+      console.error("Error fetching drivers and subdrivers:", error);
+      toast.error("Failed to fetch drivers and subdrivers");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
@@ -36,13 +75,271 @@ export default function PrintMap() {
     setSelectedSubDriver(e.target.value);
   };
 
+  const fetchDriverData = async () => {
+    if (!selectedDate || !selectedDriver) {
+      toast.error("Please select both date and driver");
+      return;
+    }
+
+    try {
+      setIsLoadingData(true);
+      const driver = drivers.find((d) => d._id === selectedDriver);
+      if (!driver) return;
+
+      // Fetch completed tasks for the selected driver and date using admin endpoint
+      const response = await assignmentAPI.getAssignments({
+        date: selectedDate,
+        driverId: selectedDriver,
+      });
+
+      if (response.data.success) {
+        // Filter for completed tasks on the frontend
+        const completedTasks = response.data.data.assignments.filter(
+          (task) =>
+            task.pickupStatus === "Completed" ||
+            task.deliveryStatus === "Completed"
+        );
+
+        console.log("📊 Setting driver data:", {
+          driver,
+          tasks: completedTasks,
+          date: selectedDate,
+        });
+        setDriverData({
+          driver,
+          tasks: completedTasks,
+          date: selectedDate,
+        });
+        console.log("✅ Driver data set successfully");
+      }
+    } catch (error) {
+      console.error("Error fetching driver data:", error);
+      toast.error("Failed to fetch driver data");
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const fetchSubDriverData = async () => {
+    if (!selectedDate || !selectedSubDriver) {
+      toast.error("Please select both date and sub-driver");
+      return;
+    }
+
+    try {
+      setIsLoadingData(true);
+      const subDriver = subDrivers.find((sd) => sd._id === selectedSubDriver);
+      if (!subDriver) return;
+
+      // Fetch completed tasks for the selected sub-driver and date using admin endpoint
+      const response = await assignmentAPI.getAssignments({
+        date: selectedDate,
+        subdriverId: selectedSubDriver,
+      });
+
+      if (response.data.success) {
+        // Filter for completed tasks on the frontend
+        const completedTasks = response.data.data.assignments.filter(
+          (task) =>
+            task.pickupStatus === "Completed" ||
+            task.deliveryStatus === "Completed"
+        );
+
+        console.log("📊 Setting subdriver data:", {
+          subDriver,
+          tasks: completedTasks,
+          date: selectedDate,
+        });
+        setSubDriverData({
+          subDriver,
+          tasks: completedTasks,
+          date: selectedDate,
+        });
+        console.log("✅ Subdriver data set successfully");
+      }
+    } catch (error) {
+      console.error("Error fetching sub-driver data:", error);
+      toast.error("Failed to fetch sub-driver data");
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const generateDriverReport = () => {
+    console.log("🚀 generateDriverReport called");
+    console.log("📊 driverData:", driverData);
+
+    if (!driverData) {
+      console.error("❌ No driver data available");
+      toast.error("No driver data available for PDF generation");
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      const { driver, tasks, date } = driverData;
+
+      console.log("📋 Generating PDF for:", {
+        driver,
+        tasks: tasks?.length,
+        date,
+      });
+
+      // Header
+      doc.setFontSize(20);
+      doc.text("Driver Completed Tasks Report", 105, 20, { align: "center" });
+
+      doc.setFontSize(12);
+      doc.text(`Date: ${date}`, 20, 35);
+      doc.text(`Driver: ${driver.username}`, 20, 45);
+      doc.text(`Driver ID: ${driver.driverID || "N/A"}`, 20, 55);
+      doc.text(`Vehicle: ${driver.vehicleNumber || "N/A"}`, 20, 65);
+
+      // Tasks table
+      if (tasks && tasks.length > 0) {
+        const tableData = tasks.map((task, index) => [
+          index + 1,
+          task.studentId?.studentGivenName && task.studentId?.studentFamilyName
+            ? `${task.studentId.studentGivenName} ${task.studentId.studentFamilyName}`
+            : "N/A",
+          task.studentId?.studentNo || "N/A",
+          task.studentId?.school || "N/A",
+          task.pickupStatus || "N/A",
+          task.deliveryStatus || "N/A",
+          task.assignmentDate
+            ? new Date(task.assignmentDate).toLocaleDateString()
+            : "N/A",
+        ]);
+
+        autoTable(doc, {
+          startY: 80,
+          head: [
+            [
+              "#",
+              "Student Name",
+              "Student No",
+              "School",
+              "Pickup Status",
+              "Delivery Status",
+              "Date",
+            ],
+          ],
+          body: tableData,
+          theme: "grid",
+          headStyles: { fillColor: [59, 130, 246] },
+        });
+      } else {
+        doc.text("No completed tasks found for this date", 20, 80);
+      }
+
+      doc.save(`driver-report-${driver.username}-${date}.pdf`);
+      console.log("✅ PDF generated and saved successfully");
+      toast.success("PDF report generated successfully!");
+    } catch (error) {
+      console.error("❌ Error generating PDF:", error);
+      toast.error("Failed to generate PDF report");
+    }
+  };
+
+  const generateSubDriverReport = () => {
+    console.log("🚀 generateSubDriverReport called");
+    console.log("📊 subDriverData:", subDriverData);
+
+    if (!subDriverData) {
+      console.error("❌ No subdriver data available");
+      toast.error("No subdriver data available for PDF generation");
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      const { subDriver, tasks, date } = subDriverData;
+
+      console.log("📋 Generating PDF for:", {
+        subDriver,
+        tasks: tasks?.length,
+        date,
+      });
+
+      // Header
+      doc.setFontSize(20);
+      doc.text("Sub-Driver Completed Tasks Report", 105, 20, {
+        align: "center",
+      });
+
+      doc.setFontSize(12);
+      doc.text(`Date: ${date}`, 20, 35);
+      doc.text(`Sub-Driver: ${subDriver.username}`, 20, 45);
+      doc.text(`Sub-Driver ID: ${subDriver.subdriverID || "N/A"}`, 20, 55);
+
+      // Tasks table
+      if (tasks && tasks.length > 0) {
+        const tableData = tasks.map((task, index) => [
+          index + 1,
+          task.studentId?.studentGivenName && task.studentId?.studentFamilyName
+            ? `${task.studentId.studentGivenName} ${task.studentId.studentFamilyName}`
+            : "N/A",
+          task.studentId?.studentNo || "N/A",
+          task.studentId?.school || "N/A",
+          task.pickupStatus || "N/A",
+          task.deliveryStatus || "N/A",
+          task.assignmentDate
+            ? new Date(task.assignmentDate).toLocaleDateString()
+            : "N/A",
+        ]);
+
+        autoTable(doc, {
+          startY: 80,
+          head: [
+            [
+              "#",
+              "Student Name",
+              "Student No",
+              "School",
+              "Pickup Status",
+              "Delivery Status",
+              "Date",
+            ],
+          ],
+          body: tableData,
+          theme: "grid",
+          headStyles: { fillColor: [59, 130, 246] },
+        });
+      } else {
+        doc.text("No completed tasks found for this date", 20, 80);
+      }
+
+      doc.save(`subdriver-report-${subDriver.username}-${date}.pdf`);
+      console.log("✅ PDF generated and saved successfully");
+      toast.success("PDF report generated successfully!");
+    } catch (error) {
+      console.error("❌ Error generating PDF:", error);
+      toast.error("Failed to generate PDF report");
+    }
+  };
+
   const handlePrint = (type) => {
-    console.log(`Printing ${type} data for:`, {
-      date: selectedDate,
-      driver: selectedDriver,
-      subDriver: selectedSubDriver,
-    });
-    // Add your print logic here
+    if (type === "driver") {
+      generateDriverReport();
+    } else if (type === "subdriver") {
+      generateSubDriverReport();
+    }
+  };
+
+  // Test PDF generation function
+  const testPDFGeneration = () => {
+    console.log("🧪 Testing PDF generation...");
+    try {
+      const doc = new jsPDF();
+      doc.text("Test PDF Generation", 20, 20);
+      doc.text("If you can see this, PDF generation is working!", 20, 40);
+      doc.save("test-pdf-generation.pdf");
+      console.log("✅ Test PDF generated successfully");
+      toast.success("Test PDF generated successfully!");
+    } catch (error) {
+      console.error("❌ Test PDF generation failed:", error);
+      toast.error("Test PDF generation failed");
+    }
   };
 
   return (
@@ -78,9 +375,17 @@ export default function PrintMap() {
         <div className="p-6 overflow-x-hidden bg-white">
           <div className="max-w-7xl mx-auto">
             {/* Page Title */}
-            <h1 className="text-2xl font-semibold text-blue-500 mb-6">
-              Print Student Data
-            </h1>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-semibold text-blue-500">
+                Print Student Data
+              </h1>
+              <Button
+                onClick={testPDFGeneration}
+                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
+              >
+                🧪 Test PDF
+              </Button>
+            </div>
 
             {/* Driver Selection Form */}
             <Card className="bg-white border-gray-200 mb-8 shadow-sm">
@@ -114,24 +419,47 @@ export default function PrintMap() {
                         value={selectedDriver}
                         onChange={handleDriverChange}
                         className="bg-white text-gray-900 border border-gray-300 focus:border-blue-500 focus:ring-blue-500 w-full h-12 text-sm rounded-lg px-3"
+                        disabled={isLoading}
                       >
                         <option value="">Select Driver</option>
                         {drivers.map((driver) => (
-                          <option key={driver.id} value={driver.name}>
-                            {driver.name}
+                          <option key={driver._id} value={driver._id}>
+                            {driver.username}{" "}
+                            {driver.driverID ? `(${driver.driverID})` : ""}
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    {/* Fetch Data Button */}
+                    <div>
+                      <Button
+                        onClick={fetchDriverData}
+                        disabled={
+                          !selectedDate || !selectedDriver || isLoadingData
+                        }
+                        className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-6 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
+                      >
+                        {isLoadingData ? (
+                          <Loader className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <FileText className="h-4 w-4" />
+                        )}
+                        <span>
+                          {isLoadingData ? "Loading..." : "Fetch Data"}
+                        </span>
+                      </Button>
                     </div>
 
                     {/* Print Button */}
                     <div>
                       <Button
                         onClick={() => handlePrint("driver")}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
+                        disabled={!driverData}
+                        className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-8 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
                       >
                         <Printer className="h-4 w-4" />
-                        <span>Print</span>
+                        <span>Print Report</span>
                       </Button>
                     </div>
                   </div>
@@ -171,24 +499,49 @@ export default function PrintMap() {
                         value={selectedSubDriver}
                         onChange={handleSubDriverChange}
                         className="bg-white text-gray-900 border border-gray-300 focus:border-blue-500 focus:ring-blue-500 w-full h-12 text-sm rounded-lg px-3"
+                        disabled={isLoading}
                       >
                         <option value="">Select Sub-Driver</option>
                         {subDrivers.map((subDriver) => (
-                          <option key={subDriver.id} value={subDriver.name}>
-                            {subDriver.name}
+                          <option key={subDriver._id} value={subDriver._id}>
+                            {subDriver.username}{" "}
+                            {subDriver.subdriverID
+                              ? `(${subDriver.subdriverID})`
+                              : ""}
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    {/* Fetch Data Button */}
+                    <div>
+                      <Button
+                        onClick={fetchSubDriverData}
+                        disabled={
+                          !selectedDate || !selectedSubDriver || isLoadingData
+                        }
+                        className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-6 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
+                      >
+                        {isLoadingData ? (
+                          <Loader className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <FileText className="h-4 w-4" />
+                        )}
+                        <span>
+                          {isLoadingData ? "Loading..." : "Fetch Data"}
+                        </span>
+                      </Button>
                     </div>
 
                     {/* Print Button */}
                     <div>
                       <Button
                         onClick={() => handlePrint("subdriver")}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
+                        disabled={!subDriverData}
+                        className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-8 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
                       >
                         <Printer className="h-4 w-4" />
-                        <span>Print</span>
+                        <span>Print Report</span>
                       </Button>
                     </div>
                   </div>
@@ -196,21 +549,317 @@ export default function PrintMap() {
               </CardContent>
             </Card>
 
+            {/* Driver Data Preview */}
+            {driverData && (
+              <Card className="bg-white border-gray-200 mb-8 shadow-sm">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <Users className="h-5 w-5 text-blue-500" />
+                      Driver Data Preview
+                    </h3>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={generateDriverReport}
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download PDF
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Driver:
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {driverData.driver.username}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Car className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Vehicle:
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {driverData.driver.vehicleNumber || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Date:
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {driverData.date}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Total Tasks:
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {driverData.tasks?.length || 0}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Status:
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {driverData.driver.status || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tasks Table */}
+                  {driverData.tasks && driverData.tasks.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse border border-gray-200">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              #
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Student Name
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Student No
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              School
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Pickup
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Delivery
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {driverData.tasks.map((task, index) => (
+                            <tr key={task._id} className="hover:bg-gray-50">
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {index + 1}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {task.studentId?.studentGivenName}{" "}
+                                {task.studentId?.studentFamilyName}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {task.studentId?.studentNo}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {task.studentId?.school}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs ${
+                                    task.pickupStatus === "Completed"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                                >
+                                  {task.pickupStatus}
+                                </span>
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs ${
+                                    task.deliveryStatus === "Completed"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                                >
+                                  {task.deliveryStatus}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      No completed tasks found for this date
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Sub-Driver Data Preview */}
+            {subDriverData && (
+              <Card className="bg-white border-gray-200 mb-8 shadow-sm">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <Users className="h-5 w-5 text-green-500" />
+                      Sub-Driver Data Preview
+                    </h3>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={generateSubDriverReport}
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download PDF
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Sub-Driver:
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {subDriverData.subDriver.username}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Date:
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {subDriverData.date}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Total Tasks:
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {subDriverData.tasks?.length || 0}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Status:
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {subDriverData.subDriver.status || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tasks Table */}
+                  {subDriverData.tasks && subDriverData.tasks.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse border border-gray-200">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              #
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Student Name
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Student No
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              School
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Pickup
+                            </th>
+                            <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
+                              Delivery
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {subDriverData.tasks.map((task, index) => (
+                            <tr key={task._id} className="hover:bg-gray-50">
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {index + 1}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {task.studentId?.studentGivenName}{" "}
+                                {task.studentId?.studentFamilyName}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {task.studentId?.studentNo}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                {task.studentId?.school}
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs ${
+                                    task.pickupStatus === "Completed"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                                >
+                                  {task.pickupStatus}
+                                </span>
+                              </td>
+                              <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs ${
+                                    task.deliveryStatus === "Completed"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                                >
+                                  {task.deliveryStatus}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      No completed tasks found for this date
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Empty State Card */}
-            <Card className="bg-white border-gray-200 shadow-sm">
-              <CardContent className="p-6">
-                <div className="text-center py-8">
-                  <Printer className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Ready to Print Student Data
-                  </h3>
-                  <p className="text-gray-500">
-                    Select a date and driver/sub-driver from the forms above,
-                    then click the Print button to generate the report.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {!driverData && !subDriverData && (
+              <Card className="bg-white border-gray-200 shadow-sm">
+                <CardContent className="p-6">
+                  <div className="text-center py-8">
+                    <Printer className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Ready to Generate Reports
+                    </h3>
+                    <p className="text-gray-500">
+                      Select a date and driver/sub-driver from the forms above,
+                      then click "Fetch Data" to load the information and
+                      generate reports.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
 

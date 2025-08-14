@@ -62,7 +62,7 @@ const ROLES = {
     label: "School",
     icon: GraduationCap,
     color: "from-purple-500 to-indigo-500",
-    dashboard: "/school/school-dashboard",
+    dashboard: "/school/school-studentsdetails",
     endpoint: "user",
   },
 };

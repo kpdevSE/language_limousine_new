@@ -132,12 +132,16 @@ const getAssignments = async (req, res) => {
     const subdriverId = req.query.subdriverId;
     const status = req.query.status;
     const date = req.query.date;
+    const pickupStatus = req.query.pickupStatus;
+    const deliveryStatus = req.query.deliveryStatus;
 
     const query = { isActive: true };
 
     if (driverId) query.driverId = driverId;
     if (subdriverId) query.subdriverId = subdriverId;
     if (status) query.status = status;
+    if (pickupStatus) query.pickupStatus = pickupStatus;
+    if (deliveryStatus) query.deliveryStatus = deliveryStatus;
     if (date) {
       const startDate = new Date(date);
       const endDate = new Date(date);
@@ -150,7 +154,7 @@ const getAssignments = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime flight"
+          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
