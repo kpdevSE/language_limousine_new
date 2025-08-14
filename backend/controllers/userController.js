@@ -48,12 +48,12 @@ const addUser = async (req, res) => {
     }
 
     // Validate role
-    const validRoles = ["Greeter", "Driver", "Subdriver", "School"];
+    const validRoles = ["Admin", "Greeter", "Driver", "Subdriver", "School"];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
         message:
-          "Invalid role. Must be one of: Greeter, Driver, Subdriver, School",
+          "Invalid role. Must be one of: Admin, Greeter, Driver, Subdriver, School",
       });
     }
 
@@ -592,6 +592,81 @@ const getAllSchools = async (req, res) => {
   }
 };
 
+// Get all admins (Admin only)
+const getAllAdmins = async (req, res) => {
+  try {
+    const admins = await User.find({ role: "Admin", isActive: true })
+      .select("username email isActive createdAt")
+      .sort({ username: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: { admins },
+    });
+  } catch (error) {
+    console.error("Error fetching admins:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Add new admin (Admin only)
+const addAdmin = async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Basic validation
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Username, email, and password are required",
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User with this email or username already exists",
+      });
+    }
+
+    // Create new admin user
+    const newAdmin = new User({
+      username,
+      email,
+      password,
+      role: "Admin",
+      gender: "Other", // Default gender for admin
+      isActive: true,
+      createdBy: req.user._id,
+    });
+
+    await newAdmin.save();
+
+    // Return success response (without password)
+    const adminData = newAdmin.toJSON();
+    delete adminData.password;
+
+    res.status(201).json({
+      success: true,
+      message: "Admin user created successfully",
+      data: { admin: adminData },
+    });
+  } catch (error) {
+    console.error("Error creating admin:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   addUser,
   getAllUsers,
@@ -601,4 +676,6 @@ module.exports = {
   getUsersByRole,
   getAllSchools,
   getUserStats,
+  getAllAdmins,
+  addAdmin,
 };

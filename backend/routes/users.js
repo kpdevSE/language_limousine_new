@@ -10,6 +10,8 @@ const {
   getUsersByRole,
   getAllSchools,
   getUserStats,
+  getAllAdmins,
+  addAdmin,
 } = require("../controllers/userController");
 const { authenticateToken, requireAdmin } = require("../middleware/auth");
 
@@ -140,6 +142,10 @@ router.get("/role/:role", getUsersByRole);
 
 // Get all schools for dropdown
 router.get("/schools/dropdown", getAllSchools);
+
+// Admin management routes
+router.get("/admins", getAllAdmins);
+router.post("/admins", addAdmin);
 
 // Get user by ID
 router.get("/:userId", getUserById);

@@ -198,6 +198,12 @@ export default function Sidebar() {
           path: "/admin/admin-users/subdrivers",
           id: "sub-drivers",
         },
+        {
+          label: "Admins",
+          icon: <ChevronRight className="w-3 h-3" />,
+          path: "/admin/admin-users/admins",
+          id: "admins",
+        },
       ],
     },
     {

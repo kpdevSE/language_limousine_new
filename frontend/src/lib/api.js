@@ -220,6 +220,14 @@ export const userAPI = {
   deleteUser: (userId) => {
     return api.delete(`/users/${userId}`);
   },
+
+  // Admin management functions
+  getAllAdmins: () => {
+    return api.get("/users/admins");
+  },
+  addAdmin: (data) => {
+    return api.post("/users/admins", data);
+  },
 };
 
 // Auth API functions

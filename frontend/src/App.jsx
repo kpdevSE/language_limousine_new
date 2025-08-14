@@ -34,6 +34,7 @@ import Privacy from "./privacy/privacy";
 import { ThemeProvider } from "./components/theme-provider";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Admins from "./pages/admin/pages/Users/Admins";
 
 function App() {
   return (
@@ -80,6 +81,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Drivers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/admin-users/admins"
+            element={
+              <ProtectedRoute>
+                <Admins />
               </ProtectedRoute>
             }
           />
