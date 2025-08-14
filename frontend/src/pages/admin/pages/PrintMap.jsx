@@ -350,22 +350,6 @@ export default function PrintMap() {
     }
   };
 
-  // Test PDF generation function
-  const testPDFGeneration = () => {
-    console.log("🧪 Testing PDF generation...");
-    try {
-      const doc = new jsPDF();
-      doc.text("Test PDF Generation", 20, 20);
-      doc.text("If you can see this, PDF generation is working!", 20, 40);
-      doc.save("test-pdf-generation.pdf");
-      console.log("✅ Test PDF generated successfully");
-      toast.success("Test PDF generated successfully!");
-    } catch (error) {
-      console.error("❌ Test PDF generation failed:", error);
-      toast.error("Test PDF generation failed");
-    }
-  };
-
   return (
     <div className="flex min-h-screen bg-white overflow-x-hidden">
       <Sidebar />
@@ -403,12 +387,6 @@ export default function PrintMap() {
               <h1 className="text-2xl font-semibold text-blue-500">
                 Print Student Data
               </h1>
-              <Button
-                onClick={testPDFGeneration}
-                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                🧪 Test PDF
-              </Button>
             </div>
 
             {/* Driver Selection Form */}
