@@ -35,6 +35,7 @@ export default function Update() {
   const [searchTerm, setSearchTerm] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [filteredStudents, setFilteredStudents] = useState([]);
+  const [schools, setSchools] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -120,7 +121,9 @@ export default function Update() {
 
       if (response.data.success) {
         setFilteredStudents(response.data.data.students);
-        toast.success(`Found ${response.data.data.students.length} students for ${selectedDate}`);
+        toast.success(
+          `Found ${response.data.data.students.length} students for ${selectedDate}`
+        );
       }
     } catch (err) {
       console.error("Error fetching students:", err);
@@ -139,6 +142,31 @@ export default function Update() {
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchSchools = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+
+      const response = await axios.get(
+        "http://localhost:5000/api/users/schools/dropdown",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setSchools(response.data.data.schools);
+      }
+    } catch (err) {
+      console.error("Error fetching schools:", err);
     }
   };
 
@@ -164,6 +192,7 @@ export default function Update() {
       client: student.client,
     });
     setIsDialogOpen(true);
+    fetchSchools(); // Fetch schools when dialog opens
   };
 
   const handleUpdateSubmit = async (e) => {
@@ -180,7 +209,10 @@ export default function Update() {
         return;
       }
 
-      const response = await apiClient.put(`/${selectedStudent._id}`, updateForm);
+      const response = await apiClient.put(
+        `/${selectedStudent._id}`,
+        updateForm
+      );
 
       if (response.data.success) {
         toast.success("Student updated successfully!");
@@ -225,8 +257,12 @@ export default function Update() {
   // Filter students based on search term
   const displayedStudents = filteredStudents.filter(
     (student) =>
-      student.studentGivenName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.studentFamilyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.studentGivenName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      student.studentFamilyName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       student.studentNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.trip?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.flight?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -395,7 +431,8 @@ export default function Update() {
                             {student.studentNo}
                           </TableCell>
                           <TableCell className="text-gray-800">
-                            {student.studentGivenName} {student.studentFamilyName}
+                            {student.studentGivenName}{" "}
+                            {student.studentFamilyName}
                           </TableCell>
                           <TableCell className="text-gray-800">
                             {student.trip}
@@ -584,14 +621,30 @@ export default function Update() {
                                       >
                                         School
                                       </Label>
-                                      <Input
-                                        id="update-school"
-                                        name="school"
-                                        type="text"
+                                      <Select
                                         value={updateForm.school}
-                                        onChange={handleInputChange}
-                                        className="bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                                      />
+                                        onValueChange={(value) =>
+                                          setUpdateForm((prev) => ({
+                                            ...prev,
+                                            school: value,
+                                          }))
+                                        }
+                                      >
+                                        <SelectTrigger className="bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                          <SelectValue placeholder="Select School" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white border-gray-300">
+                                          {schools.map((school) => (
+                                            <SelectItem
+                                              key={school.value}
+                                              value={school.value}
+                                              className="text-gray-800 hover:bg-gray-100"
+                                            >
+                                              {school.label}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
                                     </div>
                                   </div>
 
@@ -610,7 +663,9 @@ export default function Update() {
                                       disabled={isUpdating}
                                       className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 disabled:opacity-50"
                                     >
-                                      {isUpdating ? "Updating..." : "Update Student"}
+                                      {isUpdating
+                                        ? "Updating..."
+                                        : "Update Student"}
                                     </Button>
                                   </div>
                                 </form>

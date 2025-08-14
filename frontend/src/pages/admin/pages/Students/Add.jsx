@@ -37,6 +37,7 @@ export default function Add() {
   });
 
   const [students, setStudents] = useState([]);
+  const [schools, setSchools] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,6 +82,7 @@ export default function Add() {
   // Fetch students on component mount and when search/pagination changes
   useEffect(() => {
     fetchStudents();
+    fetchSchools();
   }, [currentPage, searchTerm, entriesPerPage]);
 
   const fetchStudents = async () => {
@@ -127,6 +129,31 @@ export default function Add() {
       toast.error(errorMessage);
     } finally {
       setIsFetchingStudents(false);
+    }
+  };
+
+  const fetchSchools = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+
+      const response = await axios.get(
+        "http://localhost:5000/api/users/schools/dropdown",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setSchools(response.data.data.schools);
+      }
+    } catch (err) {
+      console.error("Error fetching schools:", err);
     }
   };
 
@@ -637,14 +664,27 @@ export default function Add() {
                       <Label className="text-gray-900 text-sm font-medium">
                         School
                       </Label>
-                      <Input
-                        name="school"
-                        type="text"
+                      <Select
                         value={formData.school}
-                        onChange={handleInputChange}
-                        className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Enter school"
-                      />
+                        onValueChange={(value) =>
+                          handleSelectChange("school", value)
+                        }
+                      >
+                        <SelectTrigger className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                          <SelectValue placeholder="Select School" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300">
+                          {schools.map((school) => (
+                            <SelectItem
+                              key={school.value}
+                              value={school.value}
+                              className="text-gray-900 hover:bg-gray-100"
+                            >
+                              {school.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* Client */}

@@ -562,6 +562,36 @@ const getUserStats = async (req, res) => {
   }
 };
 
+// Get all schools for dropdown (Admin only)
+const getAllSchools = async (req, res) => {
+  try {
+    // Get all active schools with only necessary fields for dropdown
+    const schools = await User.find({
+      role: "School",
+      isActive: true,
+    })
+      .select("username schoolID")
+      .sort({ username: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        schools: schools.map((school) => ({
+          value: school.username, // Use username as the value
+          label: `${school.username} (${school.schoolID})`, // Display both username and schoolID
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Get all schools error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
 module.exports = {
   addUser,
   getAllUsers,
@@ -569,5 +599,6 @@ module.exports = {
   updateUser,
   deleteUser,
   getUsersByRole,
+  getAllSchools,
   getUserStats,
 };

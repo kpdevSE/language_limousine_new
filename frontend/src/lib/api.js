@@ -186,6 +186,11 @@ export const userAPI = {
     return api.get(`/users/role/${role}`, { params });
   },
 
+  // Get all schools for dropdown
+  getAllSchools: () => {
+    return api.get("/users/schools/dropdown");
+  },
+
   // Get all users
   getAllUsers: (params = {}) => {
     return api.get("/users", { params });

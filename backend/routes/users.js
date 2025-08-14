@@ -8,6 +8,7 @@ const {
   updateUser,
   deleteUser,
   getUsersByRole,
+  getAllSchools,
   getUserStats,
 } = require("../controllers/userController");
 const { authenticateToken, requireAdmin } = require("../middleware/auth");
@@ -136,6 +137,9 @@ router.get("/stats", getUserStats);
 
 // Get users by role
 router.get("/role/:role", getUsersByRole);
+
+// Get all schools for dropdown
+router.get("/schools/dropdown", getAllSchools);
 
 // Get user by ID
 router.get("/:userId", getUserById);
