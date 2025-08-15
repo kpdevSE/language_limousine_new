@@ -43,6 +43,7 @@ const schoolStudentRoutes = require("./routes/schoolStudents");
 const assignmentRoutes = require("./routes/assignments");
 const driverRoutes = require("./routes/driver");
 const subdriverRoutes = require("./routes/subdriver");
+const greeterRoutes = require("./routes/greeter");
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -52,6 +53,7 @@ app.use("/api/school-students", schoolStudentRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/subdriver", subdriverRoutes);
+app.use("/api/greeter", greeterRoutes);
 
 // Health check route
 app.get("/api/health", (req, res) => {

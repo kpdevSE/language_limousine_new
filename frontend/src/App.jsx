@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./home/home";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DriverProtectedRoute from "./components/DriverProtectedRoute";
+import GreeterProtectedRoute from "./components/GreeterProtectedRoute";
 import AdminDashboard from "./pages/admin/pages/Dashboard";
 import Greeters from "./pages/admin/pages/Users/Greeters";
 import Drivers from "./pages/admin/pages/Users/Drivers";
@@ -196,12 +197,27 @@ function App() {
           {/* Greeter Pages */}
           <Route
             path="/greeter/greeter-dashboard"
-            element={<AssigenDrivers />}
+            element={
+              <GreeterProtectedRoute>
+                <AssigenDrivers />
+              </GreeterProtectedRoute>
+            }
           />
-          <Route path="/greeter/absentfeedback" element={<AbsentFeedback />} />
+          <Route
+            path="/greeter/absentfeedback"
+            element={
+              <GreeterProtectedRoute>
+                <AbsentFeedback />
+              </GreeterProtectedRoute>
+            }
+          />
           <Route
             path="/greeter/updatingwaitingtime"
-            element={<UpdatingWaitingTimeGreeters />}
+            element={
+              <GreeterProtectedRoute>
+                <UpdatingWaitingTimeGreeters />
+              </GreeterProtectedRoute>
+            }
           />
           {/* Driver Pages */}
           <Route

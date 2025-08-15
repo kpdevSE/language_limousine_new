@@ -120,6 +120,34 @@ const requireSchool = async (req, res, next) => {
   }
 };
 
+// Greeter Authorization Middleware
+const requireGreeter = async (req, res, next) => {
+  try {
+    // Check if user exists and is a greeter
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    if (req.user.role !== "Greeter") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Greeter privileges required",
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Greeter authorization error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Authorization failed",
+    });
+  }
+};
+
 // Optional Authentication Middleware (for routes that can work with or without auth)
 const optionalAuth = async (req, res, next) => {
   try {
@@ -149,5 +177,6 @@ module.exports = {
   authenticateToken,
   requireAdmin,
   requireSchool,
+  requireGreeter,
   optionalAuth,
 };
