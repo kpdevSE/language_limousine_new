@@ -44,6 +44,8 @@ const assignmentRoutes = require("./routes/assignments");
 const driverRoutes = require("./routes/driver");
 const subdriverRoutes = require("./routes/subdriver");
 const greeterRoutes = require("./routes/greeter");
+const waitingTimeRoutes = require("./routes/waitingTime");
+const absentFeedbackRoutes = require("./routes/absentFeedback");
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -54,6 +56,8 @@ app.use("/api/assignments", assignmentRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/subdriver", subdriverRoutes);
 app.use("/api/greeter", greeterRoutes);
+app.use("/api/waiting-time", waitingTimeRoutes);
+app.use("/api/absent-feedback", absentFeedbackRoutes);
 
 // Health check route
 app.get("/api/health", (req, res) => {

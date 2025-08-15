@@ -12,6 +12,14 @@ const {
 // Greeter routes (require greeter authentication)
 router.use(authenticateToken, requireGreeter);
 
+// Debug middleware to log all greeter requests
+router.use((req, res, next) => {
+  console.log("🔍 Greeter Route accessed:", req.method, req.path);
+  console.log("🔍 Greeter Route params:", req.params);
+  console.log("🔍 Greeter Route query:", req.query);
+  next();
+});
+
 // Get unassigned students for greeter
 router.get("/unassigned-students", getUnassignedStudents);
 
@@ -25,6 +33,6 @@ router.post("/assignments", assignStudents);
 router.get("/assignments", getAssignments);
 
 // Cancel assignment (greeter can cancel assignments)
-router.delete("/assignments/:id", cancelAssignment);
+router.delete("/assignments/:assignmentId", cancelAssignment);
 
 module.exports = router;

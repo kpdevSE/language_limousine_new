@@ -207,6 +207,13 @@ export default function AssignDrivers() {
 
       if (assignmentsResponse.data.success) {
         const assignments = assignmentsResponse.data.data.assignments;
+        console.log("🔍 Frontend - Fetched assignments:", assignments);
+        if (assignments.length > 0) {
+          console.log(
+            "🔍 Frontend - Sample assignment structure:",
+            assignments[0]
+          );
+        }
         setAssignmentsData(assignments);
         setTotalAssignments(
           assignmentsResponse.data.data.pagination.totalAssignments
@@ -427,6 +434,12 @@ export default function AssignDrivers() {
     setCancellingId(assignmentToCancel._id);
 
     try {
+      console.log(
+        "🔍 Frontend - Cancelling assignment with ID:",
+        assignmentToCancel._id
+      );
+      console.log("🔍 Frontend - Full assignment object:", assignmentToCancel);
+
       const response = await apiClient.delete(
         `/greeter/assignments/${assignmentToCancel._id}`
       );

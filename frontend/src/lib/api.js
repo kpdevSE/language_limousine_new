@@ -100,6 +100,11 @@ export const assignmentAPI = {
     return api.put(`/driver/update-delivery/${assignmentId}`, data);
   },
 
+  // Update delivery time
+  updateDeliveryTime: (assignmentId, data) => {
+    return api.put(`/driver/update-delivery-time/${assignmentId}`, data);
+  },
+
   // Driver profile functions
   getDriverProfile: () => {
     return api.get("/driver/profile");
@@ -124,14 +129,19 @@ export const assignmentAPI = {
     return api.get("/subdriver/completed-tasks", { params });
   },
 
-  // Update pickup status for subdriver
+  // Update pickup status
   updateSubdriverPickupStatus: (assignmentId, data) => {
     return api.put(`/subdriver/update-pickup/${assignmentId}`, data);
   },
 
-  // Update delivery status for subdriver
+  // Update delivery status
   updateSubdriverDeliveryStatus: (assignmentId, data) => {
     return api.put(`/subdriver/update-delivery/${assignmentId}`, data);
+  },
+
+  // Update delivery time
+  updateSubdriverDeliveryTime: (assignmentId, data) => {
+    return api.put(`/subdriver/update-delivery-time/${assignmentId}`, data);
   },
 
   // Subdriver profile functions
@@ -145,6 +155,62 @@ export const assignmentAPI = {
 
   getSubdriverStats: (params = {}) => {
     return api.get("/subdriver/stats", { params });
+  },
+};
+
+// Waiting Time API functions
+export const waitingTimeAPI = {
+  // Get waiting times for a specific date
+  getWaitingTimes: (params = {}) => {
+    return api.get("/waiting-time", { params });
+  },
+
+  // Get waiting time statistics
+  getWaitingTimeStats: (params = {}) => {
+    return api.get("/waiting-time/stats", { params });
+  },
+
+  // Create or update waiting time
+  updateWaitingTime: (data) => {
+    return api.post("/waiting-time", data);
+  },
+
+  // Update specific waiting time by ID
+  updateWaitingTimeById: (id, data) => {
+    return api.put(`/waiting-time/${id}`, data);
+  },
+
+  // Delete waiting time
+  deleteWaitingTime: (id) => {
+    return api.delete(`/waiting-time/${id}`);
+  },
+};
+
+// Absent Feedback API functions
+export const absentFeedbackAPI = {
+  // Get absent feedback for a specific date
+  getAbsentFeedback: (params = {}) => {
+    return api.get("/absent-feedback", { params });
+  },
+
+  // Get feedback statistics
+  getFeedbackStats: (params = {}) => {
+    return api.get("/absent-feedback/stats", { params });
+  },
+
+  // Create or update absent feedback
+  submitAbsentFeedback: (data) => {
+    return api.post("/absent-feedback", data);
+  },
+
+  // Update specific feedback by ID
+  updateFeedbackById: (id, data) => {
+    return api.put(`/absent-feedback/${id}`, data);
+  },
+
+  // Delete feedback
+  deleteFeedback: (id) => {
+    return api.delete(`/absent-feedback/${id}`);
   },
 };
 

@@ -6,6 +6,7 @@ const {
   getDriverCompletedTasks,
   updatePickupStatus,
   updateDeliveryStatus,
+  updateDeliveryTime,
 } = require("../controllers/studentAssignmentController");
 
 const {
@@ -39,6 +40,9 @@ router.put("/update-pickup/:assignmentId", updatePickupStatus);
 
 // Update delivery status
 router.put("/update-delivery/:assignmentId", updateDeliveryStatus);
+
+// Update delivery time
+router.put("/update-delivery-time/:assignmentId", updateDeliveryTime);
 
 // Subdriver profile routes
 router.get("/profile", getSubdriverProfile);

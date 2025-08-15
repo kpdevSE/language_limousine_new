@@ -1,0 +1,335 @@
+const WaitingTime = require("../models/WaitingTime");
+const Student = require("../models/Student");
+
+// GET /api/waiting-time - Get waiting times for a specific date
+const getWaitingTimes = async (req, res) => {
+  try {
+    const { date, page = 1, limit = 10, search = "", status = "" } = req.query;
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "Date parameter is required",
+      });
+    }
+
+    // Build query
+    const query = { date, isActive: true };
+    if (status) query.status = status;
+
+    // Get students for the date first
+    const studentsQuery = { date, isActive: true };
+    if (search) {
+      studentsQuery.$or = [
+        { studentNo: { $regex: search, $options: "i" } },
+        { studentGivenName: { $regex: search, $options: "i" } },
+        { studentFamilyName: { $regex: search, $options: "i" } },
+        { flight: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const students = await Student.find(studentsQuery).sort({ arrivalTime: 1 });
+    const studentIds = students.map((student) => student._id);
+
+    // Get existing waiting times for these students
+    const existingWaitingTimes = await WaitingTime.find({
+      studentId: { $in: studentIds },
+      date,
+      isActive: true,
+    }).populate(
+      "studentId",
+      "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
+    );
+
+    // Create a map of existing waiting times
+    const waitingTimeMap = new Map();
+    existingWaitingTimes.forEach((wt) => {
+      waitingTimeMap.set(wt.studentId._id.toString(), wt);
+    });
+
+    // Combine students with their waiting times
+    const combinedData = students.map((student) => {
+      const existingWT = waitingTimeMap.get(student._id.toString());
+      if (existingWT) {
+        return {
+          ...student.toObject(),
+          waitingTimeId: existingWT._id,
+          waitingTime: existingWT.waitingTime,
+          pickupTime: existingWT.pickupTime,
+          status: existingWT.status,
+          notes: existingWT.notes,
+          lastUpdated: existingWT.updatedAt,
+        };
+      } else {
+        return {
+          ...student.toObject(),
+          waitingTimeId: null,
+          waitingTime: 0,
+          pickupTime: null,
+          status: "waiting",
+          notes: "",
+          lastUpdated: null,
+        };
+      }
+    });
+
+    // Apply pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const paginatedData = combinedData.slice(skip, skip + parseInt(limit));
+    const total = combinedData.length;
+
+    return res.json({
+      success: true,
+      data: {
+        waitingTimes: paginatedData,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / parseInt(limit)),
+          totalWaitingTimes: total,
+          limit: parseInt(limit),
+        },
+      },
+    });
+  } catch (err) {
+    console.error("getWaitingTimes error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// POST /api/waiting-time - Create or update waiting time
+const updateWaitingTime = async (req, res) => {
+  try {
+    const { studentId, date, waitingTime, pickupTime, notes, status } =
+      req.body;
+    const updatedBy = req.user._id;
+
+    // Validate input
+    if (!studentId || !date || waitingTime === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Student ID, date, and waiting time are required",
+      });
+    }
+
+    if (waitingTime < 0 || waitingTime > 120) {
+      return res.status(400).json({
+        success: false,
+        message: "Waiting time must be between 0 and 120 minutes",
+      });
+    }
+
+    // Check if student exists
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    // Check if waiting time already exists for this student and date
+    let waitingTimeRecord = await WaitingTime.findOne({
+      studentId,
+      date,
+      isActive: true,
+    });
+
+    if (waitingTimeRecord) {
+      // Update existing record
+      waitingTimeRecord.waitingTime = waitingTime;
+      if (pickupTime !== undefined) waitingTimeRecord.pickupTime = pickupTime;
+      waitingTimeRecord.status = status || waitingTimeRecord.status;
+      waitingTimeRecord.notes = notes || waitingTimeRecord.notes;
+      waitingTimeRecord.updatedBy = updatedBy;
+      await waitingTimeRecord.save();
+    } else {
+      // Create new record
+      waitingTimeRecord = new WaitingTime({
+        studentId,
+        date,
+        flight: student.flight,
+        arrivalTime: student.arrivalTime,
+        waitingTime,
+        pickupTime,
+        status: status || "waiting",
+        notes: notes || "",
+        updatedBy,
+      });
+      await waitingTimeRecord.save();
+    }
+
+    // Populate the response
+    const populatedRecord = await WaitingTime.findById(waitingTimeRecord._id)
+      .populate(
+        "studentId",
+        "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
+      )
+      .populate("updatedBy", "username");
+
+    return res.json({
+      success: true,
+      message: "Waiting time updated successfully",
+      data: { waitingTime: populatedRecord },
+    });
+  } catch (err) {
+    console.error("updateWaitingTime error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// PUT /api/waiting-time/:id - Update specific waiting time
+const updateWaitingTimeById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { waitingTime, pickupTime, notes, status } = req.body;
+    const updatedBy = req.user._id;
+
+    if (waitingTime !== undefined && (waitingTime < 0 || waitingTime > 120)) {
+      return res.status(400).json({
+        success: false,
+        message: "Waiting time must be between 0 and 120 minutes",
+      });
+    }
+
+    const waitingTimeRecord = await WaitingTime.findOne({
+      _id: id,
+      isActive: true,
+    });
+
+    if (!waitingTimeRecord) {
+      return res.status(404).json({
+        success: false,
+        message: "Waiting time record not found",
+      });
+    }
+
+    // Update fields
+    if (waitingTime !== undefined) waitingTimeRecord.waitingTime = waitingTime;
+    if (pickupTime !== undefined) waitingTimeRecord.pickupTime = pickupTime;
+    if (status !== undefined) waitingTimeRecord.status = status;
+    if (notes !== undefined) waitingTimeRecord.notes = notes;
+    waitingTimeRecord.updatedBy = updatedBy;
+
+    await waitingTimeRecord.save();
+
+    // Populate the response
+    const populatedRecord = await WaitingTime.findById(id)
+      .populate(
+        "studentId",
+        "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
+      )
+      .populate("updatedBy", "username");
+
+    return res.json({
+      success: true,
+      message: "Waiting time updated successfully",
+      data: { waitingTime: populatedRecord },
+    });
+  } catch (err) {
+    console.error("updateWaitingTimeById error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// DELETE /api/waiting-time/:id - Soft delete waiting time
+const deleteWaitingTime = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const waitingTimeRecord = await WaitingTime.findById(id);
+    if (!waitingTimeRecord) {
+      return res.status(404).json({
+        success: false,
+        message: "Waiting time record not found",
+      });
+    }
+
+    waitingTimeRecord.isActive = false;
+    await waitingTimeRecord.save();
+
+    return res.json({
+      success: true,
+      message: "Waiting time deleted successfully",
+    });
+  } catch (err) {
+    console.error("deleteWaitingTime error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// GET /api/waiting-time/stats - Get waiting time statistics
+const getWaitingTimeStats = async (req, res) => {
+  try {
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "Date parameter is required",
+      });
+    }
+
+    const stats = await WaitingTime.aggregate([
+      { $match: { date, isActive: true } },
+      {
+        $group: {
+          _id: null,
+          totalStudents: { $sum: 1 },
+          averageWaitingTime: { $avg: "$waitingTime" },
+          maxWaitingTime: { $max: "$waitingTime" },
+          minWaitingTime: { $min: "$waitingTime" },
+          waitingCount: {
+            $sum: { $cond: [{ $eq: ["$status", "waiting"] }, 1, 0] },
+          },
+          pickedUpCount: {
+            $sum: { $cond: [{ $eq: ["$status", "picked_up"] }, 1, 0] },
+          },
+          completedCount: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+          },
+        },
+      },
+    ]);
+
+    const result = stats[0] || {
+      totalStudents: 0,
+      averageWaitingTime: 0,
+      maxWaitingTime: 0,
+      minWaitingTime: 0,
+      waitingCount: 0,
+      pickedUpCount: 0,
+      completedCount: 0,
+    };
+
+    return res.json({
+      success: true,
+      data: { stats: result },
+    });
+  } catch (err) {
+    console.error("getWaitingTimeStats error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+module.exports = {
+  getWaitingTimes,
+  updateWaitingTime,
+  updateWaitingTimeById,
+  deleteWaitingTime,
+  getWaitingTimeStats,
+};

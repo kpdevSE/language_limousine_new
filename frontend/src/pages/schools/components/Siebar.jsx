@@ -152,18 +152,18 @@ export default function Sidebar() {
   };
 
   const menuItems = [
-    {
-      id: "school-dashboard",
-      label: "Dashboard",
-      icon: <LayoutDashboard className="w-4 h-4" />,
-      path: "/school/school-dashboard",
-    },
-    {
-      id: "school-addstudents",
-      label: "Add Students",
-      icon: <UserPlus className="w-4 h-4" />,
-      path: "/school/school-addstudents",
-    },
+    // {
+    //   id: "school-dashboard",
+    //   label: "Dashboard",
+    //   icon: <LayoutDashboard className="w-4 h-4" />,
+    //   path: "/school/school-dashboard",
+    // },
+    // {
+    //   id: "school-addstudents",
+    //   label: "Add Students",
+    //   icon: <UserPlus className="w-4 h-4" />,
+    //   path: "/school/school-addstudents",
+    // },
     {
       id: "school-studentsdetails",
       label: "Student Details",

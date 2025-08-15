@@ -1,6 +1,8 @@
 const StudentAssignment = require("../models/StudentAssignment");
 const Student = require("../models/Student");
 const User = require("../models/User");
+const WaitingTime = require("../models/WaitingTime");
+const mongoose = require("mongoose");
 
 // POST /api/assignments - Assign students to driver/subdriver
 const assignStudents = async (req, res) => {
@@ -332,10 +334,27 @@ const cancelAssignment = async (req, res) => {
   try {
     const assignmentId = req.params.assignmentId;
 
+    console.log("🔍 cancelAssignment - Received assignmentId:", assignmentId);
+    console.log("🔍 cancelAssignment - req.params:", req.params);
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+      console.log(
+        "🔍 cancelAssignment - Invalid ObjectId format:",
+        assignmentId
+      );
+      return res.status(400).json({
+        success: false,
+        message: "Invalid assignment ID format",
+      });
+    }
+
     const assignment = await StudentAssignment.findOne({
       _id: assignmentId,
       isActive: true,
     });
+
+    console.log("🔍 cancelAssignment - Found assignment:", assignment);
 
     if (!assignment) {
       return res.status(404).json({
@@ -385,7 +404,7 @@ const getDriverAssignments = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
+          "studentNo studentGivenName arrivalTime flight dOrI hostGivenName phone school address city"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -394,6 +413,26 @@ const getDriverAssignments = async (req, res) => {
         .limit(limit),
       StudentAssignment.countDocuments(query),
     ]);
+
+    // Format delivery time for display
+    const assignmentsWithFormattedTimes = assignments.map((assignment) => {
+      // Format delivery time for display
+      let deliveryTimeFormatted = null;
+      if (assignment.deliveryTime) {
+        const deliveryTime = new Date(assignment.deliveryTime);
+        deliveryTimeFormatted = deliveryTime.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      return {
+        ...assignment.toObject(),
+        deliveryTimeFormatted: deliveryTimeFormatted,
+      };
+    });
 
     console.log(
       "🔍 getDriverAssignments - Query:",
@@ -413,7 +452,7 @@ const getDriverAssignments = async (req, res) => {
     return res.json({
       success: true,
       data: {
-        assignments,
+        assignments: assignmentsWithFormattedTimes,
         pagination: {
           currentPage: page,
           totalPages: Math.ceil(total / limit),
@@ -460,7 +499,7 @@ const getDriverCompletedTasks = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
+          "studentNo studentGivenName arrivalTime flight dOrI hostGivenName phone school address city"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -470,10 +509,30 @@ const getDriverCompletedTasks = async (req, res) => {
       StudentAssignment.countDocuments(query),
     ]);
 
+    // Format delivery time for display
+    const assignmentsWithFormattedTimes = assignments.map((assignment) => {
+      // Format delivery time for display
+      let deliveryTimeFormatted = null;
+      if (assignment.deliveryTime) {
+        const deliveryTime = new Date(assignment.deliveryTime);
+        deliveryTimeFormatted = deliveryTime.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      return {
+        ...assignment.toObject(),
+        deliveryTimeFormatted: deliveryTimeFormatted,
+      };
+    });
+
     return res.json({
       success: true,
       data: {
-        assignments,
+        assignments: assignmentsWithFormattedTimes,
         pagination: {
           currentPage: page,
           totalPages: Math.ceil(total / limit),
@@ -589,6 +648,18 @@ const updateDeliveryStatus = async (req, res) => {
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber");
 
+    // Format delivery time for display
+    if (populatedAssignment.deliveryTime) {
+      const deliveryTime = new Date(populatedAssignment.deliveryTime);
+      populatedAssignment.deliveryTimeFormatted =
+        deliveryTime.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+    }
+
     return res.json({
       success: true,
       message: "Delivery status updated successfully",
@@ -596,6 +667,99 @@ const updateDeliveryStatus = async (req, res) => {
     });
   } catch (err) {
     console.error("updateDeliveryStatus error", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// PUT /api/assignments/driver/update-delivery-time - Update delivery time
+const updateDeliveryTime = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const { deliveryTime } = req.body;
+    const driverId = req.user._id;
+
+    if (!deliveryTime) {
+      return res.status(400).json({
+        success: false,
+        message: "Delivery time is required",
+      });
+    }
+
+    const assignment = await StudentAssignment.findOne({
+      _id: assignmentId,
+      $or: [{ driverId: driverId }, { subdriverId: driverId }],
+      isActive: true,
+    });
+
+    if (!assignment) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Assignment not found or you don't have permission to update it",
+      });
+    }
+
+    // Convert delivery time string to Date object
+    // Expected format: "HH:MM:SS" or "HH:MM"
+    let deliveryDateTime;
+    if (deliveryTime) {
+      // Validate time format
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])(:([0-5][0-9]))?$/;
+      if (!timeRegex.test(deliveryTime)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid delivery time format. Use HH:MM:SS or HH:MM (24-hour format)",
+        });
+      }
+
+      const today = new Date();
+      const [hours, minutes, seconds] = deliveryTime.split(":").map(Number);
+
+      if (hours !== undefined && minutes !== undefined) {
+        deliveryDateTime = new Date(today);
+        deliveryDateTime.setHours(hours, minutes, seconds || 0, 0);
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid delivery time format. Use HH:MM:SS or HH:MM",
+        });
+      }
+    }
+
+    assignment.deliveryTime = deliveryDateTime;
+    await assignment.save();
+
+    const populatedAssignment = await StudentAssignment.findById(assignmentId)
+      .populate(
+        "studentId",
+        "studentNo studentGivenName arrivalTime flight address city"
+      )
+      .populate("driverId", "username driverID vehicleNumber")
+      .populate("subdriverId", "username subdriverID vehicleNumber");
+
+    // Format delivery time for display
+    if (populatedAssignment.deliveryTime) {
+      const deliveryTime = new Date(populatedAssignment.deliveryTime);
+      populatedAssignment.deliveryTimeFormatted =
+        deliveryTime.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+    }
+
+    return res.json({
+      success: true,
+      message: "Delivery time updated successfully",
+      data: { assignment: populatedAssignment },
+    });
+  } catch (err) {
+    console.error("updateDeliveryTime error", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -614,4 +778,5 @@ module.exports = {
   getDriverCompletedTasks,
   updatePickupStatus,
   updateDeliveryStatus,
+  updateDeliveryTime,
 };
