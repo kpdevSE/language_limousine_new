@@ -4,10 +4,13 @@ const User = require("../models/User");
 // JWT Authentication Middleware
 const authenticateToken = async (req, res, next) => {
   try {
+    console.log("Auth middleware - headers:", req.headers);
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
+    console.log("Auth middleware - token:", token ? "present" : "missing");
 
     if (!token) {
+      console.log("Auth middleware - no token provided");
       return res.status(401).json({
         success: false,
         message: "Access token required",

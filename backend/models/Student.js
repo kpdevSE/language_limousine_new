@@ -22,6 +22,10 @@ const studentSchema = new mongoose.Schema(
       required: [true, "Arrival time is required"],
       trim: true,
     },
+    departurePickupTime: {
+      type: String,
+      trim: true,
+    },
     flight: {
       type: String,
       required: [true, "Flight is required"],
@@ -79,9 +83,22 @@ const studentSchema = new mongoose.Schema(
       required: [true, "City is required"],
       trim: true,
     },
+    specialInstructions: {
+      type: String,
+      trim: true,
+    },
+    studyPermit: {
+      type: String,
+      enum: ["Y", "N"],
+      trim: true,
+    },
     school: {
       type: String,
       required: [true, "School is required"],
+      trim: true,
+    },
+    staffMemberAssigned: {
+      type: String,
       trim: true,
     },
     client: {

@@ -1,47 +1,303 @@
-import Sidebar from "../../components/Sidebar";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User,
   Upload as UploadIcon,
   FileSpreadsheet,
   Search,
+  Download,
+  AlertCircle,
+  CheckCircle,
+  X,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Sidebar from "../../components/Sidebar";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function Upload() {
-  const [selectedSchool, setSelectedSchool] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [date, setDate] = useState("07/24/2025");
+  const [school, setSchool] = useState("");
+  const [client, setClient] = useState("");
+  const [schools, setSchools] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleSchoolChange = (e) => {
-    setSelectedSchool(e.target.value);
+  // Get auth token from sessionStorage or localStorage
+  const getAuthToken = () => {
+    const adminToken = sessionStorage.getItem("admin_token");
+    const authToken = localStorage.getItem("authToken");
+    const adminTokenLocal = localStorage.getItem("admin_token");
+
+    console.log("Available tokens:", {
+      sessionStorage_admin_token: adminToken ? "present" : "missing",
+      localStorage_authToken: authToken ? "present" : "missing",
+      localStorage_admin_token: adminTokenLocal ? "present" : "missing",
+    });
+
+    const token = adminToken || authToken || adminTokenLocal;
+
+    if (token) {
+      console.log("Using token:", token.substring(0, 20) + "...");
+    } else {
+      console.log("No token found!");
+    }
+
+    return token;
+  };
+
+  // Configure axios client
+  const apiClient = axios.create({
+    baseURL: "http://localhost:5000/api",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  // Add request interceptor to include auth token
+  apiClient.interceptors.request.use(
+    (config) => {
+      const token = getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  useEffect(() => {
+    fetchSchools();
+  }, []);
+
+  const fetchSchools = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        console.error("No auth token available");
+        return;
+      }
+
+      const response = await axios.get(
+        "http://localhost:5000/api/users/schools/dropdown",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setSchools(response.data.data.schools);
+      }
+    } catch (err) {
+      console.error("Error fetching schools:", err);
+    }
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setSelectedFile(file);
+    if (file) {
+      // Validate file type
+      const allowedTypes = [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+        "application/octet-stream",
+      ];
+
+      const isValidType =
+        allowedTypes.includes(file.type) ||
+        file.name.endsWith(".xlsx") ||
+        file.name.endsWith(".xls");
+
+      if (!isValidType) {
+        setError("Please select a valid Excel file (.xlsx or .xls)");
+        setSelectedFile(null);
+        return;
+      }
+
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        setError("File size too large. Maximum size is 10MB.");
+        setSelectedFile(null);
+        return;
+      }
+
+      setSelectedFile(file);
+      setError("");
+    }
   };
 
-  const handleUpload = () => {
-    if (!selectedSchool) {
-      alert("Please select a school first");
-      return;
-    }
+  const handleUpload = async () => {
     if (!selectedFile) {
-      alert("Please select a file first");
+      setError("Please select a file first");
       return;
     }
 
-    console.log(
-      "Uploading file:",
-      selectedFile.name,
-      "for school:",
-      selectedSchool
-    );
-    // Handle upload logic here
-    alert("File uploaded successfully!");
+    if (!date) {
+      setError("Please select a date");
+      return;
+    }
+
+    if (!school) {
+      setError("Please select a school");
+      return;
+    }
+
+    if (!client) {
+      setError("Please select a client");
+      return;
+    }
+
+    setIsUploading(true);
+    setError("");
+    setSuccess("");
+    setUploadResult(null);
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 2000);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("excelFile", selectedFile);
+      formData.append("date", date);
+      formData.append("school", school);
+      formData.append("client", client);
+
+      console.log("Upload request details:", {
+        file: selectedFile.name,
+        fileSize: selectedFile.size,
+        date,
+        school,
+        client,
+        token: token ? "present" : "missing",
+      });
+
+      const response = await axios.post(
+        "http://localhost:5000/api/excel-upload/students",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        const result = response.data.data;
+        setUploadResult(result);
+        setSuccess(response.data.message);
+
+        toast.success(response.data.message, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        });
+
+        // Reset form
+        setSelectedFile(null);
+        const fileInput = document.getElementById("file-upload");
+        if (fileInput) fileInput.value = "";
+      } else {
+        setError(response.data.message || "Upload failed");
+        toast.error(response.data.message || "Upload failed");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+
+      let errorMessage = "An unexpected error occurred. Please try again.";
+
+      if (err.response) {
+        if (err.response.status === 401) {
+          errorMessage = "Access token required. Please log in again.";
+          setTimeout(() => {
+            window.location.href = "/admin/login";
+          }, 2000);
+        } else if (err.response.data) {
+          errorMessage = err.response.data.message || "Upload failed";
+          console.error("Server error message:", err.response.data.message);
+        }
+      } else if (err.request) {
+        errorMessage =
+          "Network error. Please check your connection and try again.";
+      }
+
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const downloadTemplate = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setError("Access token required. Please log in again.");
+        return;
+      }
+
+      const response = await apiClient.get("/excel-upload/template");
+
+      if (response.data.success) {
+        const template = response.data.data;
+
+        // Create CSV content
+        const headers = template.headers.join(",");
+        const sampleRow = Object.values(template.sampleData[0]).join(",");
+        const csvContent = `${headers}\n${sampleRow}`;
+
+        // Create and download file
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "student_upload_template.csv";
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast.success("Template downloaded successfully!");
+      }
+    } catch (err) {
+      console.error("Download template error:", err);
+      setError("Failed to download template");
+      toast.error("Failed to download template");
+    }
+  };
+
+  const clearResults = () => {
+    setUploadResult(null);
+    setError("");
+    setSuccess("");
   };
 
   return (
@@ -74,45 +330,158 @@ export default function Upload() {
         </div>
 
         {/* Main Content */}
-        <div className="p-6 overflow-x-hidden bg-white">
+        <div className="p-6 overflow-x-hidden bg-gray-50">
           <div className="max-w-7xl mx-auto">
             {/* Page Title */}
-            <h1 className="text-2xl font-semibold text-blue-500 mb-6">
-              Upload Student Data
-            </h1>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-semibold text-blue-500">
+                Upload Student Data
+              </h1>
+              <Button
+                onClick={downloadTemplate}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download Template</span>
+              </Button>
+            </div>
+
+            {/* Error and Success Messages */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                    <span className="text-red-700">{error}</span>
+                  </div>
+                  <Button
+                    onClick={() => setError("")}
+                    className="text-red-500 hover:text-red-700"
+                    variant="ghost"
+                    size="sm"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                    <span className="text-green-700">{success}</span>
+                  </div>
+                  <Button
+                    onClick={() => setSuccess("")}
+                    className="text-green-500 hover:text-green-700"
+                    variant="ghost"
+                    size="sm"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Upload Form */}
             <Card className="bg-white border-gray-200 mb-8 shadow-sm">
+              <CardHeader className="pb-4">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Upload Excel File
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Select an Excel file containing student data and fill in the
+                  required information.
+                </p>
+              </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-6">
                   {/* Form Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    {/* Date Selection */}
+                    <div className="space-y-2">
+                      <Label className="text-gray-700 text-sm font-medium">
+                        Date *
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          value={date}
+                          onChange={(e) => setDate(e.target.value)}
+                          className="w-full bg-white text-gray-900 px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm pr-10"
+                          placeholder="MM/DD/YYYY"
+                        />
+                        <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      </div>
+                    </div>
+
                     {/* School Selection */}
                     <div className="space-y-2">
                       <Label className="text-gray-700 text-sm font-medium">
-                        School Name
+                        School *
                       </Label>
-                      <select
-                        value={selectedSchool}
-                        onChange={handleSchoolChange}
-                        className="w-full bg-white text-gray-900 px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none"
-                      >
-                        <option value="">Select School</option>
-                        <option value="school1">
-                          Lincoln Elementary School
-                        </option>
-                        <option value="school2">
-                          Washington Middle School
-                        </option>
-                        <option value="school3">Jefferson High School</option>
-                        <option value="school4">Roosevelt Academy</option>
-                      </select>
+                      <Select value={school} onValueChange={setSchool}>
+                        <SelectTrigger className="w-full bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                          <SelectValue placeholder="Select School" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300">
+                          {schools.map((schoolOption) => (
+                            <SelectItem
+                              key={schoolOption.value}
+                              value={schoolOption.value}
+                              className="text-gray-900 hover:bg-gray-100"
+                            >
+                              {schoolOption.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Client Selection */}
+                    <div className="space-y-2">
+                      <Label className="text-gray-700 text-sm font-medium">
+                        Client *
+                      </Label>
+                      <Select value={client} onValueChange={setClient}>
+                        <SelectTrigger className="w-full bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                          <SelectValue placeholder="Select Client" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300">
+                          <SelectItem
+                            value="ILSC"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            ILSC
+                          </SelectItem>
+                          <SelectItem
+                            value="EC"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            EC
+                          </SelectItem>
+                          <SelectItem
+                            value="ILAC"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            ILAC
+                          </SelectItem>
+                          <SelectItem
+                            value="EF"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            EF
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* File Selection */}
                     <div className="space-y-2">
                       <Label className="text-gray-700 text-sm font-medium">
-                        Choose Excel File
+                        Excel File *
                       </Label>
                       <div className="relative">
                         <input
@@ -141,49 +510,140 @@ export default function Upload() {
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Upload Button */}
-                    <div>
-                      <Button
-                        onClick={handleUpload}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
-                        <span>Upload</span>
-                      </Button>
-                    </div>
+                  {/* Upload Button */}
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleUpload}
+                      disabled={
+                        isUploading ||
+                        !selectedFile ||
+                        !date ||
+                        !school ||
+                        !client
+                      }
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 flex items-center space-x-2"
+                    >
+                      <UploadIcon className="h-4 w-4" />
+                      <span>
+                        {isUploading ? "Uploading..." : "Upload Students"}
+                      </span>
+                    </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Upload Results */}
+            {uploadResult && (
+              <Card className="bg-white border-gray-200 shadow-sm">
+                <CardHeader className="pb-4">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Upload Results
+                    </h2>
+                    <Button
+                      onClick={clearResults}
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {uploadResult.totalProcessed}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Total Processed
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {uploadResult.created}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Successfully Created
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-red-50 rounded-lg">
+                      <div className="text-2xl font-bold text-red-600">
+                        {uploadResult.errors}
+                      </div>
+                      <div className="text-sm text-gray-600">Errors</div>
+                    </div>
+                  </div>
+
+                  {/* Created Students */}
+                  {uploadResult.createdStudents &&
+                    uploadResult.createdStudents.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-md font-semibold text-gray-900 mb-3">
+                          Created Students
+                        </h3>
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+                          {uploadResult.createdStudents.map(
+                            (student, index) => (
+                              <div
+                                key={index}
+                                className="text-sm text-green-700 mb-1"
+                              >
+                                Row {student.row}: {student.studentGivenName}{" "}
+                                {student.studentFamilyName} ({student.studentNo}
+                                )
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Errors */}
+                  {uploadResult.errors && uploadResult.errors.length > 0 && (
+                    <div>
+                      <h3 className="text-md font-semibold text-gray-900 mb-3">
+                        Errors
+                      </h3>
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+                        {uploadResult.errors.map((error, index) => (
+                          <div
+                            key={index}
+                            className="text-sm text-red-700 mb-1"
+                          >
+                            Row {error.row}: {error.message}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Upload Instructions Card */}
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-white border-gray-200 shadow-sm mt-8">
               <CardContent className="p-6">
                 <div className="text-center py-8">
                   <FileSpreadsheet className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Upload Student Data
+                    Excel Upload Instructions
                   </h3>
                   <p className="text-gray-500 mb-4">
-                    Select a school and choose an Excel file containing student
-                    data to upload.
+                    Download the template and fill in your student data, then
+                    upload the Excel file.
                   </p>
                   <div className="text-sm text-gray-400 space-y-1">
-                    <p>Supported file formats: .xlsx, .xls</p>
-                    <p>Maximum file size: 10MB</p>
+                    <p>• Supported file formats: .xlsx, .xls</p>
+                    <p>• Maximum file size: 10MB</p>
+                    <p>
+                      • Student numbers will be auto-generated if not provided
+                    </p>
+                    <p>• All required fields must be filled</p>
                   </div>
                 </div>
               </CardContent>

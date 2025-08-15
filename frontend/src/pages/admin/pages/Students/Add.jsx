@@ -21,6 +21,7 @@ export default function Add() {
     trip: "",
     actualArrivalTime: "",
     arrivalTime: "",
+    departurePickupTime: "",
     flight: "",
     dOrI: "",
     mOrF: "",
@@ -32,7 +33,10 @@ export default function Add() {
     phone: "",
     address: "",
     city: "",
+    specialInstructions: "",
+    studyPermit: "",
     school: "",
+    staffMemberAssigned: "",
     client: "",
   });
 
@@ -271,6 +275,7 @@ export default function Add() {
       trip: "",
       actualArrivalTime: "",
       arrivalTime: "",
+      departurePickupTime: "",
       flight: "",
       dOrI: "",
       mOrF: "",
@@ -282,7 +287,10 @@ export default function Add() {
       phone: "",
       address: "",
       city: "",
+      specialInstructions: "",
+      studyPermit: "",
       school: "",
+      staffMemberAssigned: "",
       client: "",
     });
     setError("");
@@ -448,6 +456,20 @@ export default function Add() {
                         name="arrivalTime"
                         type="time"
                         value={formData.arrivalTime}
+                        onChange={handleInputChange}
+                        className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    {/* Departure Pickup Time */}
+                    <div className="space-y-2">
+                      <Label className="text-gray-900 text-sm font-medium">
+                        Departure Pickup Time
+                      </Label>
+                      <Input
+                        name="departurePickupTime"
+                        type="time"
+                        value={formData.departurePickupTime}
                         onChange={handleInputChange}
                         className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       />
@@ -703,19 +725,95 @@ export default function Add() {
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300">
                           <SelectItem
-                            value="client1"
+                            value="ILSC"
                             className="text-gray-900 hover:bg-gray-100"
                           >
-                            Client 1
+                            ILSC
                           </SelectItem>
                           <SelectItem
-                            value="client2"
+                            value="EC"
                             className="text-gray-900 hover:bg-gray-100"
                           >
-                            Client 2
+                            EC
+                          </SelectItem>
+                          <SelectItem
+                            value="ILAC"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            ILAC
+                          </SelectItem>
+                          <SelectItem
+                            value="EF"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            EF
                           </SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+
+                  {/* Fifth Row - New Fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    {/* Special Instructions */}
+                    <div className="space-y-2">
+                      <Label className="text-gray-900 text-sm font-medium">
+                        Special Instructions
+                      </Label>
+                      <Input
+                        name="specialInstructions"
+                        type="text"
+                        value={formData.specialInstructions}
+                        onChange={handleInputChange}
+                        className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="Enter special instructions"
+                      />
+                    </div>
+
+                    {/* Study Permit */}
+                    <div className="space-y-2">
+                      <Label className="text-gray-900 text-sm font-medium">
+                        Study Permit
+                      </Label>
+                      <Select
+                        value={formData.studyPermit}
+                        onValueChange={(value) =>
+                          handleSelectChange("studyPermit", value)
+                        }
+                      >
+                        <SelectTrigger className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                          <SelectValue placeholder="Select Study Permit" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300">
+                          <SelectItem
+                            value="Y"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            Yes
+                          </SelectItem>
+                          <SelectItem
+                            value="N"
+                            className="text-gray-900 hover:bg-gray-100"
+                          >
+                            No
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Staff Member Assigned */}
+                    <div className="space-y-2">
+                      <Label className="text-gray-900 text-sm font-medium">
+                        Staff Member Assigned
+                      </Label>
+                      <Input
+                        name="staffMemberAssigned"
+                        type="text"
+                        value={formData.staffMemberAssigned}
+                        onChange={handleInputChange}
+                        className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="Enter staff member"
+                      />
                     </div>
                   </div>
 
