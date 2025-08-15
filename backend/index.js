@@ -44,6 +44,7 @@ const assignmentRoutes = require("./routes/assignments");
 const driverRoutes = require("./routes/driver");
 const subdriverRoutes = require("./routes/subdriver");
 const greeterRoutes = require("./routes/greeter");
+const schoolRoutes = require("./routes/school");
 const waitingTimeRoutes = require("./routes/waitingTime");
 const absentFeedbackRoutes = require("./routes/absentFeedback");
 
@@ -56,6 +57,7 @@ app.use("/api/assignments", assignmentRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/subdriver", subdriverRoutes);
 app.use("/api/greeter", greeterRoutes);
+app.use("/api/school", schoolRoutes);
 app.use("/api/waiting-time", waitingTimeRoutes);
 app.use("/api/absent-feedback", absentFeedbackRoutes);
 

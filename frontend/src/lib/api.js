@@ -158,6 +158,19 @@ export const assignmentAPI = {
   },
 };
 
+// School API functions
+export const schoolAPI = {
+  // Get students with status for a school
+  getSchoolStudentsStatus: (params = {}) => {
+    return api.get("/school/students-status", { params });
+  },
+
+  // Get status statistics for a school
+  getSchoolStatusStats: (params = {}) => {
+    return api.get("/school/status-stats", { params });
+  },
+};
+
 // Waiting Time API functions
 export const waitingTimeAPI = {
   // Get waiting times for a specific date

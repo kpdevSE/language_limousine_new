@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart3,
   User,
@@ -8,20 +8,107 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  Search,
+  Calendar,
+  Loader2,
 } from "lucide-react";
 import Sidebar from "../components/Siebar";
+import { schoolAPI } from "@/lib/api";
+import { toast } from "react-toastify";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export default function StatusPage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [studentsData, setStudentsData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [statusCounts, setStatusCounts] = useState({
+    waiting: 0,
+    inCar: 0,
+    delivered: 0,
+  });
 
-  // Sample empty data to match the "No students found" state
-  const studentsData = [];
-
-  const totalPages = Math.ceil(studentsData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = studentsData.slice(startIndex, endIndex);
+
+  // Fetch data on component mount and when filters change
+  useEffect(() => {
+    fetchStudentsStatus();
+  }, [currentPage, itemsPerPage, selectedDate, searchTerm]);
+
+  const fetchStudentsStatus = async () => {
+    setIsLoading(true);
+    try {
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchTerm,
+      };
+
+      if (selectedDate && selectedDate.trim() !== "") {
+        params.date = selectedDate;
+      }
+
+      const response = await schoolAPI.getSchoolStudentsStatus(params);
+
+      if (response.data.success) {
+        setStudentsData(response.data.data.students);
+        setTotalStudents(response.data.data.pagination.totalStudents);
+        setTotalPages(response.data.data.pagination.totalPages);
+        setStatusCounts(response.data.data.statusCounts);
+      }
+    } catch (error) {
+      console.error("Error fetching students status:", error);
+      toast.error("Failed to fetch students status");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Delivered":
+        return "bg-green-100 text-green-800";
+      case "In Car":
+        return "bg-blue-100 text-blue-800";
+      case "Waiting":
+      default:
+        return "bg-yellow-100 text-yellow-800";
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "Delivered":
+        return <CheckCircle className="h-4 w-4" />;
+      case "In Car":
+        return <Car className="h-4 w-4" />;
+      case "Waiting":
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -53,8 +140,8 @@ export default function StatusPage() {
             {/* User Profile */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-gray-900">Admin</p>
-                <p className="text-xs text-gray-500">Administrator</p>
+                <p className="text-sm font-medium text-gray-900">School User</p>
+                <p className="text-xs text-gray-500">School Administrator</p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer">
                 <User className="h-5 w-5 text-white" />
@@ -65,6 +152,29 @@ export default function StatusPage() {
 
         {/* Main Content */}
         <main className="container mx-auto px-4 md:px-6 py-6 max-w-7xl">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search students..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-gray-400" />
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                className="w-auto"
+              />
+            </div>
+          </div>
+
           {/* Status Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div className="bg-white shadow-lg border border-gray-200 rounded-xl p-6">
@@ -73,7 +183,9 @@ export default function StatusPage() {
                   <Clock className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">0</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {statusCounts.waiting}
+                  </p>
                   <p className="text-sm text-gray-500">Waiting</p>
                 </div>
               </div>
@@ -85,7 +197,9 @@ export default function StatusPage() {
                   <Car className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">0</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {statusCounts.inCar}
+                  </p>
                   <p className="text-sm text-gray-500">In Car</p>
                 </div>
               </div>
@@ -97,7 +211,9 @@ export default function StatusPage() {
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">0</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {statusCounts.delivered}
+                  </p>
                   <p className="text-sm text-gray-500">Delivered</p>
                 </div>
               </div>
@@ -125,49 +241,106 @@ export default function StatusPage() {
                         #
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        Actual arrival time
+                        Status
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
-                        Arr time
+                        Arrival Time
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        student number
+                        Pickup Time
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        student given name
+                        Delivery Time
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        student family name
+                        Student No
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        host given name
+                        Student Name
                       </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[80px]">
-                        Waiting
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                        Flight
                       </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[80px]">
-                        In car
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                        Host Name
                       </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 min-w-[80px]">
-                        Delivered
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 min-w-[120px]">
+                        Address
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td colSpan="10" className="p-8 text-center">
-                        <div className="flex flex-col items-center gap-3 text-gray-500">
-                          <AlertCircle className="h-12 w-12 text-gray-300" />
-                          <p className="text-lg font-medium">
-                            No students found.
-                          </p>
-                          <p className="text-sm">
-                            Student status data will appear here when students
-                            are registered and tracked.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan="10" className="p-8 text-center">
+                          <div className="flex flex-col items-center gap-3 text-gray-500">
+                            <Loader2 className="h-12 w-12 text-gray-300 animate-spin" />
+                            <p className="text-lg font-medium">
+                              Loading students...
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : currentData.length === 0 ? (
+                      <tr>
+                        <td colSpan="10" className="p-8 text-center">
+                          <div className="flex flex-col items-center gap-3 text-gray-500">
+                            <AlertCircle className="h-12 w-12 text-gray-300" />
+                            <p className="text-lg font-medium">
+                              No students found.
+                            </p>
+                            <p className="text-sm">
+                              Student status data will appear here when students
+                              are registered and tracked.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      currentData.map((student, index) => (
+                        <tr
+                          key={student._id}
+                          className="border-gray-200 hover:bg-gray-50"
+                        >
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {startIndex + index + 1}
+                          </td>
+                          <td className="p-3 border-r border-gray-200">
+                            <Badge className={getStatusColor(student.status)}>
+                              <div className="flex items-center gap-1">
+                                {getStatusIcon(student.status)}
+                                {student.status}
+                              </div>
+                            </Badge>
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.arrivalTime || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.pickupTimeFormatted || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.deliveryTimeFormatted || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.studentNo || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.studentGivenName}{" "}
+                            {student.studentFamilyName}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.flight || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.hostGivenName || "N/A"}
+                          </td>
+                          <td className="p-3 text-xs text-gray-800">
+                            {student.address || "N/A"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -175,31 +348,33 @@ export default function StatusPage() {
               {/* Pagination */}
               <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
                 <div className="text-sm text-gray-500">
-                  Showing 0 to 0 of 0 entries
+                  Showing {startIndex + 1} to{" "}
+                  {Math.min(endIndex, totalStudents)} of {totalStudents} entries
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    disabled={true}
-                    className="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-400 cursor-not-allowed"
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Previous
-                  </button>
+                  </Button>
 
-                  <button
-                    disabled={true}
-                    className="w-8 h-8 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-400 cursor-not-allowed"
-                  >
-                    1
-                  </button>
+                  <span className="flex items-center px-3 py-1 text-sm text-gray-700">
+                    Page {currentPage} of {totalPages}
+                  </span>
 
-                  <button
-                    disabled={true}
-                    className="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-400 cursor-not-allowed"
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
                   >
                     Next
                     <ChevronRight className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
