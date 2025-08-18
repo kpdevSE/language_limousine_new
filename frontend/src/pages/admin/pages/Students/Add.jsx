@@ -721,33 +721,18 @@ export default function Add() {
                         }
                       >
                         <SelectTrigger className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                          <SelectValue placeholder="Select Client" />
+                          <SelectValue placeholder="Select Client (School)" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300">
-                          <SelectItem
-                            value="ILSC"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            ILSC
-                          </SelectItem>
-                          <SelectItem
-                            value="EC"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            EC
-                          </SelectItem>
-                          <SelectItem
-                            value="ILAC"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            ILAC
-                          </SelectItem>
-                          <SelectItem
-                            value="EF"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            EF
-                          </SelectItem>
+                          {schools.map((school) => (
+                            <SelectItem
+                              key={school.value}
+                              value={school.value}
+                              className="text-gray-900 hover:bg-gray-100"
+                            >
+                              {school.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

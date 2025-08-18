@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { authenticateToken, requireGreeter } = require("../middleware/auth");
+const {
+  authenticateToken,
+  requireGreeter,
+  requireRoles,
+} = require("../middleware/auth");
 const {
   getWaitingTimes,
   updateWaitingTime,
@@ -9,8 +13,8 @@ const {
   getWaitingTimeStats,
 } = require("../controllers/waitingTimeController");
 
-// Greeter routes (require greeter authentication)
-router.use(authenticateToken, requireGreeter);
+// Routes require Greeter or Admin authentication
+router.use(authenticateToken, requireRoles("Greeter", "Admin"));
 
 // Get waiting times for a specific date
 router.get("/", getWaitingTimes);

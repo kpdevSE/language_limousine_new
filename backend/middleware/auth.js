@@ -151,6 +151,35 @@ const requireGreeter = async (req, res, next) => {
   }
 };
 
+// Generic role authorization middleware
+const requireRoles = (...allowedRoles) => {
+  return async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({
+          success: false,
+          message: `Access denied. Required roles: ${allowedRoles.join(", ")}`,
+        });
+      }
+
+      next();
+    } catch (error) {
+      console.error("Role authorization error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Authorization failed",
+      });
+    }
+  };
+};
+
 // Optional Authentication Middleware (for routes that can work with or without auth)
 const optionalAuth = async (req, res, next) => {
   try {
@@ -181,5 +210,6 @@ module.exports = {
   requireAdmin,
   requireSchool,
   requireGreeter,
+  requireRoles,
   optionalAuth,
 };

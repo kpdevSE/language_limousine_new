@@ -13,21 +13,12 @@ import {
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { userAPI, studentAPI, assignmentAPI } from "@/lib/api";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     students: { total: 0, active: 0, inactive: 0 },
     drivers: { total: 0, active: 0, inactive: 0 },
@@ -357,55 +348,49 @@ export default function AdminDashboard() {
 
             {/* Dashboard Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              {/* Recent Activity */}
+              {/* Quick Actions (replaces Recent Activity) */}
               <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
                 <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
-                  Recent Activity
+                  Quick Actions
                 </h2>
-                {loading ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="animate-pulse">
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : recentActivity.length > 0 ? (
-                  <div className="space-y-4">
-                    {recentActivity.map((activity) => (
-                      <div
-                        key={activity.id}
-                        className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-800">
-                            {activity.message}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {activity.timestamp.toLocaleString()}
-                          </p>
-                        </div>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            activity.status === "completed"
-                              ? "bg-green-100 text-green-800"
-                              : activity.status === "in_progress"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {activity.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">
-                    No recent activity to display.
-                  </p>
-                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    onClick={() => navigate("/admin/admin-students/upload")}
+                  >
+                    Upload Students
+                  </Button>
+                  <Button
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    onClick={() => navigate("/admin/admin-students/add")}
+                  >
+                    Add Student
+                  </Button>
+                  <Button
+                    className="w-full bg-indigo-600 hover:bg-indigo-700"
+                    onClick={() => navigate("/admin/admin-students/view")}
+                  >
+                    View Students
+                  </Button>
+                  <Button
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    onClick={() => navigate("/admin/assigndrivers")}
+                  >
+                    Assign Drivers
+                  </Button>
+                  <Button
+                    className="w-full bg-orange-500 hover:bg-orange-600"
+                    onClick={() => navigate("/admin/admin-waitingtime")}
+                  >
+                    Update Waiting Time
+                  </Button>
+                  <Button
+                    className="w-full bg-gray-700 hover:bg-gray-800"
+                    onClick={() => navigate("/admin/printmap")}
+                  >
+                    Print Map
+                  </Button>
+                </div>
               </div>
 
               {/* System Status */}

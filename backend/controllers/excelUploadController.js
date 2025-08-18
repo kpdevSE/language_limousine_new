@@ -182,28 +182,14 @@ const uploadExcelFile = async (req, res) => {
       });
     }
 
-    const { date, school, client } = req.body;
-    console.log(
-      "Form data - date:",
-      date,
-      "school:",
-      school,
-      "client:",
-      client
-    );
+    const { date } = req.body;
+    console.log("Form data - date:", date);
 
-    if (!date || !school || !client) {
-      console.log(
-        "Missing required fields - date:",
-        !!date,
-        "school:",
-        !!school,
-        "client:",
-        !!client
-      );
+    if (!date) {
+      console.log("Missing required fields - date:", !!date);
       return res.status(400).json({
         success: false,
-        message: "Date, school, and client are required",
+        message: "Date is required",
       });
     }
 
@@ -265,8 +251,21 @@ const uploadExcelFile = async (req, res) => {
       try {
         // Set common fields
         studentData.date = date;
-        studentData.school = school;
-        studentData.client = client;
+        // Keep per-row school and client from Excel (allow mixed values)
+        if (!studentData.school) {
+          errors.push({
+            row: studentData.rowNumber,
+            message: "Missing School value in Excel row.",
+          });
+          continue;
+        }
+        if (!studentData.client) {
+          errors.push({
+            row: studentData.rowNumber,
+            message: "Missing Client value in Excel row.",
+          });
+          continue;
+        }
         studentData.createdBy = createdBy;
 
         // Generate student number if not provided
@@ -277,6 +276,16 @@ const uploadExcelFile = async (req, res) => {
           );
         }
 
+        // Normalize studyPermit to valid enum or remove if invalid/empty
+        if (typeof studentData.studyPermit === "string") {
+          const sp = studentData.studyPermit.trim().toUpperCase();
+          if (sp === "Y" || sp === "N") {
+            studentData.studyPermit = sp;
+          } else {
+            delete studentData.studyPermit;
+          }
+        }
+
         // Set default values for required fields
         if (!studentData.dOrI) studentData.dOrI = "I";
         if (!studentData.mOrF) studentData.mOrF = "M";
@@ -285,12 +294,14 @@ const uploadExcelFile = async (req, res) => {
         if (!studentData.arrivalTime) studentData.arrivalTime = "00:00";
         if (!studentData.trip) studentData.trip = "1";
 
-        // Check for duplicate student number
-        const existingStudent = await Student.findOne({
-          studentNo: studentData.studentNo,
-          date: studentData.date,
-          isActive: true,
-        });
+        // Check for duplicate student number (only when present)
+        const existingStudent = studentData.studentNo
+          ? await Student.findOne({
+              studentNo: studentData.studentNo,
+              date: studentData.date,
+              isActive: true,
+            })
+          : null;
 
         if (existingStudent) {
           errors.push({
@@ -326,7 +337,7 @@ const uploadExcelFile = async (req, res) => {
       data: {
         totalProcessed: studentsData.length,
         created: createdStudents.length,
-        errors: errors.length,
+        errorsCount: errors.length,
         createdStudents,
         errors,
       },

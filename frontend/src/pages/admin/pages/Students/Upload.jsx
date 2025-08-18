@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   User,
   Upload as UploadIcon,
@@ -14,13 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import Sidebar from "../../components/Sidebar";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -28,9 +22,6 @@ import { toast } from "react-toastify";
 export default function Upload() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [date, setDate] = useState("07/24/2025");
-  const [school, setSchool] = useState("");
-  const [client, setClient] = useState("");
-  const [schools, setSchools] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
   const [error, setError] = useState("");
@@ -81,35 +72,6 @@ export default function Upload() {
     }
   );
 
-  useEffect(() => {
-    fetchSchools();
-  }, []);
-
-  const fetchSchools = async () => {
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        console.error("No auth token available");
-        return;
-      }
-
-      const response = await axios.get(
-        "http://localhost:5000/api/users/schools/dropdown",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        setSchools(response.data.data.schools);
-      }
-    } catch (err) {
-      console.error("Error fetching schools:", err);
-    }
-  };
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -154,16 +116,6 @@ export default function Upload() {
       return;
     }
 
-    if (!school) {
-      setError("Please select a school");
-      return;
-    }
-
-    if (!client) {
-      setError("Please select a client");
-      return;
-    }
-
     setIsUploading(true);
     setError("");
     setSuccess("");
@@ -182,15 +134,11 @@ export default function Upload() {
       const formData = new FormData();
       formData.append("excelFile", selectedFile);
       formData.append("date", date);
-      formData.append("school", school);
-      formData.append("client", client);
 
       console.log("Upload request details:", {
         file: selectedFile.name,
         fileSize: selectedFile.size,
         date,
-        school,
-        client,
         token: token ? "present" : "missing",
       });
 
@@ -285,7 +233,9 @@ export default function Upload() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
 
-        toast.success("Template downloaded successfully!");
+        toast.success(
+          "Template downloaded successfully! School and Client will be automatically extracted from the Excel file."
+        );
       }
     } catch (err) {
       console.error("Download template error:", err);
@@ -392,14 +342,34 @@ export default function Upload() {
                   Upload Excel File
                 </h2>
                 <p className="text-sm text-gray-600">
-                  Select an Excel file containing student data and fill in the
-                  required information.
+                  Select an Excel file containing student data. School and
+                  Client will be automatically extracted from the file.
                 </p>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-6">
+                  {/* Info Section */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <AlertCircle className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium text-blue-800">
+                          Automatic Data Extraction
+                        </h3>
+                        <p className="text-sm text-blue-700 mt-1">
+                          School and Client information will be automatically
+                          extracted from your Excel file. Make sure your Excel
+                          file contains "School" and "Client" columns with the
+                          appropriate values.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Form Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Date Selection */}
                     <div className="space-y-2">
                       <Label className="text-gray-700 text-sm font-medium">
@@ -415,67 +385,6 @@ export default function Upload() {
                         />
                         <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       </div>
-                    </div>
-
-                    {/* School Selection */}
-                    <div className="space-y-2">
-                      <Label className="text-gray-700 text-sm font-medium">
-                        School *
-                      </Label>
-                      <Select value={school} onValueChange={setSchool}>
-                        <SelectTrigger className="w-full bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                          <SelectValue placeholder="Select School" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-300">
-                          {schools.map((schoolOption) => (
-                            <SelectItem
-                              key={schoolOption.value}
-                              value={schoolOption.value}
-                              className="text-gray-900 hover:bg-gray-100"
-                            >
-                              {schoolOption.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Client Selection */}
-                    <div className="space-y-2">
-                      <Label className="text-gray-700 text-sm font-medium">
-                        Client *
-                      </Label>
-                      <Select value={client} onValueChange={setClient}>
-                        <SelectTrigger className="w-full bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                          <SelectValue placeholder="Select Client" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-300">
-                          <SelectItem
-                            value="ILSC"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            ILSC
-                          </SelectItem>
-                          <SelectItem
-                            value="EC"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            EC
-                          </SelectItem>
-                          <SelectItem
-                            value="ILAC"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            ILAC
-                          </SelectItem>
-                          <SelectItem
-                            value="EF"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            EF
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
 
                     {/* File Selection */}
@@ -516,13 +425,7 @@ export default function Upload() {
                   <div className="flex justify-center">
                     <Button
                       onClick={handleUpload}
-                      disabled={
-                        isUploading ||
-                        !selectedFile ||
-                        !date ||
-                        !school ||
-                        !client
-                      }
+                      disabled={isUploading || !selectedFile || !date}
                       className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 flex items-center space-x-2"
                     >
                       <UploadIcon className="h-4 w-4" />
@@ -573,7 +476,7 @@ export default function Upload() {
                     </div>
                     <div className="text-center p-4 bg-red-50 rounded-lg">
                       <div className="text-2xl font-bold text-red-600">
-                        {uploadResult.errors}
+                        {uploadResult.errorsCount ?? uploadResult.errors}
                       </div>
                       <div className="text-sm text-gray-600">Errors</div>
                     </div>
