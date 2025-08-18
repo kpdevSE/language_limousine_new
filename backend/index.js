@@ -18,7 +18,7 @@ app.use(helmet());
 const allowedOrigins = (
   process.env.CLIENT_URLS ||
   process.env.CLIENT_URL ||
-  "http://localhost:5173"
+  "http://language-limousine-new-p3to.vercel.app"
 )
   .split(",")
   .map((s) => s.trim())
