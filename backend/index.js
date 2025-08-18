@@ -18,7 +18,7 @@ app.use(helmet());
 const allowedOrigins = (
   process.env.CLIENT_URLS ||
   process.env.CLIENT_URL ||
-  "http://localhost:5173"
+  ("http://localhost:5173" && "'http://localhost:5000',")
 )
   .split(",")
   .map((s) => s.trim())
@@ -92,6 +92,10 @@ app.get(`/api/health`, (req, res) => {
     message: "Server is running",
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get("/", (req, res) => {
+  res.send("Hello World");
 });
 
 // 404 handler
