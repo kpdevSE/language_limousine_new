@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import Sidebar from "../../components/Sidebar";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
 import { toast } from "react-toastify";
 
 export default function Drivers() {
@@ -63,7 +64,7 @@ export default function Drivers() {
 
   // Configure axios defaults
   const apiClient = axios.create({
-    baseURL: "http://localhost:5000/api",
+    baseURL: API_BASE_URL,
     headers: {
       "Content-Type": "application/json",
     },

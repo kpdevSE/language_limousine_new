@@ -1,5 +1,5 @@
 // Test file to verify dashboard functionality
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = process.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 async function testDashboardEndpoints() {
   console.log("Testing Dashboard Endpoints...\n");

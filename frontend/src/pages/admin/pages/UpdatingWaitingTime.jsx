@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
 import { toast } from "react-toastify";
 
 export default function UpdatingWaitingTime() {
@@ -56,7 +57,7 @@ export default function UpdatingWaitingTime() {
 
   // Axios client
   const apiClient = axios.create({
-    baseURL: "http://localhost:5000/api",
+    baseURL: API_BASE_URL,
     headers: { "Content-Type": "application/json" },
   });
 

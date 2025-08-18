@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "../../components/Sidebar";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
 import { toast } from "react-toastify";
 
 export default function Download() {
@@ -30,7 +31,7 @@ export default function Download() {
 
   // Configure axios client
   const apiClient = axios.create({
-    baseURL: "http://localhost:5000/api/students",
+    baseURL: `${API_BASE_URL}/students`,
     headers: {
       "Content-Type": "application/json",
     },

@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import Sidebar from "../../components/Sidebar";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
 import { toast } from "react-toastify";
 
 export default function Subdrivers() {
@@ -64,7 +65,7 @@ export default function Subdrivers() {
 
   // Configure axios defaults
   const apiClient = axios.create({
-    baseURL: "http://localhost:5000/api",
+    baseURL: API_BASE_URL,
     headers: {
       "Content-Type": "application/json",
     },
@@ -695,14 +696,30 @@ export default function Subdrivers() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50 hover:bg-gray-50">
-                      <TableHead className="text-gray-700 font-medium">#</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Username</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Email</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Gender</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Subdriver ID</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Vehicle Number</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Status</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Action</TableHead>
+                      <TableHead className="text-gray-700 font-medium">
+                        #
+                      </TableHead>
+                      <TableHead className="text-gray-700 font-medium">
+                        Username
+                      </TableHead>
+                      <TableHead className="text-gray-700 font-medium">
+                        Email
+                      </TableHead>
+                      <TableHead className="text-gray-700 font-medium">
+                        Gender
+                      </TableHead>
+                      <TableHead className="text-gray-700 font-medium">
+                        Subdriver ID
+                      </TableHead>
+                      <TableHead className="text-gray-700 font-medium">
+                        Vehicle Number
+                      </TableHead>
+                      <TableHead className="text-gray-700 font-medium">
+                        Status
+                      </TableHead>
+                      <TableHead className="text-gray-700 font-medium">
+                        Action
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

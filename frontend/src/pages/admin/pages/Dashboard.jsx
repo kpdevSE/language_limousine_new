@@ -14,6 +14,7 @@ import {
 import Sidebar from "../components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { API_BASE_URL } from "@/lib/config";
 import { userAPI, studentAPI, assignmentAPI } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 
@@ -107,7 +108,7 @@ export default function AdminDashboard() {
 
       // Check system status
       try {
-        await fetch("http://localhost:5000/api/health");
+        await fetch(`${API_BASE_URL}/health`);
         setSystemStatus((prev) => ({ ...prev, api: "operational" }));
       } catch (err) {
         setSystemStatus((prev) => ({ ...prev, api: "error" }));
@@ -151,7 +152,7 @@ export default function AdminDashboard() {
     try {
       const token = sessionStorage.getItem("admin_token");
       if (!token) throw new Error("Admin token not found. Please login again.");
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

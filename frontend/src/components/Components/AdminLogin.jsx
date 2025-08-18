@@ -187,10 +187,7 @@ export default function MultiRoleLoginDialog() {
       const token = tokenManager.getToken();
       if (!token) return;
 
-      const response = await api.get(
-        "http://localhost:5000/api/auth/verify",
-        token
-      );
+      const response = await api.get(`/auth/verify`, token);
 
       if (response.data.success) {
         setIsLoggedIn(true);
@@ -226,7 +223,7 @@ export default function MultiRoleLoginDialog() {
         throw new Error("Please fill in all fields");
       }
 
-      const response = await api.post("http://localhost:5000/api/auth/login", {
+      const response = await api.post(`/auth/login`, {
         email: formData.email,
         password: formData.password,
       });

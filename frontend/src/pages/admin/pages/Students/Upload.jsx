@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 import Sidebar from "../../components/Sidebar";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
 import { toast } from "react-toastify";
 
 export default function Upload() {
@@ -52,7 +53,7 @@ export default function Upload() {
 
   // Configure axios client
   const apiClient = axios.create({
-    baseURL: "http://localhost:5000/api",
+    baseURL: API_BASE_URL,
     headers: {
       "Content-Type": "application/json",
     },
@@ -143,7 +144,7 @@ export default function Upload() {
       });
 
       const response = await axios.post(
-        "http://localhost:5000/api/excel-upload/students",
+        `${API_BASE_URL}/excel-upload/students`,
         formData,
         {
           headers: {

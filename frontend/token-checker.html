@@ -121,7 +121,7 @@
 
         try {
           const response = await fetch(
-            "http://localhost:5000/api/excel-upload/template",
+            `${import.meta.env ? import.meta.env.VITE_API_BASE_URL : 'http://localhost:5000/api'}/excel-upload/template`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,

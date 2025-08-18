@@ -13,6 +13,7 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Sidebar from "../../components/Sidebar";
 import axios from "axios";
+import { API_BASE_URL } from "@/lib/config";
 import { toast } from "react-toastify";
 
 export default function Add() {
@@ -63,7 +64,7 @@ export default function Add() {
 
   // Configure axios client
   const apiClient = axios.create({
-    baseURL: "http://localhost:5000/api/students",
+    baseURL: `${API_BASE_URL}/students`,
     headers: {
       "Content-Type": "application/json",
     },
@@ -145,7 +146,7 @@ export default function Add() {
       }
 
       const response = await axios.get(
-        "http://localhost:5000/api/users/schools/dropdown",
+        `${API_BASE_URL}/users/schools/dropdown`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
