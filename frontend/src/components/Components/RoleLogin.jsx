@@ -148,9 +148,9 @@ export default function RoleLoginDialog() {
       if (!roleConfig) throw new Error("Invalid role selected");
       let endpoint = "";
       if (formData.role === "Admin") {
-        endpoint = "/api/auth/login";
+        endpoint = "/auth/login";
       } else {
-        endpoint = "/api/auth/user/login";
+        endpoint = "/auth/user/login";
       }
       const response = await axios.post(`${API_BASE_URL}${endpoint}`, {
         email: formData.email,
