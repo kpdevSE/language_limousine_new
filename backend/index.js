@@ -14,11 +14,11 @@ connectDB();
 // Security middleware
 app.use(helmet());
 
-// CORS configuration (supports multiple origins and Vercel previews)
+// CORS configuration (multiple origins, no Vercel-specific wildcard)
 const allowedOrigins = (
   process.env.CLIENT_URLS ||
   process.env.CLIENT_URL ||
-  "http://language-limousine-new-p3to.vercel.app"
+  "http://localhost:5173"
 )
   .split(",")
   .map((s) => s.trim())
@@ -26,13 +26,7 @@ const allowedOrigins = (
 
 const isOriginAllowed = (origin) => {
   if (!origin) return true; // non-browser or same-origin requests
-  if (allowedOrigins.includes(origin)) return true;
-  try {
-    const { hostname } = new URL(origin);
-    // Allow Vercel preview domains, e.g., *.vercel.app
-    if (hostname && hostname.endsWith(".vercel.app")) return true;
-  } catch (_) {}
-  return false;
+  return allowedOrigins.includes(origin);
 };
 
 const corsOptions = {
