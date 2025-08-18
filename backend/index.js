@@ -77,22 +77,22 @@ const waitingTimeRoutes = require("./routes/waitingTime");
 const absentFeedbackRoutes = require("./routes/absentFeedback");
 const excelUploadRoutes = require("./routes/excelUpload");
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/students", studentRoutes);
-app.use("/api/school-students", schoolStudentRoutes);
-app.use("/api/assignments", assignmentRoutes);
-app.use("/api/driver", driverRoutes);
-app.use("/api/subdriver", subdriverRoutes);
-app.use("/api/greeter", greeterRoutes);
-app.use("/api/school", schoolRoutes);
-app.use("/api/waiting-time", waitingTimeRoutes);
-app.use("/api/absent-feedback", absentFeedbackRoutes);
-app.use("/api/excel-upload", excelUploadRoutes);
+// Routes (always under /api)
+app.use(`/api/auth`, authRoutes);
+app.use(`/api/users`, userRoutes);
+app.use(`/api/students`, studentRoutes);
+app.use(`/api/school-students`, schoolStudentRoutes);
+app.use(`/api/assignments`, assignmentRoutes);
+app.use(`/api/driver`, driverRoutes);
+app.use(`/api/subdriver`, subdriverRoutes);
+app.use(`/api/greeter`, greeterRoutes);
+app.use(`/api/school`, schoolRoutes);
+app.use(`/api/waiting-time`, waitingTimeRoutes);
+app.use(`/api/absent-feedback`, absentFeedbackRoutes);
+app.use(`/api/excel-upload`, excelUploadRoutes);
 
 // Health check route
-app.get("/api/health", (req, res) => {
+app.get(`/api/health`, (req, res) => {
   res.json({
     success: true,
     message: "Server is running",
@@ -121,6 +121,13 @@ app.use((error, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
+// Export for Vercel serverless, otherwise listen locally
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  app.listen(PORT, () => {
+    console.log(
+      `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
+    );
+  });
+}
