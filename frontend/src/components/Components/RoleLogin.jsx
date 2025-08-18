@@ -72,6 +72,7 @@ const USER_KEY = "user_data";
 const ADMIN_TOKEN_KEY = "admin_token";
 const ADMIN_USER_KEY = "admin_user";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const tokenManager = {
   setToken: (token, isAdmin = false) => {
     sessionStorage.setItem(TOKEN_KEY, token);
@@ -151,7 +152,7 @@ export default function RoleLoginDialog() {
       } else {
         endpoint = "/api/auth/user/login";
       }
-      const response = await axios.post(`http://localhost:5000${endpoint}`, {
+      const response = await axios.post(`${API_BASE_URL}${endpoint}`, {
         email: formData.email,
         password: formData.password,
       });
