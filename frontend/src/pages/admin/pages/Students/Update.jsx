@@ -490,11 +490,10 @@ export default function Update() {
                                       <Input
                                         id="update-date"
                                         name="date"
-                                        type="text"
+                                        type="date"
                                         value={updateForm.date}
                                         onChange={handleInputChange}
                                         className="bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                                        placeholder="MM/DD/YYYY"
                                       />
                                     </div>
 

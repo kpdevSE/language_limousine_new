@@ -161,10 +161,9 @@ export default function StudentDetails() {
                   </label>
                   <div className="flex gap-2">
                     <input
-                      type="text"
+                      type="date"
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
-                      placeholder="MM/DD/YYYY (leave empty for all students)"
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     {selectedDate && selectedDate.trim() !== "" && (

@@ -378,11 +378,10 @@ export default function Upload() {
                       </Label>
                       <div className="relative">
                         <Input
-                          type="text"
+                          type="date"
                           value={date}
                           onChange={(e) => setDate(e.target.value)}
                           className="w-full bg-white text-gray-900 px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm pr-10"
-                          placeholder="MM/DD/YYYY"
                         />
                         <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       </div>

@@ -409,11 +409,10 @@ export default function Add() {
                       <div className="relative">
                         <Input
                           name="date"
-                          type="text"
+                          type="date"
                           value={formData.date}
                           onChange={handleInputChange}
                           className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500 pr-10"
-                          placeholder="07/24/2025"
                         />
                         <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       </div>

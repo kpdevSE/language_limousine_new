@@ -7,9 +7,9 @@ const {
 /**
  * Parse Excel file and extract student data
  */
-const parseExcelFile = (filePath) => {
+const parseExcelFile = (buffer) => {
   try {
-    const workbook = XLSX.readFile(filePath);
+    const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 
@@ -52,11 +52,9 @@ const parseExcelFile = (filePath) => {
     const columnMapping = {
       "Trip #": "trip",
       "Actual Arrival Time / Departure Pick Up Time": "actualArrivalTime",
-      "Actu Arriva Time": "actualArrivalTime", // Handle truncated header
       "Arr Time / Dep PU": "arrivalTime",
-      "Arr Time Dep PU": "arrivalTime", // Handle truncated header
       "Flight #": "flight",
-      "I or M / F": "mOrF",
+      "I or M / F": "dOrI",
       "Student Number": "studentNo",
       "Student Given Name": "studentGivenName",
       "Student Family Name": "studentFamilyName",
@@ -193,14 +191,17 @@ const uploadExcelFile = async (req, res) => {
       });
     }
 
+    // Read the uploaded file buffer
+    const buffer = req.file.buffer;
+
     // Parse Excel file
-    const studentsData = parseExcelFile(req.file.path);
+    const studentsData = parseExcelFile(buffer);
 
     if (studentsData.length === 0) {
       // Get headers from the parsed file for error reporting
       let foundHeaders = [];
       try {
-        const workbook = XLSX.readFile(req.file.path);
+        const workbook = XLSX.read(buffer, { type: "buffer" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
