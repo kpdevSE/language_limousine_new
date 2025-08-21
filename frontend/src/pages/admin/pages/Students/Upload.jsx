@@ -22,7 +22,7 @@ import { toast } from "react-toastify";
 
 export default function Upload() {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [date, setDate] = useState("07/24/2025");
+  const [date, setDate] = useState("2025-07-24"); // Changed from "07/24/2025" to "2025-07-24" for date input compatibility
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
   const [error, setError] = useState("");

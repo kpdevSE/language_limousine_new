@@ -2,6 +2,17 @@ const Student = require("../models/Student");
 const StudentAssignment = require("../models/StudentAssignment");
 const WaitingTime = require("../models/WaitingTime");
 
+// Helper function to normalize date format
+function normalizeDateQuery(dateStr) {
+  if (!dateStr) return null;
+  // Accept YYYY-MM-DD or MM/DD/YYYY and normalize to YYYY-MM-DD
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [m, d, y] = dateStr.split("/");
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  return dateStr;
+}
+
 // GET /api/school/students-status - Get students with status for a specific school
 const getSchoolStudentsStatus = async (req, res) => {
   try {
@@ -18,7 +29,7 @@ const getSchoolStudentsStatus = async (req, res) => {
     };
 
     if (date) {
-      query.date = date;
+      query.date = normalizeDateQuery(date);
     }
 
     if (search) {
@@ -32,10 +43,7 @@ const getSchoolStudentsStatus = async (req, res) => {
 
     const skip = (page - 1) * limit;
     const [students, total] = await Promise.all([
-      Student.find(query)
-        .sort({ arrivalTime: 1 })
-        .skip(skip)
-        .limit(limit),
+      Student.find(query).sort({ arrivalTime: 1 }).skip(skip).limit(limit),
       Student.countDocuments(query),
     ]);
 
@@ -147,7 +155,8 @@ const getSchoolStudentsStatus = async (req, res) => {
     const statusCounts = {
       waiting: studentsWithStatus.filter((s) => s.statusDetails.waiting).length,
       inCar: studentsWithStatus.filter((s) => s.statusDetails.inCar).length,
-      delivered: studentsWithStatus.filter((s) => s.statusDetails.delivered).length,
+      delivered: studentsWithStatus.filter((s) => s.statusDetails.delivered)
+        .length,
     };
 
     return res.json({
@@ -185,7 +194,7 @@ const getSchoolStatusStats = async (req, res) => {
     };
 
     if (date) {
-      query.date = date;
+      query.date = normalizeDateQuery(date);
     }
 
     // Get all students for this school
@@ -245,7 +254,8 @@ const getSchoolStatusStats = async (req, res) => {
         delivered,
         percentageWaiting: total > 0 ? Math.round((waiting / total) * 100) : 0,
         percentageInCar: total > 0 ? Math.round((inCar / total) * 100) : 0,
-        percentageDelivered: total > 0 ? Math.round((delivered / total) * 100) : 0,
+        percentageDelivered:
+          total > 0 ? Math.round((delivered / total) * 100) : 0,
       },
     });
   } catch (err) {

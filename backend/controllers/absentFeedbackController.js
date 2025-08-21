@@ -1,6 +1,17 @@
 const AbsentFeedback = require("../models/AbsentFeedback");
 const Student = require("../models/Student");
 
+// Helper function to normalize date format
+function normalizeDateQuery(dateStr) {
+  if (!dateStr) return null;
+  // Accept YYYY-MM-DD or MM/DD/YYYY and normalize to YYYY-MM-DD
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [m, d, y] = dateStr.split("/");
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  return dateStr;
+}
+
 // GET /api/absent-feedback - Get absent feedback for a specific date
 const getAbsentFeedback = async (req, res) => {
   try {
@@ -13,12 +24,15 @@ const getAbsentFeedback = async (req, res) => {
       });
     }
 
+    // Normalize date format for database query
+    const normalizedDate = normalizeDateQuery(date);
+
     // Build query
-    const query = { date, isActive: true };
+    const query = { date: normalizedDate, isActive: true };
     if (status) query.status = status;
 
     // Get students for the date first
-    const studentsQuery = { date, isActive: true };
+    const studentsQuery = { date: normalizedDate, isActive: true };
     if (search) {
       studentsQuery.$or = [
         { studentNo: { $regex: search, $options: "i" } },

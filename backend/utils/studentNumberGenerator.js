@@ -6,15 +6,22 @@ const Student = require("../models/Student");
  */
 const generateStudentNumber = async (date) => {
   try {
-    // Convert date to YYYYMMDD format
-    const dateParts = date.split("/");
-    if (dateParts.length !== 3) {
-      throw new Error("Invalid date format. Expected MM/DD/YYYY");
+    // Normalize incoming date to components
+    let year, month, day;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+      const parts = date.split("/");
+      month = parts[0].padStart(2, "0");
+      day = parts[1].padStart(2, "0");
+      year = parts[2];
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      const parts = date.split("-");
+      year = parts[0];
+      month = parts[1].padStart(2, "0");
+      day = parts[2].padStart(2, "0");
+    } else {
+      throw new Error("Invalid date format. Expected MM/DD/YYYY or YYYY-MM-DD");
     }
 
-    const month = dateParts[0].padStart(2, "0");
-    const day = dateParts[1].padStart(2, "0");
-    const year = dateParts[2];
     const datePrefix = `${year}${month}${day}`;
 
     // Find the highest sequence number for this date

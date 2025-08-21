@@ -4,10 +4,22 @@ const User = require("../models/User");
 const WaitingTime = require("../models/WaitingTime");
 const mongoose = require("mongoose");
 
+// Helper function to normalize date format
+function normalizeDateQuery(dateStr) {
+  if (!dateStr) return null;
+  // Accept YYYY-MM-DD or MM/DD/YYYY and normalize to YYYY-MM-DD
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [m, d, y] = dateStr.split("/");
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  return dateStr;
+}
+
 // POST /api/assignments - Assign students to driver/subdriver
 const assignStudents = async (req, res) => {
   try {
-    const { studentIds, driverId, subdriverId, notes } = req.body;
+    const { studentIds, driverId, subdriverId, notes, assignmentDate } =
+      req.body;
 
     // Validate input
     if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
@@ -28,6 +40,22 @@ const assignStudents = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Cannot assign to both driver and subdriver simultaneously",
+      });
+    }
+
+    // Require assignmentDate from greeter UI
+    if (!assignmentDate) {
+      return res.status(400).json({
+        success: false,
+        message: "assignmentDate is required (YYYY-MM-DD)",
+      });
+    }
+
+    const iso = normalizeDateQuery(assignmentDate);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid assignmentDate format. Use YYYY-MM-DD",
       });
     }
 
@@ -72,29 +100,34 @@ const assignStudents = async (req, res) => {
       });
     }
 
-    // Check for existing assignments
-    const existingAssignments = await StudentAssignment.find({
+    // Ensure we don't duplicate assignment for the same student on same date
+    const startDate = new Date(`${iso}T00:00:00.000Z`);
+    const endDate = new Date(`${iso}T00:00:00.000Z`);
+    endDate.setDate(endDate.getDate() + 1);
+
+    const alreadyAssigned = await StudentAssignment.find({
       studentId: { $in: studentIds },
       isActive: true,
-    });
+      assignmentDate: { $gte: startDate, $lt: endDate },
+    }).distinct("studentId");
 
-    if (existingAssignments.length > 0) {
-      const assignedStudentIds = existingAssignments.map((a) =>
-        a.studentId.toString()
-      );
+    if (alreadyAssigned.length > 0) {
       return res.status(400).json({
         success: false,
-        message: `Students already assigned: ${assignedStudentIds.join(", ")}`,
+        message: `These students are already assigned for ${iso}: ${alreadyAssigned.join(
+          ", "
+        )}`,
       });
     }
 
-    // Create assignments
+    // Create assignments with required date
     const assignments = studentIds.map((studentId) => ({
       studentId,
       driverId: driverId || null,
       subdriverId: subdriverId || null,
       assignedBy: req.user._id,
       notes: notes || "",
+      assignmentDate: startDate,
     }));
 
     const createdAssignments = await StudentAssignment.insertMany(assignments);
@@ -113,7 +146,7 @@ const assignStudents = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: `${studentIds.length} student(s) assigned successfully`,
+      message: "Students assigned successfully",
       data: { assignments: populatedAssignments },
     });
   } catch (err) {
@@ -125,30 +158,28 @@ const assignStudents = async (req, res) => {
   }
 };
 
-// GET /api/assignments - Get all assignments with filters
+// GET /api/assignments - Get assignments list (supports date)
 const getAssignments = async (req, res) => {
   try {
     const page = parseInt(req.query.page || "1", 10);
     const limit = parseInt(req.query.limit || "10", 10);
-    const driverId = req.query.driverId;
-    const subdriverId = req.query.subdriverId;
+    const search = req.query.search || "";
     const status = req.query.status;
-    const date = req.query.date;
-    const pickupStatus = req.query.pickupStatus;
-    const deliveryStatus = req.query.deliveryStatus;
+    const date = req.query.date || new Date().toISOString().split("T")[0];
 
-    const query = { isActive: true };
+    // Build date filter
+    const startDate = new Date(date);
+    const endDate = new Date(date);
+    endDate.setDate(endDate.getDate() + 1);
 
-    if (driverId) query.driverId = driverId;
-    if (subdriverId) query.subdriverId = subdriverId;
+    const query = {
+      isActive: true,
+      assignmentDate: { $gte: startDate, $lt: endDate },
+    };
     if (status) query.status = status;
-    if (pickupStatus) query.pickupStatus = pickupStatus;
-    if (deliveryStatus) query.deliveryStatus = deliveryStatus;
-    if (date) {
-      const startDate = new Date(date);
-      const endDate = new Date(date);
-      endDate.setDate(endDate.getDate() + 1);
-      query.assignmentDate = { $gte: startDate, $lt: endDate };
+
+    if (search) {
+      query.$or = [{ notes: { $regex: search, $options: "i" } }];
     }
 
     const skip = (page - 1) * limit;
@@ -196,19 +227,30 @@ const getUnassignedStudents = async (req, res) => {
     const search = req.query.search || "";
     const date = req.query.date;
 
-    // Get all assigned student IDs
-    const assignedStudentIds = await StudentAssignment.find({
-      isActive: true,
-    }).distinct("studentId");
+    // Get assigned student IDs, filtered by selected date if provided
+    let assignedStudentIds = [];
+    if (date) {
+      const startDate = new Date(date);
+      const endDate = new Date(date);
+      endDate.setDate(endDate.getDate() + 1);
+      assignedStudentIds = await StudentAssignment.find({
+        isActive: true,
+        assignmentDate: { $gte: startDate, $lt: endDate },
+      }).distinct("studentId");
+    } else {
+      assignedStudentIds = await StudentAssignment.find({
+        isActive: true,
+      }).distinct("studentId");
+    }
 
-    // Build query for unassigned students
+    // Build query for unassigned students (by their student.date when provided)
     const query = {
       _id: { $nin: assignedStudentIds },
       isActive: true,
     };
 
     if (date) {
-      query.date = date;
+      query.date = normalizeDateQuery(date);
     }
 
     if (search) {

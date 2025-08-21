@@ -1,6 +1,17 @@
 const WaitingTime = require("../models/WaitingTime");
 const Student = require("../models/Student");
 
+// Helper function to normalize date format
+function normalizeDateQuery(dateStr) {
+  if (!dateStr) return null;
+  // Accept YYYY-MM-DD or MM/DD/YYYY and normalize to YYYY-MM-DD
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [m, d, y] = dateStr.split("/");
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  return dateStr;
+}
+
 // GET /api/waiting-time - Get waiting times for a specific date
 const getWaitingTimes = async (req, res) => {
   try {
@@ -13,12 +24,15 @@ const getWaitingTimes = async (req, res) => {
       });
     }
 
+    // Normalize date format for database query
+    const normalizedDate = normalizeDateQuery(date);
+
     // Build query
-    const query = { date, isActive: true };
+    const query = { date: normalizedDate, isActive: true };
     if (status) query.status = status;
 
     // Get students for the date first
-    const studentsQuery = { date, isActive: true };
+    const studentsQuery = { date: normalizedDate, isActive: true };
     if (search) {
       studentsQuery.$or = [
         { studentNo: { $regex: search, $options: "i" } },
@@ -121,6 +135,9 @@ const updateWaitingTime = async (req, res) => {
       });
     }
 
+    // Normalize date format for database consistency
+    const normalizedDate = normalizeDateQuery(date);
+
     // Check if student exists
     const student = await Student.findById(studentId);
     if (!student) {
@@ -133,7 +150,7 @@ const updateWaitingTime = async (req, res) => {
     // Check if waiting time already exists for this student and date
     let waitingTimeRecord = await WaitingTime.findOne({
       studentId,
-      date,
+      date: normalizedDate,
       isActive: true,
     });
 
@@ -149,7 +166,7 @@ const updateWaitingTime = async (req, res) => {
       // Create new record
       waitingTimeRecord = new WaitingTime({
         studentId,
-        date,
+        date: normalizedDate,
         flight: student.flight,
         arrivalTime: student.arrivalTime,
         waitingTime,

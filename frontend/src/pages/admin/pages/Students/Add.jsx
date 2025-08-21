@@ -18,7 +18,7 @@ import { toast } from "react-toastify";
 
 export default function Add() {
   const [formData, setFormData] = useState({
-    date: "07/24/2025",
+    date: "2025-07-24", // Changed from "07/24/2025" to "2025-07-24" for date input compatibility
     trip: "",
     actualArrivalTime: "",
     arrivalTime: "",
@@ -272,7 +272,7 @@ export default function Add() {
 
   const handleReset = () => {
     setFormData({
-      date: "07/24/2025",
+      date: "2025-07-24", // Changed from "07/24/2025" to "2025-07-24" for date input compatibility
       trip: "",
       actualArrivalTime: "",
       arrivalTime: "",

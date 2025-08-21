@@ -191,6 +191,14 @@ const uploadExcelFile = async (req, res) => {
       });
     }
 
+    // Normalize incoming date to YYYY-MM-DD (accepts MM/DD/YYYY)
+    const normalizedDate = /^\d{2}\/\d{2}\/\d{4}$/.test(date)
+      ? (() => {
+          const [m, d, y] = date.split("/");
+          return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+        })()
+      : date;
+
     // Read the uploaded file buffer
     const buffer = req.file.buffer;
 
@@ -251,7 +259,7 @@ const uploadExcelFile = async (req, res) => {
     for (const studentData of studentsData) {
       try {
         // Set common fields
-        studentData.date = date;
+        studentData.date = normalizedDate;
         // Keep per-row school and client from Excel (allow mixed values)
         if (!studentData.school) {
           errors.push({
@@ -273,7 +281,7 @@ const uploadExcelFile = async (req, res) => {
         if (!studentData.studentNo) {
           studentData.studentNo = await generateStudentNumberFromExcel(
             studentData,
-            date
+            studentData.date
           );
         }
 

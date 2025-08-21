@@ -27,6 +27,14 @@ export default function Map() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markers = useRef([]);
+  const geocodeCache = useRef(new globalThis.Map());
+  const lastGeocodeTime = useRef(0);
+  const sanitizeAddress = (s) =>
+    (s || "")
+      .toString()
+      .replace(/\s+/g, " ")
+      .replace(/[\r\n]+/g, " ")
+      .trim();
 
   // Get auth token
   const getAuthToken = () => {
@@ -57,40 +65,76 @@ export default function Map() {
     }
   );
 
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
   // Initialize Leaflet Map
   useEffect(() => {
-    if (mapContainer.current && !map.current) {
-      // Load Leaflet CSS and JS
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href =
-        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css";
-      document.head.appendChild(link);
+    if (!mapContainer.current) return;
 
-      const script = document.createElement("script");
-      script.src =
-        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
-      script.onload = () => {
-        // Initialize the map centered on Canada
-        map.current = window.L.map(mapContainer.current).setView(
-          [56.1304, -106.3468], // Center of Canada
-          4
-        );
+    const initMap = () => {
+      if (
+        map.current ||
+        (mapContainer.current && mapContainer.current._leaflet_id)
+      ) {
+        return; // Already initialized
+      }
+      // Initialize the map centered on Canada
+      map.current = window.L.map(mapContainer.current).setView(
+        [56.1304, -106.3468], // Center of Canada
+        4
+      );
 
-        // Add OpenStreetMap tiles
-        window.L.tileLayer(
-          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          {
-            attribution: "© OpenStreetMap contributors",
-            maxZoom: 18,
-          }
-        ).addTo(map.current);
+      // Add OpenStreetMap tiles
+      window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+        maxZoom: 18,
+      }).addTo(map.current);
 
-        // Add Canada boundary (optional)
-        addCanadaBoundary();
-      };
-      document.head.appendChild(script);
-    }
+      // Add Canada boundary (optional)
+      addCanadaBoundary();
+    };
+
+    // Load Leaflet CSS/JS once
+    const ensureLeafletLoaded = () => {
+      return new Promise((resolve) => {
+        if (window.L) return resolve();
+
+        if (!document.getElementById("leaflet-css")) {
+          const link = document.createElement("link");
+          link.id = "leaflet-css";
+          link.rel = "stylesheet";
+          link.href =
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css";
+          document.head.appendChild(link);
+        }
+
+        const existingScript = document.getElementById("leaflet-js");
+        if (existingScript) {
+          existingScript.addEventListener("load", () => resolve(), {
+            once: true,
+          });
+        } else {
+          const script = document.createElement("script");
+          script.id = "leaflet-js";
+          script.src =
+            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+          script.onload = () => resolve();
+          document.body.appendChild(script);
+        }
+      });
+    };
+
+    ensureLeafletLoaded().then(initMap);
+
+    // Cleanup on unmount to avoid double-initialization
+    return () => {
+      try {
+        if (map.current) {
+          map.current.remove();
+          map.current = null;
+        }
+      } catch {}
+    };
   }, []);
 
   // Add Canada boundary overlay
@@ -112,66 +156,115 @@ export default function Map() {
   };
 
   // Fetch students data
-  const fetchStudents = async () => {
+  const fetchStudents = async (
+    dateParam,
+    options = { suppressState: false }
+  ) => {
     setIsLoading(true);
     try {
-      const response = await apiClient.get("/students");
+      const params = { limit: 1000 };
+      if (dateParam) params.date = dateParam;
+      const response = await apiClient.get("/students", { params });
       if (response.data.success) {
         const studentsData = response.data.data.students || [];
-        setStudents(studentsData);
-        setFilteredStudents(studentsData);
+        toast.dismiss();
+        toast.info(
+          `Loaded ${studentsData.length} students${
+            dateParam ? ` for ${dateParam}` : ""
+          }`
+        );
+        if (!options.suppressState) {
+          setStudents(studentsData);
+          setFilteredStudents(studentsData);
+        }
+        return studentsData;
       }
+      return [];
     } catch (error) {
       console.error("Error fetching students:", error);
       toast.error("Failed to fetch students data");
+      return [];
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Geocode address to get coordinates
-  const geocodeAddress = async (address) => {
-    try {
-      // Use OpenStreetMap Nominatim API for geocoding
-      const response = await axios.get(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          address + ", Canada"
-        )}&limit=1&countrycodes=ca`
-      );
+  // Geocode address to get coordinates (with cache + throttling)
+  const geocodeAddress = async (address, cityFallback) => {
+    const key = address.trim().toLowerCase();
+    if (geocodeCache.current.has(key)) {
+      return geocodeCache.current.get(key);
+    }
 
-      if (response.data && response.data.length > 0) {
-        const location = response.data[0];
-        return {
-          lat: parseFloat(location.lat),
-          lng: parseFloat(location.lon),
-          address: location.display_name,
-        };
+    // Respect Nominatim rate limit: <=1 req/sec
+    const now = Date.now();
+    const elapsed = now - lastGeocodeTime.current;
+    if (elapsed < 1100) {
+      await sleep(1100 - elapsed);
+    }
+
+    try {
+      const queries = [
+        `${address}, Canada`,
+        address,
+        cityFallback ? `${cityFallback}, Canada` : null,
+      ].filter(Boolean);
+
+      const maxRetries = 2;
+      let lastError = null;
+      for (const q of queries) {
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          try {
+            const response = await axios.get(
+              `https://nominatim.openstreetmap.org/search`,
+              {
+                params: {
+                  format: "json",
+                  q,
+                  limit: 1,
+                  countrycodes: "ca",
+                  email: "admin@language-limousine.local",
+                },
+                timeout: 25000,
+                headers: {
+                  Accept: "application/json",
+                },
+              }
+            );
+
+            lastGeocodeTime.current = Date.now();
+
+            if (response.data && response.data.length > 0) {
+              const loc = response.data[0];
+              const location = {
+                lat: parseFloat(loc.lat),
+                lng: parseFloat(loc.lon),
+                address: loc.display_name,
+              };
+              geocodeCache.current.set(key, location);
+              return location;
+            }
+            // No result; break retry loop for this query
+            break;
+          } catch (err) {
+            lastError = err;
+            // Backoff then retry
+            await sleep(700 * (attempt + 1));
+          }
+        }
       }
+
       return null;
     } catch (error) {
       console.error("Geocoding error:", error);
+      toast.warn("Geocoding timed out. Some markers may be missing.");
       return null;
     }
   };
 
-  // Filter students by date and search term
+  // Filter students by date and search term (client-side search only)
   const filterStudents = () => {
     let filtered = students;
-
-    // Filter by date if selected
-    if (selectedDate) {
-      filtered = filtered.filter((student) => {
-        // Check if student has assignment data for the selected date
-        // This is a simplified check - you may need to adjust based on your data structure
-        const studentDate = new Date(student.createdAt || student.arrivalTime);
-        const selectedDateObj = new Date(selectedDate);
-        return (
-          studentDate.getFullYear() === selectedDateObj.getFullYear() &&
-          studentDate.getMonth() === selectedDateObj.getMonth() &&
-          studentDate.getDate() === selectedDateObj.getDate()
-        );
-      });
-    }
 
     // Filter by search term
     if (searchTerm) {
@@ -191,64 +284,85 @@ export default function Map() {
   };
 
   // Update map markers
+  const isUpdatingMarkers = useRef(false);
   const updateMapMarkers = async (studentsToShow) => {
     if (!map.current || !window.L) return;
+    if (isUpdatingMarkers.current) return;
+    isUpdatingMarkers.current = true;
+    try {
+      // Clear existing markers
+      markers.current.forEach((marker) => {
+        map.current.removeLayer(marker);
+      });
+      markers.current = [];
 
-    // Clear existing markers
-    markers.current.forEach((marker) => {
-      map.current.removeLayer(marker);
-    });
-    markers.current = [];
+      if (studentsToShow.length === 0) {
+        // Reset map view to Canada
+        map.current.setView([56.1304, -106.3468], 4);
+        return;
+      }
 
-    if (studentsToShow.length === 0) {
-      // Reset map view to Canada
-      map.current.setView([56.1304, -106.3468], 4);
-      return;
-    }
+      const bounds = [];
+      const maxToGeocode = 30; // limit to avoid rate limits and delays
+      const slice = studentsToShow.slice(0, maxToGeocode);
 
-    const bounds = [];
-    const markersToAdd = [];
+      for (const student of slice) {
+        const street = sanitizeAddress(student.address);
+        const city = sanitizeAddress(student.city);
+        const address = [street, city].filter(Boolean).join(", ");
+        if (!address) continue;
 
-    for (const student of studentsToShow) {
-      // Get student address
-      const address =
-        student.address || student.city || student.studentGivenName;
-      if (!address) continue;
-
-      // Geocode the address
-      const location = await geocodeAddress(address);
-      if (location) {
-        const marker = window.L.marker([location.lat, location.lng]).addTo(
-          map.current
-        ).bindPopup(`
+        const location = await geocodeAddress(address, city);
+        if (location) {
+          const marker = window.L.marker([location.lat, location.lng]).addTo(
+            map.current
+          ).bindPopup(`
             <div style="min-width: 200px;">
               <h3 style="margin: 0 0 8px 0; color: #1f2937; font-weight: bold;">
                 ${student.studentGivenName} ${student.studentFamilyName || ""}
               </h3>
-              <p style="margin: 4px 0; color: #6b7280; font-size: 12px;">
-                <strong>Student No:</strong> ${student.studentNo || "N/A"}
-              </p>
-              <p style="margin: 4px 0; color: #6b7280; font-size: 12px;">
-                <strong>Address:</strong> ${address}
-              </p>
-              <p style="margin: 4px 0; color: #6b7280; font-size: 12px;">
-                <strong>Flight:</strong> ${student.flight || "N/A"}
-              </p>
-              <p style="margin: 4px 0; color: #6b7280; font-size: 12px;">
-                <strong>Phone:</strong> ${student.phone || "N/A"}
-              </p>
+              <p style="margin: 4px 0; color: #6b7280; font-size: 12px;"><strong>Student No:</strong> ${
+                student.studentNo || "N/A"
+              }</p>
+              <p style="margin: 4px 0; color: #6b7280; font-size: 12px;"><strong>Address:</strong> ${
+                location.address || address
+              }</p>
+              <p style="margin: 4px 0; color: #6b7280; font-size: 12px;"><strong>Flight:</strong> ${
+                student.flight || "N/A"
+              }</p>
+              <p style="margin: 4px 0; color: #6b7280; font-size: 12px;"><strong>Phone:</strong> ${
+                student.phone || "N/A"
+              }</p>
             </div>
           `);
 
-        markers.current.push(marker);
-        markersToAdd.push(marker);
-        bounds.push([location.lat, location.lng]);
+          markers.current.push(marker);
+          bounds.push([location.lat, location.lng]);
+        }
       }
-    }
 
-    // Fit map to show all markers
-    if (bounds.length > 0) {
-      map.current.fitBounds(bounds, { padding: [20, 20] });
+      const candidates = slice.length;
+      if (candidates === 0) {
+        toast.info("No students with address or city to geocode.");
+      }
+
+      if (studentsToShow.length > maxToGeocode) {
+        toast.info(
+          `Showing first ${maxToGeocode} locations to avoid geocoding limits. Refine your search to see specific students.`
+        );
+      }
+
+      // Fit map to show all markers
+      if (bounds.length > 0) {
+        map.current.fitBounds(bounds, { padding: [20, 20] });
+      } else {
+        map.current.setView([56.1304, -106.3468], 4);
+        toast.info(
+          "Unable to geocode any addresses. Please ensure student address and city are valid."
+        );
+      }
+    } finally {
+      isUpdatingMarkers.current = false;
     }
   };
 
@@ -258,8 +372,25 @@ export default function Map() {
   };
 
   // Handle search
-  const handleSearch = () => {
-    const filtered = filterStudents();
+  const handleSearch = async () => {
+    const loaded = await fetchStudents(selectedDate, { suppressState: true });
+
+    // Apply search term on top of server-side date filter
+    let filtered = loaded;
+    if (searchTerm) {
+      filtered = loaded.filter(
+        (student) =>
+          student.studentGivenName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          student.studentNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          student.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          student.city?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setStudents(loaded);
+    setFilteredStudents(filtered);
     updateMapMarkers(filtered);
   };
 
@@ -273,26 +404,27 @@ export default function Map() {
     setSelectedStudent(student);
 
     // Center map on selected student
-    if (map.current && student.address) {
-      geocodeAddress(student.address).then((location) => {
+    if (map.current) {
+      const street = sanitizeAddress(student.address);
+      const city = sanitizeAddress(student.city);
+      const addr = [street, city].filter(Boolean).join(", ");
+      if (!addr) return;
+      const key = addr.trim().toLowerCase();
+      const cached = geocodeCache.current.get(key);
+      const ensureLocation = cached
+        ? Promise.resolve(cached)
+        : geocodeAddress(addr, city);
+
+      ensureLocation.then((location) => {
         if (location) {
           map.current.setView([location.lat, location.lng], 12);
 
-          // Highlight the selected student's marker
+          // Highlight markers (optional)
           markers.current.forEach((marker) => {
-            marker.setIcon(
-              window.L.icon({
-                iconUrl:
-                  "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-                shadowUrl:
-                  "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41],
-              })
-            );
+            // no-op; could change icon if needed
           });
+        } else {
+          toast.error("Could not geocode address for this student");
         }
       });
     }
@@ -307,16 +439,31 @@ export default function Map() {
 
     setSelectedStudent(student);
 
+    const street = sanitizeAddress(student.address);
+    const city = sanitizeAddress(student.city);
+    const addr = [street, city].filter(Boolean).join(", ");
+    if (!addr) {
+      toast.error("Selected student does not have an address to locate");
+      return;
+    }
+
+    const key = addr.trim().toLowerCase();
+    const cached = geocodeCache.current.get(key);
+    const ensureLocation = cached
+      ? Promise.resolve(cached)
+      : geocodeAddress(addr, city);
+
     // Create print window
     const printWindow = window.open("", "_blank", "width=900,height=700");
 
-    geocodeAddress(
-      student.address || student.city || student.studentGivenName
-    ).then((location) => {
+    ensureLocation.then((location) => {
       if (location) {
         createPrintWindow(student, location, printWindow);
       } else {
         toast.error("Could not geocode address for printing");
+        try {
+          printWindow && printWindow.close();
+        } catch {}
       }
     });
   };
@@ -408,48 +555,29 @@ export default function Map() {
             const printMap = L.map('printMap').setView([${location.lat}, ${
       location.lng
     }], 12);
-            
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
               attribution: '© OpenStreetMap contributors',
               maxZoom: 18
             }).addTo(printMap);
-            
             L.marker([${location.lat}, ${location.lng}])
               .addTo(printMap)
-              .bindPopup(\`
-                <div style="text-align: center;">
-                  <h3><strong>${student.studentGivenName} ${
+              .bindPopup('<div style="text-align: center;"><h3><strong>${
+                student.studentGivenName
+              } ${
       student.studentFamilyName || ""
-    }</strong></h3>
-                  <p><strong>Student ID:</strong> ${
-                    student.studentNo || "N/A"
-                  }</p>
-                  <p><strong>Address:</strong> ${
-                    student.address || student.city || "N/A"
-                  }</p>
-                </div>
-              \`)
+    }</strong></h3><p><strong>Student ID:</strong> ${
+      student.studentNo || "N/A"
+    }</p><p><strong>Address:</strong> ${
+      student.address || student.city || "N/A"
+    }</p></div>')
               .openPopup();
-            
             setTimeout(() => {
               printMap.invalidateSize();
-              setTimeout(() => {
-                window.print();
-              }, 1000);
-            }, 500);
+              setTimeout(() => { window.print(); }, 800);
+            }, 400);
           }
-          
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeMap);
-          } else {
-            initializeMap();
-          }
-          
-          window.addEventListener('afterprint', () => {
-            setTimeout(() => {
-              window.close();
-            }, 1000);
-          });
+          window.onload = initializeMap; // initialize once on load only
+          window.addEventListener('afterprint', () => { setTimeout(() => { window.close(); }, 800); });
         </script>
       </body>
       </html>
@@ -464,12 +592,7 @@ export default function Map() {
     fetchStudents();
   }, []);
 
-  // Update map when filtered students change
-  useEffect(() => {
-    if (filteredStudents.length > 0) {
-      updateMapMarkers(filteredStudents);
-    }
-  }, [filteredStudents]);
+  // No automatic re-render loop on filteredStudents to avoid recursion
 
   return (
     <div className="flex min-h-screen bg-white overflow-x-hidden">
@@ -554,7 +677,10 @@ export default function Map() {
                     {/* Refresh Button */}
                     <div>
                       <Button
-                        onClick={fetchStudents}
+                        onClick={async () => {
+                          const data = await fetchStudents(selectedDate);
+                          updateMapMarkers(data);
+                        }}
                         disabled={isLoading}
                         className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12 disabled:opacity-50"
                       >

@@ -3,12 +3,21 @@ const Student = require("../models/Student");
 
 function normalizeDateQuery(dateStr) {
   if (!dateStr) return null;
-  // Accept YYYY-MM-DD or MM/DD/YYYY
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    const [y, m, d] = dateStr.split("-");
-    return `${m}/${d}/${y}`;
+  // Accept YYYY-MM-DD or MM/DD/YYYY and normalize to YYYY-MM-DD
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [m, d, y] = dateStr.split("/");
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
   return dateStr;
+}
+
+function buildDateFilter(dateStr) {
+  const iso = normalizeDateQuery(dateStr);
+  if (!iso) return null;
+  // Also compute legacy MM/DD/YYYY for backward compatibility
+  const [y, m, d] = iso.split("-");
+  const mdy = `${m}/${d}/${y}`;
+  return { $in: [iso, mdy] };
 }
 
 // POST /api/students
@@ -83,11 +92,11 @@ const getAllStudents = async (req, res) => {
     const page = parseInt(req.query.page || "1", 10);
     const limit = parseInt(req.query.limit || "10", 10);
     const search = req.query.search || "";
-    const dateQuery = normalizeDateQuery(req.query.date);
+    const dateFilter = buildDateFilter(req.query.date);
 
     const query = { isActive: true };
-    if (dateQuery) {
-      query.date = dateQuery;
+    if (dateFilter) {
+      query.date = dateFilter;
     }
     if (search) {
       query.$or = [
@@ -217,15 +226,15 @@ const getStudentsBySchool = async (req, res) => {
     const page = parseInt(req.query.page || "1", 10);
     const limit = parseInt(req.query.limit || "10", 10);
     const search = req.query.search || "";
-    const dateQuery = normalizeDateQuery(req.query.date);
+    const dateFilter = buildDateFilter(req.query.date);
 
     const query = {
       isActive: true,
       school: schoolUsername, // Filter by school username
     };
 
-    if (dateQuery) {
-      query.date = dateQuery;
+    if (dateFilter) {
+      query.date = dateFilter;
     }
 
     if (search) {
@@ -267,8 +276,8 @@ const getStudentsBySchool = async (req, res) => {
 // GET /api/students/export/pdf?date=YYYY-MM-DD or MM/DD/YYYY
 const exportStudentsPdf = async (req, res) => {
   try {
-    const dateQuery = normalizeDateQuery(req.query.date);
-    if (!dateQuery) {
+    const dateFilter = buildDateFilter(req.query.date);
+    if (!dateFilter) {
       return res
         .status(400)
         .json({ success: false, message: "date query param is required" });
@@ -276,17 +285,22 @@ const exportStudentsPdf = async (req, res) => {
 
     const students = await Student.find({
       isActive: true,
-      date: dateQuery,
+      date: dateFilter,
     }).sort({ studentFamilyName: 1, studentGivenName: 1 });
+
+    // Build a display date (use the first matched format for title/filename)
+    const iso = normalizeDateQuery(req.query.date);
+    const [y, m, d] = iso.split("-");
+    const human = `${m}/${d}/${y}`;
 
     const doc = new PDFDocument({ margin: 40 });
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=students_${dateQuery.replace(/\//g, "-")}.pdf`
+      `attachment; filename=students_${iso}.pdf`
     );
 
-    doc.fontSize(18).text(`Students - ${dateQuery}`, { align: "center" });
+    doc.fontSize(18).text(`Students - ${human}`, { align: "center" });
     doc.moveDown();
 
     doc.fontSize(12);
