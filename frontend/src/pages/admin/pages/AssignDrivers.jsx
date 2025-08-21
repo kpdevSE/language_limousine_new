@@ -42,6 +42,7 @@ export default function AssignDrivers() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [notes, setNotes] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
 
   // Manage assignments tab states
   const [assignmentsData, setAssignmentsData] = useState([]);
@@ -120,6 +121,7 @@ export default function AssignDrivers() {
     assignmentsPerPage,
     assignmentSearchTerm,
     selectedStatus,
+    selectedDate,
   ]);
 
   const fetchAssignmentData = async () => {
@@ -136,22 +138,29 @@ export default function AssignDrivers() {
         return;
       }
 
-      // Fetch unassigned students
-      const studentsResponse = await apiClient.get(
-        "/assignments/unassigned-students",
-        {
-          params: {
-            page: currentPage,
-            limit: entriesPerPage,
-            search: searchTerm,
-          },
-        }
-      );
+      if (!selectedDate) {
+        setStudentsData([]);
+        setTotalStudents(0);
+        setTotalPages(0);
+      } else {
+        // Fetch unassigned students for selected date only
+        const studentsResponse = await apiClient.get(
+          "/assignments/unassigned-students",
+          {
+            params: {
+              page: currentPage,
+              limit: entriesPerPage,
+              search: searchTerm,
+              date: selectedDate,
+            },
+          }
+        );
 
-      if (studentsResponse.data.success) {
-        setStudentsData(studentsResponse.data.data.students);
-        setTotalStudents(studentsResponse.data.data.pagination.totalStudents);
-        setTotalPages(studentsResponse.data.data.pagination.totalPages);
+        if (studentsResponse.data.success) {
+          setStudentsData(studentsResponse.data.data.students);
+          setTotalStudents(studentsResponse.data.data.pagination.totalStudents);
+          setTotalPages(studentsResponse.data.data.pagination.totalPages);
+        }
       }
 
       // Fetch drivers and subdrivers
@@ -201,6 +210,7 @@ export default function AssignDrivers() {
           limit: assignmentsPerPage,
           search: assignmentSearchTerm,
           status: selectedStatus,
+          date: selectedDate,
         },
       });
 
@@ -293,6 +303,11 @@ export default function AssignDrivers() {
     setError("");
     setSuccess("");
 
+    if (!selectedDate) {
+      setError("Please select a date before assigning students");
+      return false;
+    }
+
     if (selectedStudents.length === 0) {
       setError("Please select at least one student");
       return false;
@@ -333,6 +348,7 @@ export default function AssignDrivers() {
         driverId: selectedDriver || null,
         subdriverId: selectedSubDriver || null,
         notes: notes.trim(),
+        assignmentDate: selectedDate,
       };
 
       const response = await apiClient.post("/assignments", assignmentData);
@@ -365,6 +381,7 @@ export default function AssignDrivers() {
         setSelectedDriver("");
         setSelectedSubDriver("");
         setNotes("");
+        setSelectedDate(""); // Clear selected date after assignment
 
         // Refresh the list to remove assigned students
         await fetchAssignmentData();
@@ -655,7 +672,22 @@ export default function AssignDrivers() {
                 {/* Driver Selection Section */}
                 <Card className="bg-white border-gray-200 mb-6 shadow-sm">
                   <CardContent className="p-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                      <div className="flex flex-col">
+                        <label className="text-gray-700 text-sm font-medium mb-2">
+                          Select Date
+                        </label>
+                        <Input
+                          type="date"
+                          value={selectedDate}
+                          onChange={(e) => {
+                            setSelectedDate(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                          className="bg-white text-gray-900 border border-gray-300 rounded px-4 py-3 text-sm focus:border-blue-500 focus:ring-blue-500"
+                          disabled={isLoading || isAssigning}
+                        />
+                      </div>
                       <div className="flex flex-col">
                         <label className="text-gray-700 text-sm font-medium mb-2">
                           Select Driver
@@ -746,7 +778,7 @@ export default function AssignDrivers() {
                       value={entriesPerPage}
                       onChange={handleEntriesPerPageChange}
                       className="bg-white text-gray-900 border border-gray-300 rounded px-3 py-1 text-sm"
-                      disabled={isLoading}
+                      disabled={isLoading || !selectedDate}
                     >
                       <option value={10}>10</option>
                       <option value={25}>25</option>
@@ -888,8 +920,10 @@ export default function AssignDrivers() {
                                 colSpan={9}
                                 className="text-gray-700 text-center py-8 px-4 border-b border-gray-200 text-sm"
                               >
-                                {totalStudents === 0
-                                  ? "No unassigned students found."
+                                {!selectedDate
+                                  ? "Please select a date to view unassigned students."
+                                  : totalStudents === 0
+                                  ? "No unassigned students found for the selected date."
                                   : "No students found matching your search criteria."}
                               </td>
                             </tr>
@@ -991,6 +1025,20 @@ export default function AssignDrivers() {
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
+                    {/* Date Filter for Manage Assignments */}
+                    <div className="flex items-center space-x-2">
+                      <label className="text-gray-700 text-sm">Date</label>
+                      <Input
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => {
+                          setSelectedDate(e.target.value);
+                          setAssignmentsPage(1);
+                        }}
+                        className="bg-white text-gray-900 border border-gray-300 rounded px-3 py-1 text-sm"
+                        disabled={isLoadingAssignments}
+                      />
+                    </div>
                     <select
                       value={selectedStatus}
                       onChange={(e) => setSelectedStatus(e.target.value)}
