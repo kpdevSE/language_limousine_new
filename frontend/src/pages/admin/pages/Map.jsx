@@ -29,6 +29,8 @@ export default function Map() {
   const markers = useRef([]);
   const geocodeCache = useRef(new globalThis.Map());
   const lastGeocodeTime = useRef(0);
+  const [totalStudentsCount, setTotalStudentsCount] = useState(0);
+  const [locationCount, setLocationCount] = useState(0);
   const sanitizeAddress = (s) =>
     (s || "")
       .toString()
@@ -173,6 +175,7 @@ export default function Map() {
             dateParam ? ` for ${dateParam}` : ""
           }`
         );
+        setTotalStudentsCount(studentsData.length);
         if (!options.suppressState) {
           setStudents(studentsData);
           setFilteredStudents(studentsData);
@@ -196,11 +199,11 @@ export default function Map() {
       return geocodeCache.current.get(key);
     }
 
-    // Respect Nominatim rate limit: <=1 req/sec
+    // Respect server-side throttling interval to avoid piling up
     const now = Date.now();
     const elapsed = now - lastGeocodeTime.current;
-    if (elapsed < 1100) {
-      await sleep(1100 - elapsed);
+    if (elapsed < 400) {
+      await sleep(400 - elapsed);
     }
 
     try {
@@ -210,54 +213,31 @@ export default function Map() {
         cityFallback ? `${cityFallback}, Canada` : null,
       ].filter(Boolean);
 
-      const maxRetries = 2;
-      let lastError = null;
+      let payload = null;
       for (const q of queries) {
-        for (let attempt = 0; attempt <= maxRetries; attempt++) {
-          try {
-            const response = await axios.get(
-              `https://nominatim.openstreetmap.org/search`,
-              {
-                params: {
-                  format: "json",
-                  q,
-                  limit: 1,
-                  countrycodes: "ca",
-                  email: "admin@language-limousine.local",
-                },
-                timeout: 25000,
-                headers: {
-                  Accept: "application/json",
-                },
-              }
-            );
-
-            lastGeocodeTime.current = Date.now();
-
-            if (response.data && response.data.length > 0) {
-              const loc = response.data[0];
-              const location = {
-                lat: parseFloat(loc.lat),
-                lng: parseFloat(loc.lon),
-                address: loc.display_name,
-              };
-              geocodeCache.current.set(key, location);
-              return location;
-            }
-            // No result; break retry loop for this query
+        try {
+          const resp = await apiClient.get(`/geocode`, {
+            params: { q, country: "ca" },
+          });
+          if (resp.data?.success && resp.data?.data) {
+            payload = resp.data.data;
             break;
-          } catch (err) {
-            lastError = err;
-            // Backoff then retry
-            await sleep(700 * (attempt + 1));
           }
+        } catch (e) {
+          // try next variant
         }
       }
 
+      lastGeocodeTime.current = Date.now();
+
+      if (payload) {
+        geocodeCache.current.set(key, payload);
+        return payload;
+      }
       return null;
     } catch (error) {
       console.error("Geocoding error:", error);
-      toast.warn("Geocoding timed out. Some markers may be missing.");
+      toast.warn("Geocoding failed. Some markers may be missing.");
       return null;
     }
   };
@@ -299,6 +279,7 @@ export default function Map() {
       if (studentsToShow.length === 0) {
         // Reset map view to Canada
         map.current.setView([56.1304, -106.3468], 4);
+        setLocationCount(0);
         return;
       }
 
@@ -355,11 +336,13 @@ export default function Map() {
       // Fit map to show all markers
       if (bounds.length > 0) {
         map.current.fitBounds(bounds, { padding: [20, 20] });
+        setLocationCount(bounds.length);
       } else {
         map.current.setView([56.1304, -106.3468], 4);
         toast.info(
           "Unable to geocode any addresses. Please ensure student address and city are valid."
         );
+        setLocationCount(0);
       }
     } finally {
       isUpdatingMarkers.current = false;
@@ -712,15 +695,19 @@ export default function Map() {
                   <div className="flex justify-between items-center">
                     <div>
                       <h2 className="text-lg font-semibold text-gray-900">
-                        Students{" "}
                         {selectedDate
-                          ? `for ${new Date(selectedDate).toLocaleDateString()}`
-                          : ""}
+                          ? `Students for ${new Date(
+                              selectedDate
+                            ).toLocaleDateString()}`
+                          : "Students"}
                       </h2>
                       <p className="text-sm text-gray-500 mt-1">
-                        {filteredStudents.length} student
-                        {filteredStudents.length !== 1 ? "s" : ""} found
-                        {searchTerm && ` matching "${searchTerm}"`}
+                        {totalStudentsCount} student
+                        {totalStudentsCount !== 1 ? "s" : ""} total •{" "}
+                        {locationCount} location
+                        {locationCount !== 1 ? "s" : ""} shown
+                        {students.length > 30 ? " (max 30)" : ""}
+                        {searchTerm && ` • matching "${searchTerm}"`}
                       </p>
                     </div>
                   </div>
@@ -823,7 +810,7 @@ export default function Map() {
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-5 w-5 text-blue-500" />
                     <span className="text-sm text-gray-600">
-                      {filteredStudents.length} locations
+                      {locationCount} locations
                     </span>
                   </div>
                 </div>

@@ -70,6 +70,7 @@ const schoolRoutes = require("./routes/school");
 const waitingTimeRoutes = require("./routes/waitingTime");
 const absentFeedbackRoutes = require("./routes/absentFeedback");
 const excelUploadRoutes = require("./routes/excelUpload");
+const geocodeRoutes = require("./routes/geocode");
 
 // Routes (always under /api)
 app.use(`/api/auth`, authRoutes);
@@ -84,6 +85,7 @@ app.use(`/api/school`, schoolRoutes);
 app.use(`/api/waiting-time`, waitingTimeRoutes);
 app.use(`/api/absent-feedback`, absentFeedbackRoutes);
 app.use(`/api/excel-upload`, excelUploadRoutes);
+app.use(`/api/geocode`, geocodeRoutes);
 
 // Health check route
 app.get(`/api/health`, (req, res) => {
