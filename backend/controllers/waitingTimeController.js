@@ -48,7 +48,7 @@ const getWaitingTimes = async (req, res) => {
     // Get existing waiting times for these students
     const existingWaitingTimes = await WaitingTime.find({
       studentId: { $in: studentIds },
-      date,
+      date: normalizedDate,
       isActive: true,
     }).populate(
       "studentId",
@@ -69,6 +69,7 @@ const getWaitingTimes = async (req, res) => {
           ...student.toObject(),
           waitingTimeId: existingWT._id,
           waitingTime: existingWT.waitingTime,
+          waitingStartedAt: existingWT.waitingStartedAt || null,
           pickupTime: existingWT.pickupTime,
           status: existingWT.status,
           notes: existingWT.notes,
@@ -79,6 +80,7 @@ const getWaitingTimes = async (req, res) => {
           ...student.toObject(),
           waitingTimeId: null,
           waitingTime: 0,
+          waitingStartedAt: null,
           pickupTime: null,
           status: "waiting",
           notes: "",
@@ -147,6 +149,14 @@ const updateWaitingTime = async (req, res) => {
       });
     }
 
+    // Current server time in HH:MM:SS
+    const nowTime = new Date().toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+
     // Check if waiting time already exists for this student and date
     let waitingTimeRecord = await WaitingTime.findOne({
       studentId,
@@ -158,6 +168,10 @@ const updateWaitingTime = async (req, res) => {
       // Update existing record
       waitingTimeRecord.waitingTime = waitingTime;
       if (pickupTime !== undefined) waitingTimeRecord.pickupTime = pickupTime;
+      // Set waitingStartedAt if not set yet
+      if (!waitingTimeRecord.waitingStartedAt) {
+        waitingTimeRecord.waitingStartedAt = nowTime;
+      }
       waitingTimeRecord.status = status || waitingTimeRecord.status;
       waitingTimeRecord.notes = notes || waitingTimeRecord.notes;
       waitingTimeRecord.updatedBy = updatedBy;
@@ -170,6 +184,7 @@ const updateWaitingTime = async (req, res) => {
         flight: student.flight,
         arrivalTime: student.arrivalTime,
         waitingTime,
+        waitingStartedAt: nowTime,
         pickupTime,
         status: status || "waiting",
         notes: notes || "",

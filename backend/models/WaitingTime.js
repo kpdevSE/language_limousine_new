@@ -10,7 +10,7 @@ const waitingTimeSchema = new mongoose.Schema(
     date: {
       type: String,
       required: true,
-      // Format: "MM/DD/YYYY"
+      // Format: "YYYY-MM-DD" or normalized equivalent used throughout controllers
     },
     flight: {
       type: String,
@@ -21,12 +21,17 @@ const waitingTimeSchema = new mongoose.Schema(
       required: true,
       // Format: "HH:MM:SS"
     },
+    // Legacy numeric minutes field (kept for compatibility)
     waitingTime: {
       type: Number,
       required: true,
       min: 0,
       max: 120, // Maximum 120 minutes
       default: 0,
+    },
+    // New: exact time when waiting was recorded (button press)
+    waitingStartedAt: {
+      type: String, // "HH:MM:SS"
     },
     pickupTime: {
       type: String,
@@ -59,7 +64,6 @@ const waitingTimeSchema = new mongoose.Schema(
 // Compound index for efficient queries
 waitingTimeSchema.index({ date: 1, studentId: 1 });
 waitingTimeSchema.index({ date: 1, flight: 1 });
-waitingTimeSchema.index({ date: 1, status: 1 });
 
 // Virtual for formatted waiting time
 waitingTimeSchema.virtual("formattedWaitingTime").get(function () {

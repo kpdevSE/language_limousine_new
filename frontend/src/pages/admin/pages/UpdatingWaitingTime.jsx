@@ -33,7 +33,7 @@ import { toast } from "react-toastify";
 export default function UpdatingWaitingTime() {
   const [waitingTimes, setWaitingTimes] = useState({});
   const [pickupTimes, setPickupTimes] = useState({});
-  const [isSaving, setIsSaving] = useState(false);
+  const [waitingStartedTimes, setWaitingStartedTimes] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
@@ -46,7 +46,6 @@ export default function UpdatingWaitingTime() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Admin token retrieval
   const getAuthToken = () => {
     return (
       sessionStorage.getItem("admin_token") ||
@@ -55,7 +54,6 @@ export default function UpdatingWaitingTime() {
     );
   };
 
-  // Axios client
   const apiClient = axios.create({
     baseURL: API_BASE_URL,
     headers: { "Content-Type": "application/json" },
@@ -83,7 +81,6 @@ export default function UpdatingWaitingTime() {
     }
   );
 
-  // Default date -> today
   useEffect(() => {
     const today = new Date();
     const formattedDate = today.toLocaleDateString("en-US", {
@@ -95,7 +92,6 @@ export default function UpdatingWaitingTime() {
     setDateInputValue(today.toISOString().split("T")[0]);
   }, []);
 
-  // Fetch data on filters
   useEffect(() => {
     if (selectedDate) fetchWaitingTimeData();
   }, [selectedDate, currentPage, searchTerm]);
@@ -129,12 +125,15 @@ export default function UpdatingWaitingTime() {
 
         const initialWaiting = {};
         const initialPickup = {};
+        const initialWaitingStarted = {};
         response.data.data.waitingTimes.forEach((student) => {
           initialWaiting[student._id] = student.waitingTime || 0;
           initialPickup[student._id] = student.pickupTime || null;
+          initialWaitingStarted[student._id] = student.waitingStartedAt || null;
         });
         setWaitingTimes(initialWaiting);
         setPickupTimes(initialPickup);
+        setWaitingStartedTimes(initialWaitingStarted);
       }
     } catch (err) {
       console.error("Error fetching waiting time data:", err);
@@ -147,10 +146,54 @@ export default function UpdatingWaitingTime() {
     }
   };
 
-  const handleWaitingTimeChange = (studentId, value) => {
-    const numValue = parseInt(value) || 0;
-    if (numValue >= 0 && numValue <= 120) {
-      setWaitingTimes((prev) => ({ ...prev, [studentId]: numValue }));
+  const timeNow = () =>
+    new Date().toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+
+  const diffMinutes = (arrival) => {
+    if (!arrival) return 0;
+    const parse = (t) => {
+      const parts = t.split(":").map((p) => parseInt(p, 10));
+      const [h = 0, m = 0, s = 0] = parts;
+      return h * 3600 + m * 60 + s;
+    };
+    const nowS = parse(timeNow());
+    const arrS = parse(arrival);
+    const diff = Math.max(0, Math.round((nowS - arrS) / 60));
+    return Math.min(120, diff);
+  };
+
+  const handleSetWaitingTime = async (student) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        toast.error("Access token required. Please log in again.");
+        return;
+      }
+      const minutes = diffMinutes(student.arrivalTime);
+      setWaitingTimes((prev) => ({ ...prev, [student._id]: minutes }));
+      const resp = await apiClient.post("/waiting-time", {
+        studentId: student._id,
+        date: selectedDate,
+        waitingTime: minutes,
+        status: student.status || "waiting",
+      });
+      const saved = resp?.data?.data?.waitingTime;
+      if (saved?.waitingStartedAt) {
+        setWaitingStartedTimes((prev) => ({
+          ...prev,
+          [student._id]: saved.waitingStartedAt,
+        }));
+      }
+      toast.success("Waiting time set");
+      await fetchWaitingTimeData();
+    } catch (err) {
+      console.error("Error setting waiting time:", err);
+      toast.error("Failed to set waiting time");
     }
   };
 
@@ -162,22 +205,20 @@ export default function UpdatingWaitingTime() {
         return;
       }
 
-      const currentTime = new Date().toLocaleTimeString("en-US", {
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-
+      const currentTime = timeNow();
       setPickupTimes((prev) => ({ ...prev, [studentId]: currentTime }));
 
-      await apiClient.post("/waiting-time", {
+      const resp = await apiClient.post("/waiting-time", {
         studentId,
         date: selectedDate,
         waitingTime: waitingTimes[studentId] || 0,
         pickupTime: currentTime,
         status: "picked_up",
       });
+      const saved = resp?.data?.data?.waitingTime;
+      if (saved?.pickupTime) {
+        setPickupTimes((prev) => ({ ...prev, [studentId]: saved.pickupTime }));
+      }
 
       toast.success("Pickup time updated successfully!");
       await fetchWaitingTimeData();
@@ -189,99 +230,13 @@ export default function UpdatingWaitingTime() {
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    setError("");
-    setSuccess("");
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        setError("Access token required. Please log in again.");
-        toast.error("Access token required. Please log in again.");
-        return;
-      }
-
-      const changedWaiting = {};
-      const changedPickup = {};
-      studentsData.forEach((student) => {
-        const currentWaiting = waitingTimes[student._id] || 0;
-        const originalWaiting = student.waitingTime || 0;
-        if (currentWaiting !== originalWaiting)
-          changedWaiting[student._id] = currentWaiting;
-
-        const currentPickup = pickupTimes[student._id];
-        const originalPickup = student.pickupTime;
-        if (currentPickup !== originalPickup)
-          changedPickup[student._id] = currentPickup;
-      });
-
-      if (
-        !Object.keys(changedWaiting).length &&
-        !Object.keys(changedPickup).length
-      ) {
-        setSuccess("No changes to save");
-        return;
-      }
-
-      const updatePromises = [];
-      Object.entries(changedWaiting).forEach(([studentId, waitingTime]) => {
-        updatePromises.push(
-          apiClient.post("/waiting-time", {
-            studentId,
-            date: selectedDate,
-            waitingTime,
-            pickupTime: pickupTimes[studentId] || null,
-          })
-        );
-      });
-
-      Object.entries(changedPickup).forEach(([studentId, pickupTime]) => {
-        if (!changedWaiting[studentId]) {
-          updatePromises.push(
-            apiClient.post("/waiting-time", {
-              studentId,
-              date: selectedDate,
-              waitingTime: waitingTimes[studentId] || 0,
-              pickupTime,
-            })
-          );
-        }
-      });
-
-      await Promise.all(updatePromises);
-
-      const totalChanges =
-        Object.keys(changedWaiting).length + Object.keys(changedPickup).length;
-      const successMessage = `Successfully updated ${totalChanges} item(s)!`;
-      setSuccess(successMessage);
-      toast.success(successMessage, {
-        position: "top-right",
-        autoClose: 4000,
-        theme: "colored",
-      });
-      await fetchWaitingTimeData();
-    } catch (err) {
-      console.error("Error saving waiting times:", err);
-      let errorMessage = "Failed to save waiting times. Please try again.";
-      if (err.response?.data?.message) errorMessage = err.response.data.message;
-      setError(errorMessage);
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 5000,
-        theme: "colored",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
   const handleDateChange = (e) => {
-    const inputDate = e.target.value; // YYYY-MM-DD
+    const inputDate = e.target.value;
     setDateInputValue(inputDate);
     const [year, month, day] = inputDate.split("-");
     const formattedDate = `${month}/${day}/${year}`;
@@ -325,11 +280,9 @@ export default function UpdatingWaitingTime() {
       <Sidebar />
 
       <div className="flex-1 ml-0 md:ml-64 min-h-screen w-full">
-        {/* Header */}
         <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
           <div className="flex items-center justify-between px-4 md:px-6 py-4 max-w-7xl mx-auto">
             <div className="md:hidden w-10" />
-
             <div className="flex items-center gap-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <Timer className="h-5 w-5 text-primary" />
@@ -343,7 +296,6 @@ export default function UpdatingWaitingTime() {
                 </p>
               </div>
             </div>
-
             <div className="flex items-center gap-3">
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium">Admin</p>
@@ -355,9 +307,7 @@ export default function UpdatingWaitingTime() {
           </div>
         </header>
 
-        {/* Main Content */}
         <main className="container mx-auto px-4 md:px-6 py-6 space-y-6">
-          {/* Controls */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -385,25 +335,8 @@ export default function UpdatingWaitingTime() {
               </div>
               <Badge variant="secondary">{totalStudents} Students</Badge>
             </div>
-
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || isLoading}
-              className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" /> Save Changes
-                </>
-              )}
-            </Button>
           </div>
 
-          {/* Error/Success */}
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -417,18 +350,15 @@ export default function UpdatingWaitingTime() {
             </Alert>
           )}
 
-          {/* Instructions */}
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              <strong>Instructions:</strong> Adjust waiting times (0-120
-              minutes) for each student and mark pickup times. Click "Mark
-              Picked Up" to record when a student is picked up. Once marked, the
-              button will be disabled and show "Picked Up".
+              Click "Set Waiting" to capture waiting minutes (computed from
+              arrival time). Click "Mark Picked Up" to record pickup time. After
+              setting, buttons are disabled and show the captured values.
             </AlertDescription>
           </Alert>
 
-          {/* Desktop Table */}
           <div className="hidden lg:block">
             <Card>
               <CardHeader className="pb-4">
@@ -447,13 +377,12 @@ export default function UpdatingWaitingTime() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-16">ID</TableHead>
-                        <TableHead className="w-32">Waiting Time</TableHead>
                         <TableHead className="w-24">Status</TableHead>
                         <TableHead className="w-24">Flight</TableHead>
                         <TableHead className="w-32">Arrival Time</TableHead>
                         <TableHead className="w-32">Student Number</TableHead>
                         <TableHead>Student Name</TableHead>
-                        <TableHead className="w-32">Actions</TableHead>
+                        <TableHead className="w-60">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -461,28 +390,6 @@ export default function UpdatingWaitingTime() {
                         <TableRow key={student._id}>
                           <TableCell className="font-medium">
                             {student._id.slice(-6)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                min="0"
-                                max="120"
-                                value={waitingTimes[student._id] || 0}
-                                onChange={(e) =>
-                                  handleWaitingTimeChange(
-                                    student._id,
-                                    e.target.value
-                                  )
-                                }
-                                className="w-20 text-center"
-                                placeholder="0"
-                                disabled={isSaving}
-                              />
-                              <span className="text-xs text-muted-foreground">
-                                min
-                              </span>
-                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(student.status)}>
@@ -508,36 +415,59 @@ export default function UpdatingWaitingTime() {
                             {student.studentFamilyName}
                           </TableCell>
                           <TableCell>
-                            {pickupTimes[student._id] ? (
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className="bg-green-50 text-green-700 border-green-200"
-                                >
-                                  {pickupTimes[student._id]}
-                                </Badge>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-6 px-2 text-xs"
-                                  disabled
-                                >
-                                  Picked Up
-                                </Button>
-                              </div>
-                            ) : (
+                            <div className="flex items-center gap-3">
+                              {/* Waiting Time button */}
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() =>
-                                  handlePickupTimeUpdate(student._id)
-                                }
                                 className="h-6 px-2 text-xs"
-                                disabled={isSaving}
+                                disabled={!!waitingStartedTimes[student._id]}
+                                onClick={() => handleSetWaitingTime(student)}
                               >
-                                Mark Picked Up
+                                {waitingStartedTimes[student._id]
+                                  ? "Waiting Set"
+                                  : "Set Waiting"}
                               </Button>
-                            )}
+                              {waitingStartedTimes[student._id] && (
+                                <Badge
+                                  variant="outline"
+                                  className="font-mono text-xs"
+                                >
+                                  {waitingStartedTimes[student._id]}
+                                </Badge>
+                              )}
+
+                              {/* Pickup button */}
+                              {pickupTimes[student._id] ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-6 px-2 text-xs"
+                                    disabled
+                                  >
+                                    Picked Up
+                                  </Button>
+                                  <Badge
+                                    variant="outline"
+                                    className="font-mono text-xs"
+                                  >
+                                    {pickupTimes[student._id]}
+                                  </Badge>
+                                </>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    handlePickupTimeUpdate(student._id)
+                                  }
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  Mark Picked Up
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -605,18 +535,17 @@ export default function UpdatingWaitingTime() {
                         Waiting Time
                       </Label>
                       <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="120"
-                          value={waitingTimes[student._id] || 0}
-                          onChange={(e) =>
-                            handleWaitingTimeChange(student._id, e.target.value)
-                          }
-                          className="w-24 text-center"
-                          placeholder="0"
-                          disabled={isSaving}
-                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 px-2 text-xs"
+                          disabled={(waitingTimes[student._id] || 0) > 0}
+                          onClick={() => handleSetWaitingTime(student)}
+                        >
+                          {(waitingTimes[student._id] || 0) > 0
+                            ? `${waitingTimes[student._id]} min`
+                            : "Set Waiting"}
+                        </Button>
                         <span className="text-sm text-muted-foreground">
                           minutes
                         </span>
@@ -649,7 +578,6 @@ export default function UpdatingWaitingTime() {
                             variant="outline"
                             onClick={() => handlePickupTimeUpdate(student._id)}
                             className="h-6 px-2 text-xs"
-                            disabled={isSaving}
                           >
                             Mark Picked Up
                           </Button>
