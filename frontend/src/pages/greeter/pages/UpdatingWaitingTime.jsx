@@ -440,7 +440,7 @@ export default function UpdatingWaitingTimeGreeters() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-16">ID</TableHead>
+                        <TableHead className="w-16">Excel Order</TableHead>
                         <TableHead className="w-24">Status</TableHead>
                         <TableHead className="w-24">Flight</TableHead>
                         <TableHead className="w-32">Arrival Time</TableHead>
@@ -453,7 +453,7 @@ export default function UpdatingWaitingTimeGreeters() {
                       {studentsData.map((student) => (
                         <TableRow key={student._id}>
                           <TableCell className="font-medium">
-                            {student._id.slice(-6)}
+                            {student.excelOrder || student._id.slice(-6)}
                           </TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(student.status)}>
@@ -576,7 +576,8 @@ export default function UpdatingWaitingTimeGreeters() {
                         </Badge>
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        ID: {student._id.slice(-6)}
+                        Excel Order:{" "}
+                        {student.excelOrder || student._id.slice(-6)}
                       </span>
                     </div>
 

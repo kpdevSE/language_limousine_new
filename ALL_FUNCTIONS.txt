@@ -1,0 +1,1079 @@
+TOTAL FUNCTIONS: 785
+
+ALL FUNCTIONS IN PROJECT
+Generated: 2025-08-21T09:21:30.592Z
+
+FILE: backend/check-students-with-school.js (4)
+- checkStudentsWithSchool
+- mongoose
+- studentsWithoutSchool
+- studentsWithSchool
+
+FILE: backend/check-subdriver-assignments.js (4)
+- allSubdriverAssignments
+- assignments
+- checkSubdriverAssignments
+- mongoose
+
+FILE: backend/config/db.js (1)
+- mongoose
+
+FILE: backend/controllers/absentFeedbackController.js (9)
+- AbsentFeedback
+- combinedData
+- existingFB
+- existingFeedback
+- feedbackRecord
+- normalizeDateQuery
+- normalizedDate
+- submittedBy
+- updatedBy
+
+FILE: backend/controllers/adminController.js (4)
+- adminRegister
+- existingUser
+- user
+- User
+
+FILE: backend/controllers/driverController.js (2)
+- driverId
+- User
+
+FILE: backend/controllers/excelUploadController.js (9)
+- buffer
+- columnMapping
+- createdStudents
+- mappedField
+- normalizedDate
+- studentData
+- validHeaders
+- workbook
+- XLSX
+
+FILE: backend/controllers/geocodeController.js (2)
+- axios
+- geocode
+
+FILE: backend/controllers/schoolController.js (10)
+- assignmentMap
+- assignments
+- getSchoolStatusStats
+- normalizeDateQuery
+- schoolUsername
+- Student
+- studentId
+- studentsWithStatus
+- waiting
+- waitingTimeMap
+
+FILE: backend/controllers/studentAssignmentController.js (10)
+- assignmentId
+- createdAssignments
+- deliveryTimeFormatted
+- driverId
+- getAssignments
+- iso
+- normalizeDateQuery
+- page
+- StudentAssignment
+- updateAssignment
+
+FILE: backend/controllers/studentController.js (7)
+- buildDateFilter
+- dateFilter
+- normalizeDateQuery
+- page
+- PDFDocument
+- required
+- student
+
+FILE: backend/controllers/subdriverController.js (2)
+- subdriverId
+- User
+
+FILE: backend/controllers/userController.js (11)
+- addUser
+- admins
+- existingUser
+- getAllAdmins
+- query
+- schools
+- stats
+- totalUsers
+- user
+- User
+- validRoles
+
+FILE: backend/controllers/waitingTimeController.js (8)
+- combinedData
+- existingWaitingTimes
+- existingWT
+- normalizeDateQuery
+- normalizedDate
+- updatedBy
+- WaitingTime
+- waitingTimeRecord
+
+FILE: backend/create-actual-template.js (3)
+- createActualCSVTemplate
+- createActualTemplate
+- XLSX
+
+FILE: backend/create-excel-template.js (2)
+- createCSVTemplate
+- createExcelTemplate
+
+FILE: backend/debug-routes.js (2)
+- express
+- PORT
+
+FILE: backend/debug-subdriver-data.js (1)
+- debugSubdriverData
+
+FILE: backend/debug-upload.js (1)
+- debugUpload
+
+FILE: backend/fix-excel-file.js (3)
+- createSampleExcelFile
+- fixExcelFile
+- XLSX
+
+FILE: backend/get-admin-token.js (1)
+- getAdminToken
+
+FILE: backend/index.js (5)
+- corsOptions
+- express
+- isOriginAllowed
+- limiter
+- PORT
+
+FILE: backend/middleware/auth.js (6)
+- authHeader
+- jwt
+- optionalAuth
+- requireGreeter
+- requireRoles
+- requireSchool
+
+FILE: backend/quick-fix-upload.js (1)
+- express
+
+FILE: backend/routes/auth.js (1)
+- express
+
+FILE: backend/routes/driver.js (1)
+- express
+
+FILE: backend/routes/excelUpload.js (2)
+- allowedTypes
+- express
+
+FILE: backend/routes/greeter.js (1)
+- express
+
+FILE: backend/routes/school.js (1)
+- express
+
+FILE: backend/routes/schoolStudents.js (1)
+- express
+
+FILE: backend/routes/subdriver.js (1)
+- express
+
+FILE: backend/routes/users.js (1)
+- express
+
+FILE: backend/setup-test-admin.js (1)
+- setupTestData
+
+FILE: backend/test-actual-excel.js (2)
+- axios
+- testActualExcelStructure
+
+FILE: backend/test-admin-assignments.js (1)
+- testAdminAssignments
+
+FILE: backend/test-admin-management.js (1)
+- testAdminManagement
+
+FILE: backend/test-admin-registration.js (2)
+- axios
+- testAdminRegistration
+
+FILE: backend/test-api.js (5)
+- runTests
+- testAdminLogin
+- testAdminRegistration
+- testGetProfile
+- testUpdateProfile
+
+FILE: backend/test-assignment-api.js (1)
+- testAssignmentAPI
+
+FILE: backend/test-assignment-integration.js (4)
+- assignmentData
+- axios
+- isSubdriver
+- testAssignmentFlow
+
+FILE: backend/test-complete-api.js (1)
+- testCompleteAPI
+
+FILE: backend/test-complete-driver-flow.js (2)
+- axios
+- testCompleteDriverFlow
+
+FILE: backend/test-driver-creation.js (2)
+- axios
+- testDriverCreation
+
+FILE: backend/test-driver-functionality.js (2)
+- axios
+- testDriverFunctionality
+
+FILE: backend/test-driver-profile-update.js (1)
+- testDriverProfileUpdate
+
+FILE: backend/test-driver-profile.js (1)
+- testDriverProfile
+
+FILE: backend/test-excel-upload-automatic.js (7)
+- allSameClient
+- columnMapping
+- parseExcelFile
+- studentData
+- testExcelParsing
+- workbook
+- XLSX
+
+FILE: backend/test-excel-upload.js (1)
+- testExcelUpload
+
+FILE: backend/test-frontend-integration.js (1)
+- testFrontendIntegration
+
+FILE: backend/test-logout-functionality.js (2)
+- testAllRoles
+- testLoginAndLogout
+
+FILE: backend/test-school-dropdown.js (3)
+- axios
+- testSchool
+- testSchoolDropdown
+
+FILE: backend/test-school-students.js (1)
+- testSchoolStudents
+
+FILE: backend/test-school-subdriver-pages.js (8)
+- axios
+- schoolLoginResponse
+- schoolSearchResponse
+- subdriverSearchResponse
+- subdriversResponse
+- subdriversToDelete
+- testSchoolAndSubdriverPages
+- vehicleSearchResponse
+
+FILE: backend/test-server-connection.js (1)
+- testServerConnection
+
+FILE: backend/test-server-routes.js (1)
+- testServerRoutes
+
+FILE: backend/test-simple-driver.js (1)
+- testSimpleDriver
+
+FILE: backend/test-simplified-admin-registration.js (2)
+- axios
+- testSimplifiedAdminRegistration
+
+FILE: backend/test-student-api.js (3)
+- runTests
+- testStudentAPI
+- testValidationErrors
+
+FILE: backend/test-students-api.js (1)
+- testStudentsAPI
+
+FILE: backend/test-students-endpoint.js (1)
+- testStudentsEndpoint
+
+FILE: backend/test-subdriver-assignments.js (1)
+- testSubdriverAssignments
+
+FILE: backend/test-subdriver-completed-tasks.js (1)
+- testSubdriverCompletedTasks
+
+FILE: backend/test-subdriver-profile-update.js (1)
+- testSubdriverProfileUpdate
+
+FILE: backend/test-time-formatting.js (2)
+- formatTimeToAMPM
+- hour
+
+FILE: backend/test-token.js (1)
+- testToken
+
+FILE: backend/test-upload-endpoint.js (1)
+- testUploadEndpoint
+
+FILE: backend/test-user-login-integration.js (1)
+- testUserLoginIntegration
+
+FILE: backend/test-user-management.js (15)
+- axios
+- response
+- runTests
+- testAddDriver
+- testAddGreeter
+- testAddSchool
+- testAddSubdriver
+- testAdminLogin
+- testDeleteUser
+- testGetAllUsers
+- testGetUserById
+- testGetUsersByRole
+- testGetUserStats
+- testUpdateUser
+- testUserLogin
+
+FILE: backend/utils/studentNumberGenerator.js (2)
+- parts
+- Student
+
+FILE: frontend/src/aboutus/aboutus.jsx (2)
+- AboutUs
+- timer
+
+FILE: frontend/src/App.jsx (1)
+- App
+
+FILE: frontend/src/components/Components/AboutUsComponents/Detail.jsx (3)
+- element
+- LanguageLimousineDetailed
+- observer
+
+FILE: frontend/src/components/Components/AboutUsComponents/Hero.jsx (2)
+- AboutUsHero
+- handleMouseMove
+
+FILE: frontend/src/components/Components/AboutUsComponents/SecondHeroSection.jsx (3)
+- element
+- LanguageLimousine
+- observer
+
+FILE: frontend/src/components/Components/AdminLogin.jsx (13)
+- api
+- getUserRoleConfig
+- handleDialogClose
+- handleSubmit
+- MultiRoleLoginDialog
+- resetForm
+- response
+- roleConfig
+- Select
+- SelectOption
+- togglePasswordVisibility
+- token
+- user
+
+FILE: frontend/src/components/Components/Footer.jsx (2)
+- FooterSection
+- usefulLinks
+
+FILE: frontend/src/components/Components/HomeComponents/AnimatedCounter.jsx (8)
+- animate
+- AnimatedCounter
+- AnimatedStatsSection
+- counterRef
+- formatNumber
+- observer
+- progress
+- stats
+
+FILE: frontend/src/components/Components/HomeComponents/CustomerReviewCarousel.jsx (7)
+- CustomerReviewsCarousel
+- goToSlide
+- interval
+- nextSlide
+- prevSlide
+- renderStars
+- reviews
+
+FILE: frontend/src/components/Components/HomeComponents/Hero.jsx (3)
+- handleMouseMove
+- LanguageLimousineHero
+- timer
+
+FILE: frontend/src/components/Components/HomeComponents/ParentTrust.jsx (3)
+- observer
+- ParentsTrustSection
+- section
+
+FILE: frontend/src/components/Components/HomeComponents/StudentTransport.jsx (1)
+- StudentTransportService
+
+FILE: frontend/src/components/Components/HomeComponents/TravelService.jsx (4)
+- observer
+- section
+- services
+- TravelServicesSection
+
+FILE: frontend/src/components/Components/Loader.jsx (1)
+- ColorfulTextLoader
+
+FILE: frontend/src/components/Components/Navigationbar.jsx (4)
+- handleScroll
+- NavigationBar
+- navigationItems
+- scrollTop
+
+FILE: frontend/src/components/Components/PrivacyPloiciesCompnents/Details.jsx (1)
+- PrivacyPolicyComponent
+
+FILE: frontend/src/components/Components/PrivacyPloiciesCompnents/Hero.jsx (1)
+- PrivacyPolicyHero
+
+FILE: frontend/src/components/Components/PrivacyPloiciesCompnents/SecondHeroSection.jsx (1)
+- LanguageLimousinePrivacy
+
+FILE: frontend/src/components/Components/RoleLogin.jsx (10)
+- handleRoleChange
+- handleSubmit
+- isAdmin
+- resetForm
+- roleCfg
+- roleConfig
+- RoleLoginDialog
+- ROLES
+- token
+- user
+
+FILE: frontend/src/components/Components/ScrollTop.jsx (3)
+- scrollToTop
+- ScrollToTopButton
+- toggleVisibility
+
+FILE: frontend/src/components/DriverProtectedRoute.jsx (4)
+- checkAuth
+- DriverProtectedRoute
+- TOKEN_KEY
+- user
+
+FILE: frontend/src/components/GreeterProtectedRoute.jsx (4)
+- checkAuth
+- GreeterProtectedRoute
+- TOKEN_KEY
+- user
+
+FILE: frontend/src/components/mode-toggle.jsx (1)
+- ModeToggle
+
+FILE: frontend/src/components/ProtectedRoute.jsx (4)
+- checkAuth
+- ProtectedRoute
+- TOKEN_KEY
+- user
+
+FILE: frontend/src/components/theme-provider.jsx (4)
+- root
+- ThemeProvider
+- ThemeProviderContext
+- useTheme
+
+FILE: frontend/src/components/theme-toggle.jsx (2)
+- storedTheme
+- ThemeToggle
+
+FILE: frontend/src/components/ui/alert.jsx (3)
+- Alert
+- AlertDescription
+- AlertTitle
+
+FILE: frontend/src/components/ui/badge.jsx (1)
+- Badge
+
+FILE: frontend/src/components/ui/button.jsx (1)
+- Button
+
+FILE: frontend/src/components/ui/card.jsx (7)
+- Card
+- CardAction
+- CardContent
+- CardDescription
+- CardFooter
+- CardHeader
+- CardTitle
+
+FILE: frontend/src/components/ui/dialog.jsx (10)
+- Dialog
+- DialogClose
+- DialogContent
+- DialogDescription
+- DialogFooter
+- DialogHeader
+- DialogOverlay
+- DialogPortal
+- DialogTitle
+- DialogTrigger
+
+FILE: frontend/src/components/ui/dropdown-menu.jsx (15)
+- DropdownMenu
+- DropdownMenuCheckboxItem
+- DropdownMenuContent
+- DropdownMenuGroup
+- DropdownMenuItem
+- DropdownMenuLabel
+- DropdownMenuPortal
+- DropdownMenuRadioGroup
+- DropdownMenuRadioItem
+- DropdownMenuSeparator
+- DropdownMenuShortcut
+- DropdownMenuSub
+- DropdownMenuSubContent
+- DropdownMenuSubTrigger
+- DropdownMenuTrigger
+
+FILE: frontend/src/components/ui/input.jsx (1)
+- Input
+
+FILE: frontend/src/components/ui/label.jsx (1)
+- Label
+
+FILE: frontend/src/components/ui/select.jsx (10)
+- Select
+- SelectContent
+- SelectGroup
+- SelectItem
+- SelectLabel
+- SelectScrollDownButton
+- SelectScrollUpButton
+- SelectSeparator
+- SelectTrigger
+- SelectValue
+
+FILE: frontend/src/components/ui/table.jsx (8)
+- Table
+- TableBody
+- TableCaption
+- TableCell
+- TableFooter
+- TableHead
+- TableHeader
+- TableRow
+
+FILE: frontend/src/components/ui/textarea.jsx (1)
+- Textarea
+
+FILE: frontend/src/home/home.jsx (2)
+- Home
+- timer
+
+FILE: frontend/src/lib/api.js (9)
+- absentFeedbackAPI
+- api
+- assignmentAPI
+- authAPI
+- schoolAPI
+- studentAPI
+- token
+- userAPI
+- waitingTimeAPI
+
+FILE: frontend/src/lib/utils.js (1)
+- cn
+
+FILE: frontend/src/pages/admin/AdminRegister.jsx (5)
+- AdminRegister
+- navigate
+- newErrors
+- response
+- validateForm
+
+FILE: frontend/src/pages/admin/components/Sidebar.jsx (14)
+- bottomItem
+- checkScreenSize
+- childItem
+- currentPath
+- handleLogout
+- handleNavigation
+- isChildActive
+- menuItems
+- mobile
+- navigate
+- shouldShowTooltip
+- Sidebar
+- toggleSection
+- toggleSidebar
+
+FILE: frontend/src/pages/admin/pages/AssignDrivers.jsx (28)
+- allStudentIds
+- apiClient
+- AssignDrivers
+- assignmentsResponse
+- closeCancelModal
+- confirmCancelAssignment
+- fetchAssignmentData
+- fetchAssignmentsData
+- getAuthToken
+- getPickupStatusColor
+- getStatusDisplay
+- handleAssign
+- handleAssignmentSearchChange
+- handleAssignmentsPageChange
+- handleAssignmentsPerPageChange
+- handleCancelAssignmentClick
+- handleCheckboxChange
+- handleDriverChange
+- handleEntriesPerPageChange
+- handlePageChange
+- handleSearchChange
+- handleSelectAllStudents
+- handleSubDriverChange
+- pageNumber
+- startIndex
+- studentsResponse
+- token
+- validateAssignment
+
+FILE: frontend/src/pages/admin/pages/Dashboard.jsx (10)
+- AdminDashboard
+- getStatusColor
+- handleLogout
+- handleRegister
+- handleRegisterInput
+- IconComponent
+- interval
+- navigate
+- token
+- userStatsResponse
+
+FILE: frontend/src/pages/admin/pages/Map.jsx (27)
+- addCanadaBoundary
+- apiClient
+- bounds
+- canadaBounds
+- createPrintWindow
+- data
+- ensureLeafletLoaded
+- filtered
+- getAuthToken
+- handlePrintMap
+- handleSearch
+- handleSearchTermChange
+- handleStudentSelect
+- initializeMap
+- initMap
+- isUpdatingMarkers
+- key
+- link
+- loaded
+- Map
+- mapContainer
+- params
+- printContent
+- script
+- sleep
+- street
+- token
+
+FILE: frontend/src/pages/admin/pages/PrintMap.jsx (14)
+- doc
+- driver
+- fetchDriverData
+- fetchDriversAndSubdrivers
+- fetchSubDriverData
+- generateDriverReport
+- generateSubDriverReport
+- handleDateChange
+- handleDriverChange
+- handlePrint
+- handleSubDriverChange
+- PrintMap
+- response
+- subDriver
+
+FILE: frontend/src/pages/admin/pages/Profile.jsx (7)
+- adminData
+- currentUser
+- fetchAdminProfile
+- handleInputChange
+- handleReset
+- handleSubmit
+- Profile
+
+FILE: frontend/src/pages/admin/pages/Students/Add.jsx (12)
+- Add
+- apiClient
+- fetchSchools
+- fetchStudents
+- getAuthToken
+- handleDelete
+- handleReset
+- handleSelectChange
+- handleSubmit
+- response
+- startIndex
+- token
+
+FILE: frontend/src/pages/admin/pages/Students/Download.jsx (7)
+- apiClient
+- Download
+- getAuthToken
+- handleDateChange
+- handleDownload
+- link
+- token
+
+FILE: frontend/src/pages/admin/pages/Students/Update.jsx (11)
+- apiClient
+- displayedStudents
+- fetchSchools
+- getAuthToken
+- handleDateFilter
+- handleInputChange
+- handleSelectChange
+- handleUpdateSubmit
+- response
+- token
+- Update
+
+FILE: frontend/src/pages/admin/pages/Students/Upload.jsx (8)
+- adminToken
+- downloadTemplate
+- file
+- formData
+- getAuthToken
+- handleFileChange
+- token
+- Upload
+
+FILE: frontend/src/pages/admin/pages/Students/View.jsx (10)
+- apiClient
+- filteredStudents
+- getAuthToken
+- getStatusColor
+- handleDateChange
+- handleSearchChange
+- handleViewStudents
+- response
+- token
+- View
+
+FILE: frontend/src/pages/admin/pages/UpdatingWaitingTime.jsx (19)
+- apiClient
+- diffMinutes
+- errorMessage
+- fetchWaitingTimeData
+- getAuthToken
+- getStatusDisplay
+- handleDateChange
+- handlePickupTimeUpdate
+- inputDate
+- nowS
+- pageNumber
+- parse
+- parts
+- resp
+- response
+- startIndex
+- today
+- token
+- UpdatingWaitingTime
+
+FILE: frontend/src/pages/admin/pages/Users/Admins.jsx (7)
+- Admins
+- currentAdmin
+- fetchAdmins
+- filteredAdmins
+- handleAddAdmin
+- resetForm
+- response
+
+FILE: frontend/src/pages/admin/pages/Users/Drivers.jsx (14)
+- apiClient
+- Drivers
+- fetchDrivers
+- getAuthToken
+- handleDelete
+- handleEntriesPerPageChange
+- handleInputChange
+- handlePageChange
+- handleReset
+- handleSearchChange
+- handleSelectChange
+- handleSubmit
+- token
+- validateForm
+
+FILE: frontend/src/pages/admin/pages/Users/Greeters.jsx (14)
+- apiClient
+- fetchGreeters
+- getAuthToken
+- Greeters
+- handleDelete
+- handleEntriesPerPageChange
+- handleInputChange
+- handlePageChange
+- handleReset
+- handleSearchChange
+- handleSelectChange
+- handleSubmit
+- token
+- validateForm
+
+FILE: frontend/src/pages/admin/pages/Users/Schools.jsx (14)
+- apiClient
+- fetchSchools
+- getAuthToken
+- handleDelete
+- handleEntriesPerPageChange
+- handleInputChange
+- handlePageChange
+- handleReset
+- handleSearchChange
+- handleSelectChange
+- handleSubmit
+- Schools
+- token
+- validateForm
+
+FILE: frontend/src/pages/admin/pages/Users/Subdrivers.jsx (14)
+- apiClient
+- fetchSubdrivers
+- getAuthToken
+- handleDelete
+- handleEntriesPerPageChange
+- handleInputChange
+- handlePageChange
+- handleReset
+- handleSearchChange
+- handleSelectChange
+- handleSubmit
+- Subdrivers
+- token
+- validateForm
+
+FILE: frontend/src/pages/driver/components/Sidebar.jsx (13)
+- bottomItem
+- checkScreenSize
+- childItem
+- currentPath
+- handleNavigation
+- isChildActive
+- menuItems
+- mobile
+- navigate
+- shouldShowTooltip
+- Sidebar
+- toggleSection
+- toggleSidebar
+
+FILE: frontend/src/pages/driver/pages/Dashboard.jsx (10)
+- apiFunction
+- Dashboard
+- errorMessage
+- fetchAssignments
+- handleDateChange
+- handleEntriesPerPageChange
+- handlePickupStatusUpdate
+- pageNumber
+- response
+- startIndex
+
+FILE: frontend/src/pages/driver/pages/Profile.jsx (4)
+- DriverProfile
+- fetchDriverProfile
+- handleUpdateProfile
+- response
+
+FILE: frontend/src/pages/greeter/components/Sidebar.jsx (13)
+- bottomItem
+- checkScreenSize
+- childItem
+- currentPath
+- handleNavigation
+- isChildActive
+- menuItems
+- mobile
+- navigate
+- shouldShowTooltip
+- Sidebar
+- toggleSection
+- toggleSidebar
+
+FILE: frontend/src/pages/greeter/pages/AbsentFeedback.jsx (19)
+- AbsentFeedbackGreeters
+- apiClient
+- fetchAbsentFeedbackData
+- getAuthToken
+- getFeedbackTypeColor
+- getFeedbackTypeDisplay
+- getStatusDisplay
+- handleDateChange
+- handleDeleteFeedback
+- handleEntriesPerPageChange
+- handlePageChange
+- handleSubmitFeedback
+- inputDate
+- openFeedbackDialog
+- pageNumber
+- response
+- startIndex
+- today
+- token
+
+FILE: frontend/src/pages/greeter/pages/AssigenDrivers.jsx (29)
+- allStudentIds
+- apiClient
+- AssignDrivers
+- assignmentsResponse
+- closeCancelModal
+- confirmCancelAssignment
+- fetchAssignmentData
+- fetchAssignmentsData
+- getAuthToken
+- getPickupStatusColor
+- getStatusDisplay
+- handleAssign
+- handleAssignmentSearchChange
+- handleAssignmentsPageChange
+- handleAssignmentsPerPageChange
+- handleCancelAssignmentClick
+- handleCheckboxChange
+- handleDateChange
+- handleDriverChange
+- handleEntriesPerPageChange
+- handlePageChange
+- handleSearchChange
+- handleSelectAllStudents
+- handleSubDriverChange
+- pageNumber
+- startIndex
+- studentsResponse
+- token
+- validateAssignment
+
+FILE: frontend/src/pages/greeter/pages/UpdatingWaitingTime.jsx (21)
+- apiClient
+- diffMinutes
+- errorMessage
+- fetchWaitingTimeData
+- getAuthToken
+- getStatusDisplay
+- handleDateChange
+- handlePickupTimeUpdate
+- handleSearchChange
+- inputDate
+- nowS
+- pageNumber
+- parse
+- parts
+- resp
+- response
+- startIndex
+- timeNow
+- today
+- token
+- UpdatingWaitingTimeGreeters
+
+FILE: frontend/src/pages/schools/components/Siebar.jsx (13)
+- bottomItem
+- checkScreenSize
+- childItem
+- currentPath
+- handleNavigation
+- isChildActive
+- menuItems
+- mobile
+- navigate
+- shouldShowTooltip
+- Sidebar
+- toggleSection
+- toggleSidebar
+
+FILE: frontend/src/pages/schools/pages/AddStudents.jsx (5)
+- AddStudentsPage
+- handleDelete
+- handleReset
+- handleSubmit
+- itemsPerPage
+
+FILE: frontend/src/pages/schools/pages/Dashboard.jsx (4)
+- file
+- handleFileChange
+- handleReset
+- SchoolDashboard
+
+FILE: frontend/src/pages/schools/pages/Status.jsx (8)
+- fetchStudentsStatus
+- getStatusColor
+- getStatusIcon
+- handleDateChange
+- handlePageChange
+- params
+- startIndex
+- StatusPage
+
+FILE: frontend/src/pages/schools/pages/StudentsDetails.jsx (7)
+- fetchStudents
+- handlePageChange
+- handleSearch
+- params
+- startIndex
+- StudentDetails
+- userData
+
+FILE: frontend/src/pages/subdriver/components/Sidebar.jsx (13)
+- bottomItem
+- checkScreenSize
+- childItem
+- currentPath
+- handleNavigation
+- isChildActive
+- menuItems
+- mobile
+- navigate
+- shouldShowTooltip
+- Sidebar
+- toggleSection
+- toggleSidebar
+
+FILE: frontend/src/pages/subdriver/pages/Dashboard.jsx (13)
+- apiFunction
+- Dashboard
+- fetchAssignments
+- filteredAssignments
+- formatTimeToAMPM
+- getStatusColor
+- getStatusIcon
+- handleDateChange
+- handleDeliveryStatusUpdate
+- handlePickupStatusUpdate
+- hour
+- response
+- studentName
+
+FILE: frontend/src/pages/subdriver/pages/Profile.jsx (6)
+- fetchSubdriverProfile
+- handleUpdateProfile
+- response
+- SubDriverProfile
+- togglePasswordVisibility
+- updateData
+
+FILE: frontend/src/privacy/privacy.jsx (2)
+- Privacy
+- timer
+
+FILE: frontend/test-dashboard.js (1)
+- testDashboardEndpoints
+
+FILE: scripts/extract-functions.js (6)
+- allFiles
+- extractFunctionNames
+- fs
+- listFilesRecursively
+- main
+- sortedFiles

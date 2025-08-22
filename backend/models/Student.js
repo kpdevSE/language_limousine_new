@@ -106,6 +106,11 @@ const studentSchema = new mongoose.Schema(
       required: [true, "Client is required"],
       trim: true,
     },
+    excelOrder: {
+      type: Number,
+      required: [true, "Excel order is required"],
+      min: 1,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -125,6 +130,7 @@ const studentSchema = new mongoose.Schema(
 studentSchema.index({ date: 1, trip: 1 });
 studentSchema.index({ studentNo: 1, date: 1 });
 studentSchema.index({ isActive: 1 });
+studentSchema.index({ excelOrder: 1, date: 1 }); // Add index for excel order
 studentSchema.index({
   trip: "text",
   studentNo: "text",

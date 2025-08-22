@@ -840,7 +840,9 @@ export default function AssignDrivers() {
                               </div>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                              <span className="text-xs md:text-sm">ID</span>
+                              <span className="text-xs md:text-sm">
+                                Excel Order
+                              </span>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                               <span className="text-xs md:text-sm">
@@ -909,7 +911,7 @@ export default function AssignDrivers() {
                                   />
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                                  {student._id}
+                                  {student.excelOrder || student._id.slice(-6)}
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                                   {student.arrivalTime}

@@ -265,7 +265,7 @@ export default function View() {
                       <thead>
                         <tr className="bg-gray-50">
                           <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            #
+                            Excel Order
                           </th>
                           <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
                             Student No
@@ -301,7 +301,7 @@ export default function View() {
                               className="border-gray-200 hover:bg-gray-50"
                             >
                               <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                                {index + 1}
+                                {student.excelOrder || index + 1}
                               </td>
                               <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
                                 {student.studentNo}
@@ -331,14 +331,12 @@ export default function View() {
                             </tr>
                           ))
                         ) : (
-                          <tr className="border-gray-200">
+                          <tr>
                             <td
-                              colSpan={9}
-                              className="text-gray-700 text-center py-8 px-4 border-b border-gray-200"
+                              colSpan="9"
+                              className="text-center py-8 text-gray-500"
                             >
-                              {students.length === 0
-                                ? "No students found for this date."
-                                : "No students found matching your search criteria."}
+                              No students found for the selected date
                             </td>
                           </tr>
                         )}

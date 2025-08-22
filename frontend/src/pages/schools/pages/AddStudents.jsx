@@ -478,6 +478,9 @@ export default function AddStudentsPage() {
                         Actions
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200">
+                        Excel Order
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200">
                         Date
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200">
@@ -530,6 +533,9 @@ export default function AddStudentsPage() {
                           >
                             Delete
                           </Button>
+                        </td>
+                        <td className="p-3 text-xs border-r border-gray-200">
+                          {student.excelOrder || "N/A"}
                         </td>
                         <td className="p-3 text-xs border-r border-gray-200">
                           {student.date}

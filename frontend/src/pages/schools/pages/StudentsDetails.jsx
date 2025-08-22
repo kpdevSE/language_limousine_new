@@ -231,7 +231,7 @@ export default function StudentDetails() {
                         Action
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[40px]">
-                        #
+                        Excel Order
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
                         Actual arrival time
@@ -314,7 +314,7 @@ export default function StudentDetails() {
                             </button>
                           </td>
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {startIndex + index + 1}
+                            {student.excelOrder || startIndex + index + 1}
                           </td>
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
                             {student.actualArrivalTime || "N/A"}

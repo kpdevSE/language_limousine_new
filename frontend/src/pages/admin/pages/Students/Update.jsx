@@ -393,7 +393,7 @@ export default function Update() {
                     <TableHeader>
                       <TableRow className="bg-gray-50 hover:bg-gray-50">
                         <TableHead className="text-gray-700 font-medium">
-                          #
+                          Excel Order
                         </TableHead>
                         <TableHead className="text-gray-700 font-medium">
                           Student No
@@ -425,7 +425,7 @@ export default function Update() {
                           className="border-gray-200 hover:bg-gray-50"
                         >
                           <TableCell className="text-gray-800">
-                            {index + 1}
+                            {student.excelOrder || index + 1}
                           </TableCell>
                           <TableCell className="text-gray-800">
                             {student.studentNo}

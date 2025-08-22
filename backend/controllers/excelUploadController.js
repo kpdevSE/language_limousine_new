@@ -74,6 +74,7 @@ const parseExcelFile = (buffer) => {
     };
 
     const students = [];
+    let excelOrderCounter = 1; // Start from 1 for sequential numbering
 
     dataRows.forEach((row, index) => {
       if (row.length === 0 || row.every((cell) => !cell)) {
@@ -150,8 +151,10 @@ const parseExcelFile = (buffer) => {
       if (studentData.studentGivenName || studentData.studentFamilyName) {
         students.push({
           ...studentData,
+          excelOrder: excelOrderCounter, // Assign sequential number
           rowNumber: index + 2, // +2 because we start from row 2 (after header)
         });
+        excelOrderCounter++; // Increment counter for next student
       }
     });
 

@@ -720,7 +720,7 @@ export default function Map() {
                       <thead>
                         <tr className="bg-gray-50">
                           <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            #
+                            Excel Order
                           </th>
                           <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
                             Student Number
@@ -754,7 +754,7 @@ export default function Map() {
                             onClick={() => handleStudentSelect(student)}
                           >
                             <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                              {index + 1}
+                              {student.excelOrder || index + 1}
                             </td>
                             <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
                               {student.studentNo || "N/A"}

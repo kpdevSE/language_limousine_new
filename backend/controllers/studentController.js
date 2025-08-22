@@ -111,7 +111,7 @@ const getAllStudents = async (req, res) => {
 
     const skip = (page - 1) * limit;
     const [students, total] = await Promise.all([
-      Student.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Student.find(query).sort({ excelOrder: 1 }).skip(skip).limit(limit),
       Student.countDocuments(query),
     ]);
 

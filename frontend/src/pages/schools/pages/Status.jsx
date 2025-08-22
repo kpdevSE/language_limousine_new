@@ -238,7 +238,7 @@ export default function StatusPage() {
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[40px]">
-                        #
+                        Excel Order
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
                         Status
@@ -303,7 +303,7 @@ export default function StatusPage() {
                           className="border-gray-200 hover:bg-gray-50"
                         >
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {startIndex + index + 1}
+                            {student.excelOrder || startIndex + index + 1}
                           </td>
                           <td className="p-3 border-r border-gray-200">
                             <Badge className={getStatusColor(student.status)}>
