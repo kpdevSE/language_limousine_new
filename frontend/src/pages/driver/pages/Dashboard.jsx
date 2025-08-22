@@ -416,7 +416,9 @@ export default function Dashboard() {
                     <thead>
                       <tr className="bg-gray-50">
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                          <span className="text-xs md:text-sm">ID</span>
+                          <span className="text-xs md:text-sm">
+                            Excel Order
+                          </span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                           <span className="text-xs md:text-sm">Pick Up</span>
@@ -490,7 +492,8 @@ export default function Dashboard() {
                             className="border-gray-200 hover:bg-gray-50 transition-colors"
                           >
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                              {assignment._id.slice(-6)}
+                              {assignment.studentId?.excelOrder ||
+                                assignment._id.slice(-6)}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               <span

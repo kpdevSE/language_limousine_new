@@ -819,7 +819,9 @@ export default function AssignDrivers() {
                               </div>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                              <span className="text-xs md:text-sm">ID</span>
+                              <span className="text-xs md:text-sm">
+                                Excel Order
+                              </span>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                               <span className="text-xs md:text-sm">
@@ -887,7 +889,7 @@ export default function AssignDrivers() {
                                   />
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                                  {student._id}
+                                  {student.excelOrder || student._id.slice(-6)}
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                                   {student.arrivalTime}
@@ -1062,6 +1064,9 @@ export default function AssignDrivers() {
                         <thead>
                           <tr className="bg-gray-50">
                             <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                              <span className="text-sm">Excel Order</span>
+                            </th>
+                            <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
                               <span className="text-sm">Student</span>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
@@ -1088,7 +1093,7 @@ export default function AssignDrivers() {
                           {isLoadingAssignments ? (
                             <tr className="border-gray-200">
                               <td
-                                colSpan={7}
+                                colSpan={8}
                                 className="text-gray-700 text-center py-8 px-4 border-b border-gray-200 text-sm"
                               >
                                 <div className="flex items-center justify-center">
@@ -1103,6 +1108,12 @@ export default function AssignDrivers() {
                                 key={assignment._id}
                                 className="border-gray-200 hover:bg-gray-50 transition-colors"
                               >
+                                <td className="px-4 py-3 border-b border-gray-200">
+                                  <div className="text-sm text-gray-900 font-medium">
+                                    {assignment.studentId?.excelOrder ||
+                                      assignment.studentId?._id.slice(-6)}
+                                  </div>
+                                </td>
                                 <td className="px-4 py-3 border-b border-gray-200">
                                   <div>
                                     <div className="font-medium text-gray-900">
@@ -1267,7 +1278,7 @@ export default function AssignDrivers() {
                           ) : (
                             <tr className="border-gray-200">
                               <td
-                                colSpan={7}
+                                colSpan={8}
                                 className="text-gray-700 text-center py-8 px-4 border-b border-gray-200 text-sm"
                               >
                                 {totalAssignments === 0

@@ -631,7 +631,7 @@ export default function PrintMap() {
                         <thead>
                           <tr className="bg-gray-50">
                             <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
-                              #
+                              Excel Order
                             </th>
                             <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
                               Student Name
@@ -660,7 +660,7 @@ export default function PrintMap() {
                           {driverData.tasks.map((task, index) => (
                             <tr key={task._id} className="hover:bg-gray-50">
                               <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
-                                {index + 1}
+                                {task.studentId?.excelOrder || index + 1}
                               </td>
                               <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
                                 {task.studentId?.studentGivenName}{" "}
@@ -801,7 +801,7 @@ export default function PrintMap() {
                         <thead>
                           <tr className="bg-gray-50">
                             <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
-                              #
+                              Excel Order
                             </th>
                             <th className="border border-gray-200 px-3 py-2 text-left text-xs font-medium text-gray-700">
                               Student Name
@@ -830,7 +830,7 @@ export default function PrintMap() {
                           {subDriverData.tasks.map((task, index) => (
                             <tr key={task._id} className="hover:bg-gray-50">
                               <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
-                                {index + 1}
+                                {task.studentId?.excelOrder || index + 1}
                               </td>
                               <td className="border border-gray-200 px-3 py-2 text-xs text-gray-900">
                                 {task.studentId?.studentGivenName}{" "}
