@@ -7,6 +7,7 @@ import {
   Package,
   ArrowUp,
 } from "lucide-react";
+import takeOff from "../../../../public/images/takeoff.jpg";
 
 const StudentTransportService = () => {
   return (
@@ -84,50 +85,11 @@ const StudentTransportService = () => {
           {/* Center Column - Image */}
           <div className="relative">
             <div className="aspect-square rounded-lg overflow-hidden shadow-lg">
-              <div
-                className="w-full h-full bg-cover bg-center"
-                style={{
-                  backgroundImage: `url('data:image/svg+xml;base64,${btoa(`
-                    <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
-                      <defs>
-                        <linearGradient id="skyBg" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" style="stop-color:#87CEEB;stop-opacity:1" />
-                          <stop offset="100%" style="stop-color:#B0C4DE;stop-opacity:1" />
-                        </linearGradient>
-                      </defs>
-                      <!-- Sky background -->
-                      <rect width="100%" height="200" fill="url(#skyBg)"/>
-                      <!-- Road -->
-                      <rect x="0" y="200" width="100%" height="200" fill="#374151"/>
-                      <rect x="0" y="280" width="100%" height="10" fill="#6B7280"/>
-                      <!-- Buildings in background -->
-                      <rect x="50" y="120" width="40" height="80" fill="#4B5563"/>
-                      <rect x="100" y="100" width="50" height="100" fill="#374151"/>
-                      <rect x="160" y="130" width="35" height="70" fill="#4B5563"/>
-                      <rect x="300" y="110" width="45" height="90" fill="#374151"/>
-                      <!-- Car -->
-                      <rect x="150" y="240" width="100" height="40" fill="#1F2937" rx="5"/>
-                      <circle cx="170" cy="285" r="12" fill="#000"/>
-                      <circle cx="230" cy="285" r="12" fill="#000"/>
-                      <rect x="160" y="220" width="80" height="20" fill="#4A90E2" rx="3"/>
-                      <!-- Person with Canadian flag -->
-                      <circle cx="120" cy="250" r="15" fill="#F4A460"/>
-                      <rect x="110" y="265" width="20" height="30" fill="#8B4513"/>
-                      <!-- Canadian flag -->
-                      <rect x="95" y="235" width="20" height="15" fill="#FF0000"/>
-                      <polygon points="100,240 105,242 105,245 100,247 95,245 95,242" fill="#FF0000"/>
-                      <!-- Street elements -->
-                      <rect x="50" y="310" width="15" height="60" fill="#654321"/>
-                      <circle cx="57" cy="305" r="8" fill="#228B22"/>
-                      <rect x="320" y="315" width="12" height="50" fill="#696969"/>
-                      <circle cx="326" cy="310" r="6" fill="#FFD700"/>
-                    </svg>
-                  `)}')`,
-                }}
-              >
-                {/* Overlay for better text visibility if needed */}
-                <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-              </div>
+              <img
+                src={takeOff}
+                alt="Student Transport Service"
+                className="w-full h-full object-cover object-center"
+              />
             </div>
           </div>
 
