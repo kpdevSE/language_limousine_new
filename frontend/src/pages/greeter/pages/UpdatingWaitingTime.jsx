@@ -298,6 +298,11 @@ export default function UpdatingWaitingTimeGreeters() {
     setCurrentPage(page);
   };
 
+  const handleWaitingTimeChange = (studentId, value) => {
+    const numValue = parseInt(value) || 0;
+    setWaitingTimes((prev) => ({ ...prev, [studentId]: numValue }));
+  };
+
   // Calculate pagination info
   const startIndex = (currentPage - 1) * 10;
   const endIndex = Math.min(startIndex + 10, totalStudents);
@@ -369,8 +374,8 @@ export default function UpdatingWaitingTimeGreeters() {
         <main className="container mx-auto px-4 md:px-6 py-6 space-y-6">
           {/* Controls */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <Label htmlFor="date" className="text-sm font-medium">
                   Select Date
@@ -380,20 +385,22 @@ export default function UpdatingWaitingTimeGreeters() {
                   type="date"
                   value={dateInputValue}
                   onChange={handleDateChange}
-                  className="w-40"
+                  className="w-full sm:w-40"
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Search students..."
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  className="w-48"
+                  className="w-full sm:w-48"
                 />
               </div>
-              <Badge variant="secondary">{totalStudents} Students</Badge>
+              <Badge variant="secondary" className="w-fit">
+                {totalStudents} Students
+              </Badge>
             </div>
           </div>
 
@@ -565,9 +572,10 @@ export default function UpdatingWaitingTimeGreeters() {
             ) : studentsData.length > 0 ? (
               studentsData.map((student) => (
                 <Card key={student._id}>
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                  <CardContent className="p-4 space-y-4">
+                    {/* Header with flight and status */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="outline" className="font-mono text-xs">
                           {student.flight}
                         </Badge>
@@ -581,23 +589,23 @@ export default function UpdatingWaitingTimeGreeters() {
                       </span>
                     </div>
 
+                    {/* Student Information */}
                     <div className="space-y-2">
-                      <div className="font-medium">
+                      <div className="font-medium text-base">
                         {student.studentGivenName} {student.studentFamilyName}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Student No: {student.studentNo}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Arrival: {student.arrivalTime}
+                      <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                        <div>Student No: {student.studentNo}</div>
+                        <div>Arrival: {student.arrivalTime}</div>
                       </div>
                     </div>
 
+                    {/* Waiting Time Section */}
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">
                         Waiting Time
                       </Label>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                         <Input
                           type="number"
                           min="0"
@@ -606,7 +614,7 @@ export default function UpdatingWaitingTimeGreeters() {
                           onChange={(e) =>
                             handleWaitingTimeChange(student._id, e.target.value)
                           }
-                          className="w-24 text-center"
+                          className="w-full sm:w-24 text-center"
                           placeholder="0"
                           disabled={isSaving}
                         />
@@ -616,21 +624,22 @@ export default function UpdatingWaitingTimeGreeters() {
                       </div>
                     </div>
 
+                    {/* Actions Section */}
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Actions</Label>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                         {pickupTimes[student._id] ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                             <Badge
                               variant="outline"
-                              className="bg-green-50 text-green-700 border-green-200"
+                              className="bg-green-50 text-green-700 border-green-200 w-fit"
                             >
                               {pickupTimes[student._id]}
                             </Badge>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-6 px-2 text-xs"
+                              className="w-full sm:w-auto h-8 px-3 text-xs"
                               disabled={true}
                               title="Pickup time already recorded"
                             >
@@ -642,7 +651,7 @@ export default function UpdatingWaitingTimeGreeters() {
                             size="sm"
                             variant="outline"
                             onClick={() => handlePickupTimeUpdate(student._id)}
-                            className="h-6 px-2 text-xs"
+                            className="w-full sm:w-auto h-8 px-3 text-xs"
                             disabled={isSaving}
                           >
                             Mark Picked Up
