@@ -11,7 +11,6 @@ const NavigationBar = () => {
   const navigationItems = [
     { name: "Home", href: "/", isActive: false },
     { name: "About Us", href: "/aboutus", isActive: false },
-    { name: "Tracking", href: "#tracking", isActive: false },
     { name: "Privacy & Policy", href: "/privacy", isActive: false },
   ];
 
