@@ -614,21 +614,25 @@ export default function UpdatingWaitingTimeGreeters() {
                         Waiting Time
                       </Label>
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="120"
-                          value={waitingTimes[student._id] || 0}
-                          onChange={(e) =>
-                            handleWaitingTimeChange(student._id, e.target.value)
-                          }
-                          className="w-full sm:w-24 text-center"
-                          placeholder="0"
-                          disabled={isSaving}
-                        />
-                        <span className="text-sm text-muted-foreground">
-                          minutes
-                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full sm:w-auto h-8 px-3 text-xs"
+                          disabled={!!waitingStartedTimes[student._id]}
+                          onClick={() => handleSetWaitingTime(student)}
+                        >
+                          {waitingStartedTimes[student._id]
+                            ? "Waiting Set"
+                            : "Set Waiting"}
+                        </Button>
+                        {waitingStartedTimes[student._id] && (
+                          <Badge
+                            variant="outline"
+                            className="font-mono text-xs w-fit"
+                          >
+                            {waitingStartedTimes[student._id]}
+                          </Badge>
+                        )}
                       </div>
                     </div>
 
