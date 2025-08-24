@@ -351,11 +351,34 @@ export default function Map() {
 
   // Handle date change
   const handleDateChange = (e) => {
-    setSelectedDate(e.target.value);
+    const newDate = e.target.value;
+    setSelectedDate(newDate);
+
+    // Clear data when date is cleared
+    if (!newDate) {
+      setStudents([]);
+      setFilteredStudents([]);
+      setSelectedStudent(null);
+      setTotalStudentsCount(0);
+      setLocationCount(0);
+      // Clear map markers
+      if (map.current && window.L) {
+        markers.current.forEach((marker) => {
+          map.current.removeLayer(marker);
+        });
+        markers.current = [];
+        map.current.setView([56.1304, -106.3468], 4);
+      }
+    }
   };
 
   // Handle search
   const handleSearch = async () => {
+    if (!selectedDate) {
+      toast.error("Please select a date first");
+      return;
+    }
+
     const loaded = await fetchStudents(selectedDate, { suppressState: true });
 
     // Apply search term on top of server-side date filter
@@ -572,7 +595,8 @@ export default function Map() {
 
   // Load students on component mount
   useEffect(() => {
-    fetchStudents();
+    // Don't automatically load all students - only load when date is selected
+    // fetchStudents();
   }, []);
 
   // No automatic re-render loop on filteredStudents to avoid recursion
@@ -616,6 +640,33 @@ export default function Map() {
               Student Locations Map - Canada
             </h1>
 
+            {/* Instructions */}
+            {!selectedDate && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <MapPin className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-blue-800">
+                      How to use the Map
+                    </h3>
+                    <p className="text-sm text-blue-700 mt-1">
+                      1. Select a date from the calendar below
+                      <br />
+                      2. Click "Search Students" to load student locations for
+                      that date
+                      <br />
+                      3. View student locations on the map and in the table
+                      below
+                      <br />
+                      4. Click on a student to center the map on their location
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Search Form */}
             <Card className="bg-white border-gray-200 mb-8 shadow-sm">
               <CardContent className="p-6">
@@ -643,7 +694,7 @@ export default function Map() {
                     <div>
                       <Button
                         onClick={handleSearch}
-                        disabled={isLoading}
+                        disabled={isLoading || !selectedDate}
                         className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12 disabled:opacity-50"
                       >
                         {isLoading ? (
@@ -661,10 +712,14 @@ export default function Map() {
                     <div>
                       <Button
                         onClick={async () => {
+                          if (!selectedDate) {
+                            toast.error("Please select a date first");
+                            return;
+                          }
                           const data = await fetchStudents(selectedDate);
                           updateMapMarkers(data);
                         }}
-                        disabled={isLoading}
+                        disabled={isLoading || !selectedDate}
                         className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12 disabled:opacity-50"
                       >
                         Refresh Data
@@ -688,109 +743,130 @@ export default function Map() {
             </Card>
 
             {/* Students List */}
-            {filteredStudents.length > 0 && (
-              <Card className="bg-white border-gray-200 overflow-hidden shadow-sm mb-8">
-                {/* Table Header */}
-                <CardHeader className="p-6 border-b border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        {selectedDate
-                          ? `Students for ${new Date(
-                              selectedDate
-                            ).toLocaleDateString()}`
-                          : "Students"}
-                      </h2>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {totalStudentsCount} student
-                        {totalStudentsCount !== 1 ? "s" : ""} total •{" "}
-                        {locationCount} location
-                        {locationCount !== 1 ? "s" : ""} shown
-                        {students.length > 30 ? " (max 30)" : ""}
-                        {searchTerm && ` • matching "${searchTerm}"`}
-                      </p>
-                    </div>
-                  </div>
-                </CardHeader>
+            {selectedDate && (
+              <>
+                {filteredStudents.length > 0 ? (
+                  <Card className="bg-white border-gray-200 overflow-hidden shadow-sm mb-8">
+                    {/* Table Header */}
+                    <CardHeader className="p-6 border-b border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h2 className="text-lg font-semibold text-gray-900">
+                            {selectedDate
+                              ? `Students for ${new Date(
+                                  selectedDate
+                                ).toLocaleDateString()}`
+                              : "Students"}
+                          </h2>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {totalStudentsCount} student
+                            {totalStudentsCount !== 1 ? "s" : ""} total •{" "}
+                            {locationCount} location
+                            {locationCount !== 1 ? "s" : ""} shown
+                            {students.length > 30 ? " (max 30)" : ""}
+                            {searchTerm && ` • matching "${searchTerm}"`}
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
 
-                {/* Table */}
-                <CardContent className="p-0 overflow-x-auto">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-gray-50">
-                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            Excel Order
-                          </th>
-                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            Student Number
-                          </th>
-                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            Name
-                          </th>
-                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            Address/City
-                          </th>
-                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            Flight
-                          </th>
-                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            Phone
-                          </th>
-                          <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredStudents.map((student, index) => (
-                          <tr
-                            key={student._id}
-                            className={`border-gray-200 hover:bg-gray-50 cursor-pointer ${
-                              selectedStudent?._id === student._id
-                                ? "bg-blue-50"
-                                : ""
-                            }`}
-                            onClick={() => handleStudentSelect(student)}
-                          >
-                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                              {student.excelOrder || index + 1}
-                            </td>
-                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                              {student.studentNo || "N/A"}
-                            </td>
-                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                              {student.studentGivenName}{" "}
-                              {student.studentFamilyName || ""}
-                            </td>
-                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                              {student.address || student.city || "N/A"}
-                            </td>
-                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                              {student.flight || "N/A"}
-                            </td>
-                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                              {student.phone || "N/A"}
-                            </td>
-                            <td className="px-4 py-3 border-b border-gray-200">
-                              <Button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handlePrintMap(student);
-                                }}
-                                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2"
+                    {/* Table */}
+                    <CardContent className="p-0 overflow-x-auto">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="bg-gray-50">
+                              <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                                Excel Order
+                              </th>
+                              <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                                Student Number
+                              </th>
+                              <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                                Name
+                              </th>
+                              <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                                Address/City
+                              </th>
+                              <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                                Flight
+                              </th>
+                              <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                                Phone
+                              </th>
+                              <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                                Action
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredStudents.map((student, index) => (
+                              <tr
+                                key={student._id}
+                                className={`border-gray-200 hover:bg-gray-50 cursor-pointer ${
+                                  selectedStudent?._id === student._id
+                                    ? "bg-blue-50"
+                                    : ""
+                                }`}
+                                onClick={() => handleStudentSelect(student)}
                               >
-                                <Printer className="h-4 w-4" />
-                                <span>Print</span>
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
+                                <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                  {student.excelOrder || index + 1}
+                                </td>
+                                <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                  {student.studentNo || "N/A"}
+                                </td>
+                                <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                  {student.studentGivenName}{" "}
+                                  {student.studentFamilyName || ""}
+                                </td>
+                                <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                  {student.address || student.city || "N/A"}
+                                </td>
+                                <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                  {student.flight || "N/A"}
+                                </td>
+                                <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                                  {student.phone || "N/A"}
+                                </td>
+                                <td className="px-4 py-3 border-b border-gray-200">
+                                  <Button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePrintMap(student);
+                                    }}
+                                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2"
+                                  >
+                                    <Printer className="h-4 w-4" />
+                                    <span>Print</span>
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="bg-white border-gray-200 overflow-hidden shadow-sm mb-8">
+                    <CardContent className="p-12">
+                      <div className="text-center">
+                        <Search className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-500 mb-2">
+                          No Students Found
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          No students found for{" "}
+                          {new Date(selectedDate).toLocaleDateString()}. Try a
+                          different date or check if students are assigned for
+                          this date.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
 
             {/* Map Container */}
@@ -804,7 +880,9 @@ export default function Map() {
                     <p className="text-sm text-gray-500 mt-1">
                       {selectedStudent
                         ? `Showing location for ${selectedStudent.studentGivenName}`
-                        : "Click on a student to view their location on the map"}
+                        : selectedDate
+                        ? "Click on a student to view their location on the map"
+                        : "Select a date and search to view student locations"}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -822,6 +900,20 @@ export default function Map() {
                   style={{ minHeight: "600px" }}
                 >
                   {/* Leaflet map will be rendered here */}
+                  {!selectedDate && (
+                    <div className="flex items-center justify-center h-full bg-gray-50">
+                      <div className="text-center">
+                        <MapPin className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-500 mb-2">
+                          No Date Selected
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          Please select a date and click "Search Students" to
+                          view locations
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
