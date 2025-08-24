@@ -175,13 +175,17 @@ export default function UpdatingWaitingTime() {
         return;
       }
       const minutes = diffMinutes(student.arrivalTime);
+
+      // Update local state immediately for better UX
       setWaitingTimes((prev) => ({ ...prev, [student._id]: minutes }));
+
       const resp = await apiClient.post("/waiting-time", {
         studentId: student._id,
         date: selectedDate,
         waitingTime: minutes,
         status: student.status || "waiting",
       });
+
       const saved = resp?.data?.data?.waitingTime;
       if (saved?.waitingStartedAt) {
         setWaitingStartedTimes((prev) => ({
@@ -189,11 +193,14 @@ export default function UpdatingWaitingTime() {
           [student._id]: saved.waitingStartedAt,
         }));
       }
+
       toast.success("Waiting time set");
-      await fetchWaitingTimeData();
+      // No need to reload entire data - just update the specific student
     } catch (err) {
       console.error("Error setting waiting time:", err);
       toast.error("Failed to set waiting time");
+      // Revert local state on error
+      setWaitingTimes((prev) => ({ ...prev, [student._id]: 0 }));
     }
   };
 
@@ -206,6 +213,8 @@ export default function UpdatingWaitingTime() {
       }
 
       const currentTime = timeNow();
+
+      // Update local state immediately for better UX
       setPickupTimes((prev) => ({ ...prev, [studentId]: currentTime }));
 
       const resp = await apiClient.post("/waiting-time", {
@@ -215,18 +224,21 @@ export default function UpdatingWaitingTime() {
         pickupTime: currentTime,
         status: "picked_up",
       });
+
       const saved = resp?.data?.data?.waitingTime;
       if (saved?.pickupTime) {
         setPickupTimes((prev) => ({ ...prev, [studentId]: saved.pickupTime }));
       }
 
       toast.success("Pickup time updated successfully!");
-      await fetchWaitingTimeData();
+      // No need to reload entire data - just update the specific student
     } catch (err) {
       console.error("Error updating pickup time:", err);
       let errorMessage = "Failed to update pickup time. Please try again.";
       if (err.response?.data?.message) errorMessage = err.response.data.message;
       toast.error(errorMessage);
+      // Revert local state on error
+      setPickupTimes((prev) => ({ ...prev, [studentId]: null }));
     }
   };
 
