@@ -358,6 +358,37 @@ const exportStudentsPdf = async (req, res) => {
   }
 };
 
+// DELETE /api/students/by-date?date=YYYY-MM-DD or MM/DD/YYYY
+const deleteStudentsByDate = async (req, res) => {
+  try {
+    const dateFilter = buildDateFilter(req.query.date);
+    if (!dateFilter) {
+      return res
+        .status(400)
+        .json({ success: false, message: "date query param is required" });
+    }
+
+    // Soft delete: set isActive=false for all matching students
+    const result = await Student.updateMany(
+      { isActive: true, date: dateFilter },
+      { $set: { isActive: false } }
+    );
+
+    return res.json({
+      success: true,
+      message: `Deleted ${
+        result.modifiedCount || 0
+      } students for the selected date`,
+      data: { deleted: result.modifiedCount || 0 },
+    });
+  } catch (err) {
+    console.error("deleteStudentsByDate error", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   addStudent,
   getAllStudents,
@@ -366,4 +397,5 @@ module.exports = {
   deleteStudent,
   exportStudentsPdf,
   getStudentsBySchool,
+  deleteStudentsByDate,
 };

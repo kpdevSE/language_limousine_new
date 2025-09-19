@@ -8,6 +8,7 @@ const {
   updateStudent,
   deleteStudent,
   exportStudentsPdf,
+  deleteStudentsByDate,
 } = require("../controllers/studentController");
 
 // All routes require admin authentication
@@ -21,6 +22,9 @@ router.get("/", getAllStudents);
 
 // Export PDF by date
 router.get("/export/pdf", exportStudentsPdf);
+
+// Bulk delete by date (soft delete)
+router.delete("/by-date", deleteStudentsByDate);
 
 // Read (single)
 router.get("/:studentId", getStudentById);

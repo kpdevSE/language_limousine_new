@@ -27,6 +27,8 @@ export default function Upload() {
   const [uploadResult, setUploadResult] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [studentsForDate, setStudentsForDate] = useState([]);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
 
   // Get auth token from sessionStorage or localStorage
   const getAuthToken = () => {
@@ -72,6 +74,27 @@ export default function Upload() {
       return Promise.reject(error);
     }
   );
+
+  const fetchStudentsForDate = async (selected) => {
+    if (!selected) {
+      setStudentsForDate([]);
+      return;
+    }
+    setIsLoadingStudents(true);
+    try {
+      const response = await apiClient.get("/students", {
+        params: { date: selected, limit: "all" },
+      });
+      if (response.data.success) {
+        setStudentsForDate(response.data.data.students || []);
+      }
+    } catch (err) {
+      console.error("Fetch students by date error:", err);
+      toast.error("Failed to load students for selected date");
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -380,7 +403,12 @@ export default function Upload() {
                         <Input
                           type="date"
                           value={date}
-                          onChange={(e) => setDate(e.target.value)}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setDate(v);
+                            // Auto-load students when date changes
+                            fetchStudentsForDate(v);
+                          }}
                           className="w-full bg-white text-gray-900 px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm pr-10"
                         />
                         <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -527,6 +555,153 @@ export default function Upload() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Students for Selected Date */}
+            <Card className="bg-white border-gray-200 shadow-sm mt-8">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Students for Selected Date
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {date
+                        ? new Date(date).toLocaleDateString()
+                        : "No date selected"}{" "}
+                      • {studentsForDate.length} student
+                      {studentsForDate.length === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => fetchStudentsForDate(date)}
+                      disabled={!date || isLoadingStudents}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-800"
+                      variant="secondary"
+                    >
+                      {isLoadingStudents ? "Loading..." : "Refresh"}
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        if (!date) {
+                          toast.error("Please select a date first");
+                          return;
+                        }
+                        if (studentsForDate.length === 0) {
+                          toast.info(
+                            "No students to delete for the selected date"
+                          );
+                          return;
+                        }
+                        const confirmed = window.confirm(
+                          `Are you sure you want to delete all ${
+                            studentsForDate.length
+                          } students for ${new Date(
+                            date
+                          ).toLocaleDateString()}? This cannot be undone.`
+                        );
+                        if (!confirmed) return;
+                        try {
+                          const resp = await apiClient.delete(
+                            "/students/by-date",
+                            {
+                              params: { date },
+                            }
+                          );
+                          if (resp.data.success) {
+                            toast.success(
+                              resp.data.message || "Deleted students for date"
+                            );
+                            // Refresh list after delete
+                            fetchStudentsForDate(date);
+                          }
+                        } catch (err) {
+                          console.error("Delete by date error:", err);
+                          toast.error(
+                            err.response?.data?.message ||
+                              "Failed to delete students for date"
+                          );
+                        }
+                      }}
+                      disabled={
+                        !date ||
+                        isLoadingStudents ||
+                        studentsForDate.length === 0
+                      }
+                      className="bg-red-500 hover:bg-red-600 text-white"
+                    >
+                      Delete All for Date
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[800px]">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                          Excel Order
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                          Student No
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                          Student Name
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                          Flight
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-4 py-3 border-b border-gray-200">
+                          School
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isLoadingStudents ? (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="text-center py-6 text-gray-600"
+                          >
+                            Loading students...
+                          </td>
+                        </tr>
+                      ) : studentsForDate.length > 0 ? (
+                        studentsForDate.map((s, idx) => (
+                          <tr key={s._id || idx} className="hover:bg-gray-50">
+                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                              {s.excelOrder ?? idx + 1}
+                            </td>
+                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                              {s.studentNo}
+                            </td>
+                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                              {s.studentGivenName} {s.studentFamilyName}
+                            </td>
+                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                              {s.flight}
+                            </td>
+                            <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
+                              {s.school}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="text-center py-6 text-gray-500"
+                          >
+                            No students for selected date
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Upload Instructions Card */}
             <Card className="bg-white border-gray-200 shadow-sm mt-8">
