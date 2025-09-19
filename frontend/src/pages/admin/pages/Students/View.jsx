@@ -79,7 +79,7 @@ export default function View() {
       const response = await apiClient.get("/", {
         params: {
           date: selectedDate,
-          limit: 100, // Get all students for the date
+          limit: "all", // Request all students for the date
         },
       });
 

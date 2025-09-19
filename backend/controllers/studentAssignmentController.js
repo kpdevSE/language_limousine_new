@@ -265,7 +265,11 @@ const getUnassignedStudents = async (req, res) => {
 
     const skip = (page - 1) * limit;
     const [students, total] = await Promise.all([
-      Student.find(query).sort({ arrivalTime: 1 }).skip(skip).limit(limit),
+      // Sort primarily by excelOrder to mirror Admin's Excel view, with arrivalTime as secondary
+      Student.find(query)
+        .sort({ excelOrder: 1, arrivalTime: 1 })
+        .skip(skip)
+        .limit(limit),
       Student.countDocuments(query),
     ]);
 

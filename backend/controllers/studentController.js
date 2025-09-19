@@ -89,8 +89,14 @@ const addStudent = async (req, res) => {
 // GET /api/students?date=&page=&limit=&search=
 const getAllStudents = async (req, res) => {
   try {
-    const page = parseInt(req.query.page || "1", 10);
-    const limit = parseInt(req.query.limit || "10", 10);
+    const pageRaw = req.query.page;
+    const limitRaw = req.query.limit;
+    const page = parseInt(pageRaw || "1", 10);
+    // Support unlimited results when limit=all or 0 or missing
+    const unlimited =
+      (typeof limitRaw === "string" && limitRaw.toLowerCase() === "all") ||
+      parseInt(limitRaw || "0", 10) === 0;
+    const limit = unlimited ? 0 : parseInt(limitRaw || "10", 10);
     const search = req.query.search || "";
     const dateFilter = buildDateFilter(req.query.date);
 
@@ -109,9 +115,12 @@ const getAllStudents = async (req, res) => {
       ];
     }
 
-    const skip = (page - 1) * limit;
+    const skip = unlimited ? 0 : (page - 1) * (limit || 0);
     const [students, total] = await Promise.all([
-      Student.find(query).sort({ excelOrder: 1 }).skip(skip).limit(limit),
+      Student.find(query)
+        .sort({ excelOrder: 1 })
+        .skip(skip)
+        .limit(limit || 0),
       Student.countDocuments(query),
     ]);
 
@@ -119,12 +128,19 @@ const getAllStudents = async (req, res) => {
       success: true,
       data: {
         students,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(total / limit),
-          totalStudents: total,
-          limit,
-        },
+        pagination: unlimited
+          ? {
+              currentPage: 1,
+              totalPages: 1,
+              totalStudents: total,
+              limit: total,
+            }
+          : {
+              currentPage: page,
+              totalPages: Math.ceil(total / (limit || 1)),
+              totalStudents: total,
+              limit,
+            },
       },
     });
   } catch (err) {
