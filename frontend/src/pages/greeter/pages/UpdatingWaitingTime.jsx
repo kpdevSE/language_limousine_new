@@ -11,6 +11,8 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +48,8 @@ export default function UpdatingWaitingTimeGreeters() {
   const [totalPages, setTotalPages] = useState(0);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [sortBy, setSortBy] = useState("excelOrder"); // Default sort by Excel order
+  const [sortOrder, setSortOrder] = useState("asc"); // asc or desc
 
   // Get auth token from sessionStorage (matching the RoleLogin component)
   const getAuthToken = () => {
@@ -114,7 +118,7 @@ export default function UpdatingWaitingTimeGreeters() {
     if (selectedDate) {
       fetchWaitingTimeData();
     }
-  }, [selectedDate, currentPage, searchTerm]);
+  }, [selectedDate, currentPage, searchTerm, sortBy, sortOrder]);
 
   const fetchWaitingTimeData = async () => {
     setIsLoading(true);
@@ -136,6 +140,8 @@ export default function UpdatingWaitingTimeGreeters() {
           page: currentPage,
           limit: 10,
           search: searchTerm,
+          sortBy: sortBy,
+          sortOrder: sortOrder,
         },
       });
 
@@ -306,6 +312,16 @@ export default function UpdatingWaitingTimeGreeters() {
     setCurrentPage(page);
   };
 
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1); // Reset to first page when sorting
+  };
+
   const handleWaitingTimeChange = (studentId, value) => {
     const numValue = parseInt(value) || 0;
     setWaitingTimes((prev) => ({ ...prev, [studentId]: numValue }));
@@ -406,9 +422,31 @@ export default function UpdatingWaitingTimeGreeters() {
                   className="w-full sm:w-48"
                 />
               </div>
-              <Badge variant="secondary" className="w-fit">
-                {totalStudents} Students
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="w-fit">
+                  {totalStudents} Students
+                </Badge>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-medium">Sort by:</Label>
+                  <select
+                    value={`${sortBy}-${sortOrder}`}
+                    onChange={(e) => {
+                      const [field, order] = e.target.value.split("-");
+                      setSortBy(field);
+                      setSortOrder(order);
+                      setCurrentPage(1);
+                    }}
+                    className="bg-white text-gray-900 border border-gray-300 rounded px-2 py-1 text-sm"
+                  >
+                    <option value="excelOrder-asc">Excel Order ↑</option>
+                    <option value="excelOrder-desc">Excel Order ↓</option>
+                    <option value="arrivalTime-asc">Arrival Time ↑</option>
+                    <option value="arrivalTime-desc">Arrival Time ↓</option>
+                    <option value="studentNo-asc">Student No ↑</option>
+                    <option value="studentNo-desc">Student No ↓</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -455,7 +493,20 @@ export default function UpdatingWaitingTimeGreeters() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-16">Excel Order</TableHead>
+                        <TableHead
+                          className="w-20 cursor-pointer hover:bg-gray-50 select-none"
+                          onClick={() => handleSort("excelOrder")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Excel Order
+                            {sortBy === "excelOrder" &&
+                              (sortOrder === "asc" ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              ))}
+                          </div>
+                        </TableHead>
                         <TableHead className="w-24">Status</TableHead>
                         <TableHead className="w-24">Flight</TableHead>
                         <TableHead className="w-32">Arrival Time</TableHead>
@@ -467,8 +518,13 @@ export default function UpdatingWaitingTimeGreeters() {
                     <TableBody>
                       {studentsData.map((student) => (
                         <TableRow key={student._id}>
-                          <TableCell className="font-medium">
-                            {student.excelOrder || student._id.slice(-6)}
+                          <TableCell className="font-medium text-center">
+                            <Badge
+                              variant="outline"
+                              className="font-mono text-xs"
+                            >
+                              {student.excelOrder || student._id.slice(-6)}
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(student.status)}>
@@ -591,10 +647,10 @@ export default function UpdatingWaitingTimeGreeters() {
                           {getStatusDisplay(student.status)}
                         </Badge>
                       </div>
-                      <span className="text-xs text-muted-foreground">
+                      <Badge variant="outline" className="font-mono text-xs">
                         Excel Order:{" "}
                         {student.excelOrder || student._id.slice(-6)}
-                      </span>
+                      </Badge>
                     </div>
 
                     {/* Student Information */}

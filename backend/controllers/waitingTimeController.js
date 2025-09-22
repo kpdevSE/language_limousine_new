@@ -15,7 +15,15 @@ function normalizeDateQuery(dateStr) {
 // GET /api/waiting-time - Get waiting times for a specific date
 const getWaitingTimes = async (req, res) => {
   try {
-    const { date, page = 1, limit = 10, search = "", status = "" } = req.query;
+    const {
+      date,
+      page = 1,
+      limit = 10,
+      search = "",
+      status = "",
+      sortBy = "excelOrder",
+      sortOrder = "asc",
+    } = req.query;
 
     if (!date) {
       return res.status(400).json({
@@ -42,7 +50,31 @@ const getWaitingTimes = async (req, res) => {
       ];
     }
 
-    const students = await Student.find(studentsQuery).sort({ arrivalTime: 1 });
+    // Build sort object based on sortBy and sortOrder
+    let sortObject = {};
+    const sortDirection = sortOrder === "desc" ? -1 : 1;
+
+    switch (sortBy) {
+      case "excelOrder":
+        sortObject = { excelOrder: sortDirection };
+        break;
+      case "arrivalTime":
+        sortObject = { arrivalTime: sortDirection };
+        break;
+      case "studentNo":
+        sortObject = { studentNo: sortDirection };
+        break;
+      case "flight":
+        sortObject = { flight: sortDirection };
+        break;
+      case "studentGivenName":
+        sortObject = { studentGivenName: sortDirection };
+        break;
+      default:
+        sortObject = { excelOrder: sortDirection };
+    }
+
+    const students = await Student.find(studentsQuery).sort(sortObject);
     const studentIds = students.map((student) => student._id);
 
     // Get existing waiting times for these students
