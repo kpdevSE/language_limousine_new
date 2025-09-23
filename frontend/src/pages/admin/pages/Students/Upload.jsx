@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User,
   Upload as UploadIcon,
@@ -22,7 +22,7 @@ import { toast } from "react-toastify";
 
 export default function Upload() {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [date, setDate] = useState("2025-07-24"); // Changed from "07/24/2025" to "2025-07-24" for date input compatibility
+  const [date, setDate] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
   const [error, setError] = useState("");
@@ -60,6 +60,20 @@ export default function Upload() {
       "Content-Type": "application/json",
     },
   });
+
+  // Default date to today (America/Vancouver) in YYYY-MM-DD and preload students list
+  useEffect(() => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Vancouver",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+    const get = (type) => parts.find((p) => p.type === type)?.value || "";
+    const todayStr = `${get("year")}-${get("month")}-${get("day")}`;
+    setDate(todayStr);
+    fetchStudentsForDate(todayStr);
+  }, []);
 
   // Add request interceptor to include auth token
   apiClient.interceptors.request.use(

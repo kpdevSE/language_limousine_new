@@ -63,6 +63,18 @@ export default function PrintMap() {
     }
   };
 
+  // Default date to today (America/Vancouver)
+  useEffect(() => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Vancouver",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+    const get = (type) => parts.find((p) => p.type === type)?.value || "";
+    setSelectedDate(`${get("year")}-${get("month")}-${get("day")}`);
+  }, []);
+
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
   };
@@ -93,21 +105,16 @@ export default function PrintMap() {
       });
 
       if (response.data.success) {
-        // Filter for completed tasks on the frontend
-        const completedTasks = response.data.data.assignments.filter(
-          (task) =>
-            task.pickupStatus === "Completed" ||
-            task.deliveryStatus === "Completed"
-        );
+        const allTasks = response.data.data.assignments;
 
         console.log("📊 Setting driver data:", {
           driver,
-          tasks: completedTasks,
+          tasks: allTasks,
           date: selectedDate,
         });
         setDriverData({
           driver,
-          tasks: completedTasks,
+          tasks: allTasks,
           date: selectedDate,
         });
         console.log("✅ Driver data set successfully");
@@ -138,21 +145,16 @@ export default function PrintMap() {
       });
 
       if (response.data.success) {
-        // Filter for completed tasks on the frontend
-        const completedTasks = response.data.data.assignments.filter(
-          (task) =>
-            task.pickupStatus === "Completed" ||
-            task.deliveryStatus === "Completed"
-        );
+        const allTasks = response.data.data.assignments;
 
         console.log("📊 Setting subdriver data:", {
           subDriver,
-          tasks: completedTasks,
+          tasks: allTasks,
           date: selectedDate,
         });
         setSubDriverData({
           subDriver,
-          tasks: completedTasks,
+          tasks: allTasks,
           date: selectedDate,
         });
         console.log("✅ Subdriver data set successfully");
@@ -195,7 +197,7 @@ export default function PrintMap() {
       doc.text(`Driver ID: ${driver.driverID || "N/A"}`, 20, 55);
       doc.text(`Vehicle: ${driver.vehicleNumber || "N/A"}`, 20, 65);
 
-      // Tasks table
+      // Tasks table (all tasks: pickup and delivery)
       if (tasks && tasks.length > 0) {
         const tableData = tasks.map((task, index) => [
           index + 1,
@@ -284,7 +286,7 @@ export default function PrintMap() {
       doc.text(`Sub-Driver: ${subDriver.username}`, 20, 45);
       doc.text(`Sub-Driver ID: ${subDriver.subdriverID || "N/A"}`, 20, 55);
 
-      // Tasks table
+      // Tasks table (all tasks: pickup and delivery)
       if (tasks && tasks.length > 0) {
         const tableData = tasks.map((task, index) => [
           index + 1,

@@ -43,6 +43,18 @@ export default function StatusPage() {
     fetchStudentsStatus();
   }, [currentPage, itemsPerPage, selectedDate, searchTerm]);
 
+  // Default date to today (America/Vancouver) for input YYYY-MM-DD
+  useEffect(() => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Vancouver",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+    const get = (type) => parts.find((p) => p.type === type)?.value || "";
+    setSelectedDate(`${get("year")}-${get("month")}-${get("day")}`);
+  }, []);
+
   const fetchStudentsStatus = async () => {
     setIsLoading(true);
     try {

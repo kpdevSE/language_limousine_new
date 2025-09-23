@@ -69,6 +69,19 @@ export default function Map() {
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+  // Default date to today (America/Vancouver) for the date input
+  useEffect(() => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Vancouver",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+    const get = (type) => parts.find((p) => p.type === type)?.value || "";
+    const todayStr = `${get("year")}-${get("month")}-${get("day")}`;
+    setSelectedDate(todayStr);
+  }, []);
+
   // Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainer.current) return;

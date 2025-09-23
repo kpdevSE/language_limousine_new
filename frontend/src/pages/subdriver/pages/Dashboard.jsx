@@ -56,6 +56,14 @@ export default function Dashboard() {
     fetchAssignments();
   }, [currentPage, entriesPerPage, selectedDate, showCompletedTasks]);
 
+  // Light polling to keep counts fresh
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchAssignments();
+    }, 20000); // 20s
+    return () => clearInterval(intervalId);
+  }, [selectedDate, showCompletedTasks]);
+
   const fetchAssignments = async () => {
     setIsLoading(true);
     try {
@@ -120,6 +128,7 @@ export default function Dashboard() {
           )
         );
         alert(`Pickup status updated to ${newStatus}`);
+        fetchAssignments();
       }
     } catch (error) {
       console.error("Error updating pickup status:", error);
@@ -148,6 +157,7 @@ export default function Dashboard() {
           )
         );
         alert(`Delivery status updated to ${newStatus}`);
+        fetchAssignments();
       }
     } catch (error) {
       console.error("Error updating delivery status:", error);

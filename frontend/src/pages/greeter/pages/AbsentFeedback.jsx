@@ -116,19 +116,19 @@ export default function AbsentFeedbackGreeters() {
     }
   );
 
-  // Set default date to today
+  // Set default date to today (America/Vancouver)
   useEffect(() => {
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString("en-US", {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Vancouver",
+      year: "numeric",
       month: "2-digit",
       day: "2-digit",
-      year: "numeric",
-    });
-    setSelectedDate(formattedDate);
-
-    // Also set the HTML date input value
-    const htmlDateValue = today.toISOString().split("T")[0]; // YYYY-MM-DD
-    setDateInputValue(htmlDateValue);
+    }).formatToParts(new Date());
+    const get = (type) => parts.find((p) => p.type === type)?.value || "";
+    // Backend expects MM/DD/YYYY
+    setSelectedDate(`${get("month")}/${get("day")}/${get("year")}`);
+    // Input expects YYYY-MM-DD
+    setDateInputValue(`${get("year")}-${get("month")}-${get("day")}`);
   }, []);
 
   // Fetch data when date changes

@@ -42,16 +42,40 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
+// Ensure correct IPs behind proxies (e.g., Vercel/NGINX)
+app.set("trust proxy", 1);
+
 // Rate limiting
-const limiter = rateLimit({
+const isProd = process.env.NODE_ENV === "production";
+
+// Global limiter (very relaxed in production, disabled in dev)
+const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: isProd ? 1000 : 0, // disable via skip() when not prod
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
     message: "Too many requests from this IP, please try again later.",
   },
+  // Disable the limiter entirely in non-production environments
+  skip: () => !isProd,
 });
-app.use(limiter);
+app.use(globalLimiter);
+
+// Tighter limiter only for login to prevent brute-force
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many login attempts, please try again later.",
+  },
+});
+// Apply specifically to the login endpoint
+app.use("/api/auth/login", loginLimiter);
 
 // Body parser middleware
 app.use(express.json({ limit: "10mb" }));
