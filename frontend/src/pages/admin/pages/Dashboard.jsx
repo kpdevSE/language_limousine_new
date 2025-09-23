@@ -15,7 +15,7 @@ import Sidebar from "../components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { API_BASE_URL } from "@/lib/config";
-import { userAPI, studentAPI, assignmentAPI } from "@/lib/api";
+import { userAPI, studentAPI, assignmentAPI, waitingTimeAPI } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
@@ -36,6 +36,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [live, setLive] = useState(true);
+  const [statusCounts, setStatusCounts] = useState({
+    waiting: 0,
+    inCar: 0,
+    delivered: 0,
+  });
 
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [registerData, setRegisterData] = useState({
@@ -68,6 +74,47 @@ export default function AdminDashboard() {
         limit: 5,
       });
       const recentAssignments = assignmentsResponse.data.assignments || [];
+
+      // Today in America/Vancouver
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Vancouver",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).formatToParts(new Date());
+      const get = (t) => parts.find((p) => p.type === t)?.value || "";
+      const today = `${get("year")}-${get("month")}-${get("day")}`;
+
+      // Fetch waiting time stats (status overview for today)
+      try {
+        const wtResp = await waitingTimeAPI.getWaitingTimeStats({
+          date: today,
+        });
+        const wt = wtResp.data?.data || {};
+        setStatusCounts({
+          waiting: wt.waiting ?? 0,
+          inCar: wt.inCar ?? 0,
+          delivered: wt.delivered ?? 0,
+        });
+      } catch (e) {
+        // Non-fatal
+      }
+
+      // Fetch completed tasks count for today
+      let completedToday = 0;
+      try {
+        const compResp = await assignmentAPI.getAssignments({
+          date: today,
+          status: "Completed",
+          limit: "all",
+        });
+        completedToday =
+          compResp.data?.data?.assignments?.length ||
+          compResp.data?.assignments?.length ||
+          0;
+      } catch (e) {
+        // Non-fatal
+      }
 
       // Update stats
       setStats({
@@ -127,9 +174,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchDashboardData();
 
-    const interval = setInterval(fetchDashboardData, 30000);
+    const interval = setInterval(() => {
+      if (live) fetchDashboardData();
+    }, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [live]);
 
   // Logout function
   const handleLogout = () => {
@@ -272,6 +321,22 @@ export default function AdminDashboard() {
                   className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
                 />
                 Refresh
+              </Button>
+
+              <Button
+                onClick={() => setLive((v) => !v)}
+                disabled={loading}
+                variant="outline"
+                size="sm"
+                className={`border-gray-300 ${live ? "bg-green-50" : ""}`}
+                title="Toggle live auto-refresh"
+              >
+                <span
+                  className={`h-2 w-2 rounded-full mr-2 ${
+                    live ? "bg-green-500" : "bg-gray-400"
+                  }`}
+                />
+                {live ? "Live On" : "Live Off"}
               </Button>
 
               {/* Logout Button */}
@@ -434,6 +499,22 @@ export default function AdminDashboard() {
                         {stats.drivers.active +
                           stats.subdrivers.active +
                           stats.greeters.active}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Waiting Today:</span>
+                      <span className="font-medium">
+                        {statusCounts.waiting}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">In Car Today:</span>
+                      <span className="font-medium">{statusCounts.inCar}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Delivered Today:</span>
+                      <span className="font-medium">
+                        {statusCounts.delivered}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
