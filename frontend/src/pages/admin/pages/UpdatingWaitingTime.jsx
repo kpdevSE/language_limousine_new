@@ -450,7 +450,7 @@ export default function UpdatingWaitingTime() {
                             </Badge>
                           </TableCell>
                           <TableCell className="font-mono text-sm">
-                            {student.arrivalTime}
+                            {student.actualArrivalTime}
                           </TableCell>
                           <TableCell className="font-mono text-sm">
                             {student.studentNo}

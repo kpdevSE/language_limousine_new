@@ -40,6 +40,29 @@ export default function Dashboard() {
     return () => clearInterval(intervalId);
   }, [selectedDate, showCompletedTasks]);
 
+  // Format Excel numeric time (fraction of a day) or plain time strings to HH:MM
+  const formatTimeHM = (value) => {
+    if (value === null || value === undefined) return "N/A";
+    // If already a time-like string with ':' return trimmed value
+    if (typeof value === "string" && value.includes(":")) {
+      const v = value.trim();
+      if (v.length === 0) return "N/A";
+      return v;
+    }
+    const num = typeof value === "number" ? value : parseFloat(value);
+    if (!isNaN(num) && isFinite(num)) {
+      // Excel stores time as fraction of 24 hours
+      let totalMinutes = Math.round(num * 24 * 60);
+      // Normalize within 0-1440
+      totalMinutes = ((totalMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      const pad = (n) => (n < 10 ? `0${n}` : `${n}`);
+      return `${pad(hours)}:${pad(minutes)}`;
+    }
+    return "N/A";
+  };
+
   const fetchAssignments = async () => {
     setIsLoading(true);
     try {
@@ -443,7 +466,7 @@ export default function Dashboard() {
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                           <span className="text-xs md:text-sm">
-                            Arrival Time
+                            Actual Arrival Time
                           </span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
@@ -533,7 +556,12 @@ export default function Dashboard() {
                               {assignment.studentId?.flight}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                              {assignment.studentId?.arrivalTime}
+                              {formatTimeHM(
+                                assignment.studentId?.actualArrivalTime ??
+                                  assignment.studentId?.arrivalTime ??
+                                  assignment.studentId?.arrival_time ??
+                                  assignment.studentId?.arrivalTimeFormatted
+                              )}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               {assignment.studentId?.dOrI}
@@ -545,7 +573,10 @@ export default function Dashboard() {
                               {assignment.studentId?.studentGivenName}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                              {assignment.studentId?.studentFamilyName}
+                              {assignment.studentId?.studentFamilyName ||
+                                assignment.studentId?.studentFamilyname ||
+                                assignment.studentId?.familyName ||
+                                ""}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               {assignment.studentId?.address}

@@ -52,13 +52,22 @@ const parseExcelFile = (buffer) => {
     const columnMapping = {
       "Trip #": "trip",
       "Actual Arrival Time / Departure Pick Up Time": "actualArrivalTime",
+      // Common variant seen in sheets
+      "Actual Arrival Time": "actualArrivalTime",
       "Arr Time / Dep PU": "arrivalTime",
+      // Short variants
+      "Arr Time": "arrivalTime",
       "Flight #": "flight",
-      "I or M / F": "dOrI",
+      // This column is gender (Male/Female); map correctly
+      "I or M / F": "mOrF",
+      "I/ D": "dOrI",
+      "I/D": "dOrI",
       "Student Number": "studentNo",
       "Student Given Name": "studentGivenName",
+      "Student Giver": "studentGivenName", // truncated header in some files
       "Student Family Name": "studentFamilyName",
       "Student Fam Name": "studentFamilyName", // Handle truncated header
+      "Student Fam": "studentFamilyName",
       "Host Given Name": "hostGivenName",
       "Host Give Name": "hostGivenName", // Handle truncated header
       "Host Family Name": "hostFamilyName",
@@ -70,11 +79,37 @@ const parseExcelFile = (buffer) => {
       "Study Permit Y or N": "studyPermit",
       School: "school",
       "Staff Member Assigned": "staffMemberAssigned",
+      "Staff Member As": "staffMemberAssigned",
       Client: "client",
     };
 
     const students = [];
     let excelOrderCounter = 1; // Start from 1 for sequential numbering
+
+    // Helper: convert Excel numeric time (fraction of a day) to HH:MM
+    const toTimeString = (input) => {
+      if (input === null || input === undefined) return "";
+      if (typeof input === "string") {
+        const s = input.trim();
+        if (s.length === 0) return "";
+        // If it already looks like a time (has ":"), accept as-is
+        if (s.includes(":")) return s;
+        // Try parse numeric string
+        const num = parseFloat(s);
+        if (!isNaN(num)) input = num;
+        else return s;
+      }
+      if (typeof input === "number" && isFinite(input)) {
+        // Excel time is a fraction of a 24-hour day
+        let totalMinutes = Math.round(input * 24 * 60);
+        totalMinutes = ((totalMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        const pad = (n) => (n < 10 ? `0${n}` : `${n}`);
+        return `${pad(hours)}:${pad(minutes)}`;
+      }
+      return String(input).trim();
+    };
 
     dataRows.forEach((row, index) => {
       if (row.length === 0 || row.every((cell) => !cell)) {
@@ -113,36 +148,50 @@ const parseExcelFile = (buffer) => {
           row[colIndex] !== undefined &&
           row[colIndex] !== null
         ) {
-          const value = String(row[colIndex]).trim();
+          const rawValue = row[colIndex];
+          const value =
+            typeof rawValue === "number" ? rawValue : String(rawValue).trim();
 
           // Handle special cases
           if (mappedField === "mOrF") {
             // Extract gender from combined field (I/M or F)
-            if (value.includes("F")) {
+            const v = String(value).toUpperCase();
+            if (v.includes("F")) {
               studentData.mOrF = "F";
-            } else if (value.includes("M")) {
+            } else if (v.includes("M")) {
               studentData.mOrF = "M";
+            }
+          } else if (mappedField === "dOrI") {
+            // Normalize Domestic/International codes
+            const v = String(value).toUpperCase();
+            if (v === "D" || v === "I") {
+              studentData.dOrI = v;
+            } else if (v.includes("D")) {
+              studentData.dOrI = "D";
+            } else if (v.includes("I")) {
+              studentData.dOrI = "I";
             }
           } else if (mappedField === "actualArrivalTime") {
             // Handle combined arrival/departure time
-            const timeParts = value.split("/");
+            const timeParts = String(value).split("/");
             if (timeParts.length >= 2) {
-              studentData.actualArrivalTime = timeParts[0].trim();
-              studentData.departurePickupTime = timeParts[1].trim();
+              studentData.actualArrivalTime = toTimeString(timeParts[0]);
+              studentData.departurePickupTime = toTimeString(timeParts[1]);
             } else {
-              studentData.actualArrivalTime = value;
+              studentData.actualArrivalTime = toTimeString(value);
             }
           } else if (mappedField === "arrivalTime") {
             // Handle combined arrival/departure time
-            const timeParts = value.split("/");
+            const timeParts = String(value).split("/");
             if (timeParts.length >= 2) {
-              studentData.arrivalTime = timeParts[0].trim();
-              studentData.departurePickupTime = timeParts[1].trim();
+              studentData.arrivalTime = toTimeString(timeParts[0]);
+              studentData.departurePickupTime = toTimeString(timeParts[1]);
             } else {
-              studentData.arrivalTime = value;
+              studentData.arrivalTime = toTimeString(value);
             }
           } else {
-            studentData[mappedField] = value;
+            studentData[mappedField] =
+              typeof value === "number" ? String(value) : value;
           }
         }
       });
@@ -255,6 +304,7 @@ const uploadExcelFile = async (req, res) => {
     }
 
     const createdStudents = [];
+    const updatedStudents = [];
     const errors = [];
     const createdBy = req.user._id;
 
@@ -299,7 +349,19 @@ const uploadExcelFile = async (req, res) => {
         }
 
         // Set default values for required fields
-        if (!studentData.dOrI) studentData.dOrI = "I";
+        // Normalize dOrI: accept common variants like 't' (treated as 'I')
+        if (studentData.dOrI) {
+          const dio = String(studentData.dOrI).toUpperCase();
+          if (dio !== "D" && dio !== "I") {
+            // Heuristics: sometimes 't' appears for International; coerce to I
+            if (dio === "T") studentData.dOrI = "I";
+            else studentData.dOrI = "I"; // default to International
+          } else {
+            studentData.dOrI = dio;
+          }
+        } else {
+          studentData.dOrI = "I";
+        }
         if (!studentData.mOrF) studentData.mOrF = "M";
         if (!studentData.actualArrivalTime)
           studentData.actualArrivalTime = "00:00";
@@ -316,22 +378,38 @@ const uploadExcelFile = async (req, res) => {
           : null;
 
         if (existingStudent) {
-          errors.push({
-            row: studentData.rowNumber,
-            message: `Student number ${studentData.studentNo} already exists for this date`,
-          });
-          continue;
-        }
+          // Update existing record but PRESERVE previous dOrI (do not overwrite)
+          const updates = { ...studentData };
+          delete updates.dOrI;
+          delete updates.studentNo; // never change student number on update
+          delete updates.createdBy; // don't change audit fields
+          // Keep date fixed
+          delete updates.date;
 
-        // Create student
-        const student = await Student.create(studentData);
-        createdStudents.push({
-          _id: student._id,
-          studentNo: student.studentNo,
-          studentGivenName: student.studentGivenName,
-          studentFamilyName: student.studentFamilyName,
-          row: studentData.rowNumber,
-        });
+          const updated = await Student.findByIdAndUpdate(
+            existingStudent._id,
+            { $set: updates },
+            { new: true, runValidators: true }
+          );
+
+          updatedStudents.push({
+            _id: updated._id,
+            studentNo: updated.studentNo,
+            studentGivenName: updated.studentGivenName,
+            studentFamilyName: updated.studentFamilyName,
+            row: studentData.rowNumber,
+          });
+        } else {
+          // Create student
+          const student = await Student.create(studentData);
+          createdStudents.push({
+            _id: student._id,
+            studentNo: student.studentNo,
+            studentGivenName: student.studentGivenName,
+            studentFamilyName: student.studentFamilyName,
+            row: studentData.rowNumber,
+          });
+        }
       } catch (error) {
         console.error(
           `Error processing student at row ${studentData.rowNumber}:`,
@@ -349,11 +427,13 @@ const uploadExcelFile = async (req, res) => {
       data: {
         totalProcessed: studentsData.length,
         created: createdStudents.length,
+        updated: updatedStudents.length,
         errorsCount: errors.length,
         createdStudents,
+        updatedStudents,
         errors,
       },
-      message: `Successfully processed ${studentsData.length} students. Created: ${createdStudents.length}, Errors: ${errors.length}`,
+      message: `Successfully processed ${studentsData.length} students. Created: ${createdStudents.length}, Updated: ${updatedStudents.length}, Errors: ${errors.length}`,
     });
   } catch (error) {
     console.error("Excel upload error:", error);

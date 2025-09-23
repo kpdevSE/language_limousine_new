@@ -105,16 +105,19 @@ export default function PrintMap() {
       });
 
       if (response.data.success) {
-        const allTasks = response.data.data.assignments;
+        const allTasks = response.data.data.assignments || [];
+        const deliveryCompleted = allTasks.filter(
+          (t) => t.deliveryStatus === "Completed"
+        );
 
-        console.log("📊 Setting driver data:", {
+        console.log("📊 Setting driver data (delivery completed only):", {
           driver,
-          tasks: allTasks,
+          tasks: deliveryCompleted,
           date: selectedDate,
         });
         setDriverData({
           driver,
-          tasks: allTasks,
+          tasks: deliveryCompleted,
           date: selectedDate,
         });
         console.log("✅ Driver data set successfully");
@@ -145,16 +148,19 @@ export default function PrintMap() {
       });
 
       if (response.data.success) {
-        const allTasks = response.data.data.assignments;
+        const allTasks = response.data.data.assignments || [];
+        const deliveryCompleted = allTasks.filter(
+          (t) => t.deliveryStatus === "Completed"
+        );
 
-        console.log("📊 Setting subdriver data:", {
+        console.log("📊 Setting subdriver data (delivery completed only):", {
           subDriver,
-          tasks: allTasks,
+          tasks: deliveryCompleted,
           date: selectedDate,
         });
         setSubDriverData({
           subDriver,
-          tasks: allTasks,
+          tasks: deliveryCompleted,
           date: selectedDate,
         });
         console.log("✅ Subdriver data set successfully");
@@ -585,7 +591,7 @@ export default function PrintMap() {
                           {driverData.driver.username}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      {/* <div className="flex items-center gap-2">
                         <Car className="h-4 w-4 text-gray-500" />
                         <span className="text-sm font-medium text-gray-700">
                           Vehicle:
@@ -593,7 +599,7 @@ export default function PrintMap() {
                         <span className="text-sm text-gray-900">
                           {driverData.driver.vehicleNumber || "N/A"}
                         </span>
-                      </div>
+                      </div> */}
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-500" />
                         <span className="text-sm font-medium text-gray-700">

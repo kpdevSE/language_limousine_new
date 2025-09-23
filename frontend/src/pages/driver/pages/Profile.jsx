@@ -14,7 +14,6 @@ export default function DriverProfile() {
     gender: "Male",
     password: "••••••••••••",
     driverID: "",
-    vehicleNumber: "",
     status: "Off Duty",
   });
 
@@ -40,7 +39,6 @@ export default function DriverProfile() {
           gender: driver.gender || "Male",
           password: "••••••••••••",
           driverID: driver.driverID || "",
-          vehicleNumber: driver.vehicleNumber || "",
           status: driver.status || "Off Duty",
         };
 
@@ -212,21 +210,6 @@ export default function DriverProfile() {
                       value={formData.driverID}
                       onChange={(e) =>
                         handleInputChange("driverID", e.target.value)
-                      }
-                      className="w-full bg-white text-gray-900 px-4 py-3 rounded border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  {/* Vehicle No */}
-                  <div className="space-y-2">
-                    <label className="block text-gray-700 text-sm font-medium">
-                      Vehicle No
-                    </label>
-                    <Input
-                      type="text"
-                      value={formData.vehicleNumber}
-                      onChange={(e) =>
-                        handleInputChange("vehicleNumber", e.target.value)
                       }
                       className="w-full bg-white text-gray-900 px-4 py-3 rounded border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />

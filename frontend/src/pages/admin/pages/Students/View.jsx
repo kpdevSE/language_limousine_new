@@ -314,7 +314,7 @@ export default function View() {
                                 {student.trip}
                               </td>
                               <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
-                                {student.arrivalTime}
+                                {student.actualArrivalTime}
                               </td>
                               <td className="text-gray-700 px-4 py-3 border-b border-gray-200">
                                 {student.flight}
