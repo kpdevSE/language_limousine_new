@@ -33,8 +33,8 @@ const handleValidationErrors = (req, res, next) => {
 const validateAddUser = [
   body("username")
     .trim()
-    .isLength({ min: 3 })
-    .withMessage("Username must be at least 3 characters long"),
+    .isLength({ min: 1 })
+    .withMessage("Username is required"),
   body("email")
     .isEmail()
     .normalizeEmail()
@@ -42,9 +42,7 @@ const validateAddUser = [
   body("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
-  body("gender")
-    .isIn(["Male", "Female", "Other"])
-    .withMessage("Gender must be Male, Female, or Other"),
+  body("gender").optional(),
   body("role")
     .isIn(["Greeter", "Driver", "Subdriver", "School"])
     .withMessage("Role must be Greeter, Driver, Subdriver, or School"),
@@ -80,17 +78,14 @@ const validateUpdateUser = [
   body("username")
     .optional()
     .trim()
-    .isLength({ min: 3 })
-    .withMessage("Username must be at least 3 characters long"),
+    .isLength({ min: 1 })
+    .withMessage("Username is required"),
   body("email")
     .optional()
     .isEmail()
     .normalizeEmail()
     .withMessage("Please enter a valid email"),
-  body("gender")
-    .optional()
-    .isIn(["Male", "Female", "Other"])
-    .withMessage("Gender must be Male, Female, or Other"),
+  body("gender").optional(),
   body("role")
     .optional()
     .isIn(["Greeter", "Driver", "Subdriver", "School"])

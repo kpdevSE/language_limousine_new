@@ -6,8 +6,6 @@ import {
   Car,
   CheckCircle,
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
   Search,
   Calendar,
   Loader2,
@@ -16,16 +14,12 @@ import Sidebar from "../components/Siebar";
 import { schoolAPI } from "@/lib/api";
 import { toast } from "react-toastify";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function StatusPage() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [studentsData, setStudentsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [statusCounts, setStatusCounts] = useState({
@@ -34,14 +28,10 @@ export default function StatusPage() {
     delivered: 0,
   });
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentData = studentsData.slice(startIndex, endIndex);
-
   // Fetch data on component mount and when filters change
   useEffect(() => {
     fetchStudentsStatus();
-  }, [currentPage, itemsPerPage, selectedDate, searchTerm]);
+  }, [selectedDate, searchTerm]);
 
   // Default date to today (America/Vancouver) for input YYYY-MM-DD
   useEffect(() => {
@@ -59,8 +49,8 @@ export default function StatusPage() {
     setIsLoading(true);
     try {
       const params = {
-        page: currentPage,
-        limit: itemsPerPage,
+        page: 1,
+        limit: "all",
         search: searchTerm,
       };
 
@@ -72,8 +62,6 @@ export default function StatusPage() {
 
       if (response.data.success) {
         setStudentsData(response.data.data.students);
-        setTotalStudents(response.data.data.pagination.totalStudents);
-        setTotalPages(response.data.data.pagination.totalPages);
         setStatusCounts(response.data.data.statusCounts);
       }
     } catch (error) {
@@ -86,16 +74,10 @@ export default function StatusPage() {
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1);
   };
 
   const handleDateChange = (e) => {
     setSelectedDate(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
   };
 
   const getStatusColor = (status) => {
@@ -119,6 +101,23 @@ export default function StatusPage() {
       case "Waiting":
       default:
         return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  const formatTime = (timeValue) => {
+    if (!timeValue) return null;
+    try {
+      const date = new Date(timeValue);
+      if (isNaN(date.getTime())) return null;
+      return date.toLocaleTimeString("en-CA", {
+        hour12: true,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZone: "America/Vancouver",
+      });
+    } catch (_) {
+      return null;
     }
   };
 
@@ -243,152 +242,249 @@ export default function StatusPage() {
               </p>
             </div>
 
-            <div className="p-0">
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[40px]">
-                        Excel Order
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        Status
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
-                        Arrival Time
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        Pickup Time
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        Delivery Time
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        Student No
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        Student Name
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        Flight
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        Host Name
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 min-w-[120px]">
-                        Address
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan="10" className="p-8 text-center">
-                          <div className="flex flex-col items-center gap-3 text-gray-500">
-                            <Loader2 className="h-12 w-12 text-gray-300 animate-spin" />
-                            <p className="text-lg font-medium">
-                              Loading students...
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : currentData.length === 0 ? (
-                      <tr>
-                        <td colSpan="10" className="p-8 text-center">
-                          <div className="flex flex-col items-center gap-3 text-gray-500">
-                            <AlertCircle className="h-12 w-12 text-gray-300" />
-                            <p className="text-lg font-medium">
-                              No students found.
-                            </p>
-                            <p className="text-sm">
-                              Student status data will appear here when students
-                              are registered and tracked.
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      currentData.map((student, index) => (
-                        <tr
-                          key={student._id}
-                          className="border-gray-200 hover:bg-gray-50"
-                        >
-                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.excelOrder || startIndex + index + 1}
-                          </td>
-                          <td className="p-3 border-r border-gray-200">
-                            <Badge className={getStatusColor(student.status)}>
-                              <div className="flex items-center gap-1">
-                                {getStatusIcon(student.status)}
-                                {student.status}
-                              </div>
-                            </Badge>
-                          </td>
-                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.arrivalTime || "N/A"}
-                          </td>
-                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.pickupTimeFormatted || "N/A"}
-                          </td>
-                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.deliveryTimeFormatted || "N/A"}
-                          </td>
-                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.studentNo || "N/A"}
-                          </td>
-                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.studentGivenName}{" "}
-                            {student.studentFamilyName}
-                          </td>
-                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.flight || "N/A"}
-                          </td>
-                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.hostGivenName || "N/A"}
-                          </td>
-                          <td className="p-3 text-xs text-gray-800">
-                            {student.address || "N/A"}
-                          </td>
+            <div className="p-6">
+              <Tabs defaultValue="waiting">
+                <TabsList>
+                  <TabsTrigger value="waiting">Waiting Students</TabsTrigger>
+                  <TabsTrigger value="completed">
+                    Completed Students
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="waiting">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[40px]">
+                            Excel Order
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Status
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
+                            Arrival Time
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Student No
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Student Name
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Flight
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Host Name
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 min-w-[120px]">
+                            Address
+                          </th>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      </thead>
+                      <tbody>
+                        {isLoading ? (
+                          <tr>
+                            <td colSpan="8" className="p-8 text-center">
+                              <div className="flex flex-col items-center gap-3 text-gray-500">
+                                <Loader2 className="h-12 w-12 text-gray-300 animate-spin" />
+                                <p className="text-lg font-medium">
+                                  Loading students...
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : studentsData.filter((s) => s.status === "Waiting")
+                            .length === 0 ? (
+                          <tr>
+                            <td colSpan="8" className="p-8 text-center">
+                              <div className="flex flex-col items-center gap-3 text-gray-500">
+                                <AlertCircle className="h-12 w-12 text-gray-300" />
+                                <p className="text-lg font-medium">
+                                  No waiting students.
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          studentsData
+                            .filter((s) => s.status === "Waiting")
+                            .map((student, index) => (
+                              <tr
+                                key={student._id}
+                                className="border-gray-200 hover:bg-gray-50"
+                              >
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.excelOrder || index + 1}
+                                </td>
+                                <td className="p-3 border-r border-gray-200">
+                                  <Badge
+                                    className={getStatusColor(student.status)}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      {getStatusIcon(student.status)}
+                                      {student.status}
+                                    </div>
+                                  </Badge>
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {formatTime(
+                                    student.actualArrivalTime ||
+                                      student.arrivalTime
+                                  ) ||
+                                    student.actualArrivalTime ||
+                                    student.arrivalTime ||
+                                    "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.studentNo || "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.studentGivenName}{" "}
+                                  {student.studentFamilyName}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.flight || "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.hostGivenName || "N/A"}
+                                </td>
+                                <td className="p-3 text-xs text-gray-800">
+                                  {student.address || "N/A"}
+                                </td>
+                              </tr>
+                            ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
 
-              {/* Pagination */}
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
-                <div className="text-sm text-gray-500">
-                  Showing {startIndex + 1} to{" "}
-                  {Math.min(endIndex, totalStudents)} of {totalStudents} entries
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-
-                  <span className="flex items-center px-3 py-1 text-sm text-gray-700">
-                    Page {currentPage} of {totalPages}
-                  </span>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+                <TabsContent value="completed">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[40px]">
+                            Excel Order
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Status
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
+                            Arrival Time
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Pickup Time
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Delivery Time
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Student No
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Student Name
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Flight
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Host Name
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 min-w-[120px]">
+                            Address
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {isLoading ? (
+                          <tr>
+                            <td colSpan="10" className="p-8 text-center">
+                              <div className="flex flex-col items-center gap-3 text-gray-500">
+                                <Loader2 className="h-12 w-12 text-gray-300 animate-spin" />
+                                <p className="text-lg font-medium">
+                                  Loading students...
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : studentsData.filter((s) => s.status === "Delivered")
+                            .length === 0 ? (
+                          <tr>
+                            <td colSpan="10" className="p-8 text-center">
+                              <div className="flex flex-col items-center gap-3 text-gray-500">
+                                <AlertCircle className="h-12 w-12 text-gray-300" />
+                                <p className="text-lg font-medium">
+                                  No completed students.
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          studentsData
+                            .filter((s) => s.status === "Delivered")
+                            .map((student, index) => (
+                              <tr
+                                key={student._id}
+                                className="border-gray-200 hover:bg-gray-50"
+                              >
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.excelOrder || index + 1}
+                                </td>
+                                <td className="p-3 border-r border-gray-200">
+                                  <Badge
+                                    className={getStatusColor(student.status)}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      {getStatusIcon(student.status)}
+                                      {student.status}
+                                    </div>
+                                  </Badge>
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {formatTime(
+                                    student.actualArrivalTime ||
+                                      student.arrivalTime
+                                  ) ||
+                                    student.actualArrivalTime ||
+                                    student.arrivalTime ||
+                                    "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.pickupTimeFormatted ||
+                                    formatTime(student.pickupTime) ||
+                                    "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {formatTime(student.deliveryTime) ||
+                                    student.deliveryTimeFormatted ||
+                                    "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.studentNo || "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.studentGivenName}{" "}
+                                  {student.studentFamilyName}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.flight || "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.hostGivenName || "N/A"}
+                                </td>
+                                <td className="p-3 text-xs text-gray-800">
+                                  {student.address || "N/A"}
+                                </td>
+                              </tr>
+                            ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </main>

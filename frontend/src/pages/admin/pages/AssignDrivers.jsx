@@ -904,7 +904,7 @@ export default function AssignDrivers() {
                                   {student.excelOrder || student._id.slice(-6)}
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                                  {student.arrivalTime}
+                                  {student.actualArrivalTime}
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                                   {student.flight}

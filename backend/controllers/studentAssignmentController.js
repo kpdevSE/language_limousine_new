@@ -4,6 +4,70 @@ const User = require("../models/User");
 const WaitingTime = require("../models/WaitingTime");
 const mongoose = require("mongoose");
 
+// Compute offset between UTC and a target time zone for a specific instant
+function getTimeZoneOffsetMsFor(date, timeZone) {
+  const opts = {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  };
+  const partsTz = new Intl.DateTimeFormat("en-CA", {
+    ...opts,
+    timeZone,
+  }).formatToParts(date);
+  const partsUtc = new Intl.DateTimeFormat("en-CA", {
+    ...opts,
+    timeZone: "UTC",
+  }).formatToParts(date);
+  const getNum = (parts, type) =>
+    parseInt(parts.find((p) => p.type === type)?.value || "0", 10);
+  const msTz = Date.UTC(
+    getNum(partsTz, "year"),
+    getNum(partsTz, "month") - 1,
+    getNum(partsTz, "day"),
+    getNum(partsTz, "hour"),
+    getNum(partsTz, "minute"),
+    getNum(partsTz, "second")
+  );
+  const msUtc = Date.UTC(
+    getNum(partsUtc, "year"),
+    getNum(partsUtc, "month") - 1,
+    getNum(partsUtc, "day"),
+    getNum(partsUtc, "hour"),
+    getNum(partsUtc, "minute"),
+    getNum(partsUtc, "second")
+  );
+  return msUtc - msTz; // positive when TZ is behind UTC (e.g., PDT)
+}
+
+// Build a Date object for today in Vancouver with provided HH:MM[:SS]
+function buildVancouverDateFromTimeString(timeString) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Vancouver",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const getNum = (type) =>
+    parseInt(parts.find((p) => p.type === type)?.value || "0", 10);
+  const y = getNum("year");
+  const m = getNum("month");
+  const d = getNum("day");
+  const [hStr, mStr, sStr] = timeString.split(":");
+  const hh = parseInt(hStr, 10) || 0;
+  const mm = parseInt(mStr, 10) || 0;
+  const ss = parseInt(sStr || "0", 10) || 0;
+  // Build the time as if it's local Vancouver wall clock, then adjust to the proper UTC instant
+  const baseUtc = Date.UTC(y, (m || 1) - 1, d || 1, hh, mm, ss);
+  const offset = getTimeZoneOffsetMsFor(new Date(baseUtc), "America/Vancouver");
+  return new Date(baseUtc + offset);
+}
+
 // Helper function to normalize date format
 function normalizeDateQuery(dateStr) {
   if (!dateStr) return null;
@@ -138,7 +202,7 @@ const assignStudents = async (req, res) => {
     })
       .populate(
         "studentId",
-        "studentNo studentGivenName studentFamilyName arrivalTime flight address city"
+        "studentNo studentGivenName studentFamilyName arrivalTime actualArrivalTime flight address city"
       )
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -158,14 +222,18 @@ const assignStudents = async (req, res) => {
   }
 };
 
-// GET /api/assignments - Get assignments list (supports date)
+// GET /api/assignments - Get assignments list (supports date, driver filters, pagination override)
 const getAssignments = async (req, res) => {
   try {
     const page = parseInt(req.query.page || "1", 10);
-    const limit = parseInt(req.query.limit || "10", 10);
+    const limitParam = req.query.limit;
+    // Support limit=all to disable pagination
+    const limit = limitParam === "all" ? 0 : parseInt(limitParam || "10", 10);
     const search = req.query.search || "";
     const status = req.query.status;
     const date = req.query.date || new Date().toISOString().split("T")[0];
+    const driverId = req.query.driverId;
+    const subdriverId = req.query.subdriverId;
 
     // Build date filter
     const startDate = new Date(date);
@@ -177,24 +245,31 @@ const getAssignments = async (req, res) => {
       assignmentDate: { $gte: startDate, $lt: endDate },
     };
     if (status) query.status = status;
+    if (driverId) query.driverId = driverId;
+    if (subdriverId) query.subdriverId = subdriverId;
 
     if (search) {
       query.$or = [{ notes: { $regex: search, $options: "i" } }];
     }
 
     const skip = (page - 1) * limit;
+    // Build the mongoose query
+    let findQuery = StudentAssignment.find(query)
+      .populate(
+        "studentId",
+        "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
+      )
+      .populate("driverId", "username driverID vehicleNumber")
+      .populate("subdriverId", "username subdriverID vehicleNumber")
+      .populate("assignedBy", "username")
+      .sort({ assignmentDate: -1 });
+
+    if (limit > 0) {
+      findQuery = findQuery.skip(skip).limit(limit);
+    }
+
     const [assignments, total] = await Promise.all([
-      StudentAssignment.find(query)
-        .populate(
-          "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
-        )
-        .populate("driverId", "username driverID vehicleNumber")
-        .populate("subdriverId", "username subdriverID vehicleNumber")
-        .populate("assignedBy", "username")
-        .sort({ assignmentDate: -1 })
-        .skip(skip)
-        .limit(limit),
+      findQuery,
       StudentAssignment.countDocuments(query),
     ]);
 
@@ -204,7 +279,7 @@ const getAssignments = async (req, res) => {
         assignments,
         pagination: {
           currentPage: page,
-          totalPages: Math.ceil(total / limit),
+          totalPages: limit > 0 ? Math.ceil(total / limit) : 1,
           totalAssignments: total,
           limit,
         },
@@ -355,7 +430,7 @@ const updateAssignment = async (req, res) => {
     const populatedAssignment = await StudentAssignment.findById(assignmentId)
       .populate(
         "studentId",
-        "studentNo studentGivenName studentFamilyName arrivalTime flight address city"
+        "studentNo studentGivenName studentFamilyName arrivalTime actualArrivalTime flight address city"
       )
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -450,7 +525,7 @@ const getDriverAssignments = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName arrivalTime flight dOrI hostGivenName phone school address city"
+          "studentNo studentGivenName studentFamilyName arrivalTime actualArrivalTime flight dOrI hostGivenName phone school address city"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -545,7 +620,7 @@ const getDriverCompletedTasks = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName arrivalTime flight dOrI hostGivenName phone school address city"
+          "studentNo studentGivenName studentFamilyName arrivalTime actualArrivalTime flight dOrI hostGivenName phone school address city"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -762,12 +837,9 @@ const updateDeliveryTime = async (req, res) => {
         });
       }
 
-      const today = new Date();
       const [hours, minutes, seconds] = deliveryTime.split(":").map(Number);
-
       if (hours !== undefined && minutes !== undefined) {
-        deliveryDateTime = new Date(today);
-        deliveryDateTime.setHours(hours, minutes, seconds || 0, 0);
+        deliveryDateTime = buildVancouverDateFromTimeString(deliveryTime);
       } else {
         return res.status(400).json({
           success: false,
@@ -782,7 +854,7 @@ const updateDeliveryTime = async (req, res) => {
     const populatedAssignment = await StudentAssignment.findById(assignmentId)
       .populate(
         "studentId",
-        "studentNo studentGivenName arrivalTime flight address city"
+        "studentNo studentGivenName studentFamilyName arrivalTime actualArrivalTime flight address city"
       )
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber");

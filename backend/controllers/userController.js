@@ -57,16 +57,7 @@ const addUser = async (req, res) => {
       });
     }
 
-    // Validate gender if provided and not School role
-    const validGenders = ["Male", "Female", "Other"];
-    if (role !== "School") {
-      if (!gender || !validGenders.includes(gender)) {
-        return res.status(400).json({
-          success: false,
-          message: "Valid gender is required for this role",
-        });
-      }
-    }
+    // Gender is optional for all roles now
 
     // Role-specific validations
     let roleSpecificData = {};
@@ -332,7 +323,7 @@ const updateUser = async (req, res) => {
     const updates = {};
     if (username) updates.username = username;
     if (email) updates.email = email;
-    if (gender) updates.gender = gender;
+    if (gender !== undefined) updates.gender = gender;
     if (role) updates.role = role;
     if (greeterID !== undefined) updates.greeterID = greeterID;
     if (isActive !== undefined) updates.isActive = isActive;
@@ -346,13 +337,7 @@ const updateUser = async (req, res) => {
       });
     }
 
-    // Validate gender if being updated
-    if (gender && !["Male", "Female", "Other"].includes(gender)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid gender. Must be one of: Male, Female, Other",
-      });
-    }
+    // No strict gender validation
 
     // Check for duplicate email/username if being updated
     if (email || username) {

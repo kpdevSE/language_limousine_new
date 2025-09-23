@@ -102,6 +102,7 @@ export default function PrintMap() {
       const response = await assignmentAPI.getAssignments({
         date: selectedDate,
         driverId: selectedDriver,
+        limit: "all",
       });
 
       if (response.data.success) {
@@ -145,6 +146,7 @@ export default function PrintMap() {
       const response = await assignmentAPI.getAssignments({
         date: selectedDate,
         subdriverId: selectedSubDriver,
+        limit: "all",
       });
 
       if (response.data.success) {
@@ -202,6 +204,17 @@ export default function PrintMap() {
       doc.text(`Driver: ${driver.username}`, 20, 45);
       doc.text(`Driver ID: ${driver.driverID || "N/A"}`, 20, 55);
       doc.text(`Vehicle: ${driver.vehicleNumber || "N/A"}`, 20, 65);
+      doc.text(
+        `Generated at: ${new Date().toLocaleString("en-CA", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+          timeZone: "America/Vancouver",
+        })}`,
+        20,
+        75
+      );
 
       // Tasks table (all tasks: pickup and delivery)
       if (tasks && tasks.length > 0) {
@@ -210,21 +223,25 @@ export default function PrintMap() {
           task.studentId?.studentGivenName && task.studentId?.studentFamilyName
             ? `${task.studentId.studentGivenName} ${task.studentId.studentFamilyName}`
             : "N/A",
-          task.studentId?.studentNo || "N/A",
+          task.studentId?.excelOrder || index + 1,
           task.studentId?.school || "N/A",
           task.pickupStatus || "N/A",
           task.pickupTime
-            ? new Date(task.pickupTime).toLocaleTimeString("en-US", {
+            ? new Date(task.pickupTime).toLocaleTimeString("en-CA", {
                 hour: "2-digit",
                 minute: "2-digit",
+                second: "2-digit",
                 hour12: true,
+                timeZone: "America/Vancouver",
               })
             : "N/A",
           task.deliveryTime
-            ? new Date(task.deliveryTime).toLocaleTimeString("en-US", {
+            ? new Date(task.deliveryTime).toLocaleTimeString("en-CA", {
                 hour: "2-digit",
                 minute: "2-digit",
+                second: "2-digit",
                 hour12: true,
+                timeZone: "America/Vancouver",
               })
             : "N/A",
           task.deliveryStatus || "N/A",
@@ -236,7 +253,7 @@ export default function PrintMap() {
             [
               "#",
               "Student Name",
-              "Student No",
+              "Excel Order",
               "School",
               "Pickup Status",
               "Pickup Time",
@@ -303,17 +320,21 @@ export default function PrintMap() {
           task.studentId?.school || "N/A",
           task.pickupStatus || "N/A",
           task.pickupTime
-            ? new Date(task.pickupTime).toLocaleTimeString("en-US", {
+            ? new Date(task.pickupTime).toLocaleTimeString("en-CA", {
                 hour: "2-digit",
                 minute: "2-digit",
+                second: "2-digit",
                 hour12: true,
+                timeZone: "America/Vancouver",
               })
             : "N/A",
           task.deliveryTime
-            ? new Date(task.deliveryTime).toLocaleTimeString("en-US", {
+            ? new Date(task.deliveryTime).toLocaleTimeString("en-CA", {
                 hour: "2-digit",
                 minute: "2-digit",
+                second: "2-digit",
                 hour12: true,
+                timeZone: "America/Vancouver",
               })
             : "N/A",
           task.deliveryStatus || "N/A",
@@ -695,10 +716,12 @@ export default function PrintMap() {
                                 {task.pickupTime
                                   ? new Date(
                                       task.pickupTime
-                                    ).toLocaleTimeString("en-US", {
+                                    ).toLocaleTimeString("en-CA", {
                                       hour: "2-digit",
                                       minute: "2-digit",
+                                      second: "2-digit",
                                       hour12: true,
+                                      timeZone: "America/Vancouver",
                                     })
                                   : "N/A"}
                               </td>
@@ -706,10 +729,12 @@ export default function PrintMap() {
                                 {task.deliveryTime
                                   ? new Date(
                                       task.deliveryTime
-                                    ).toLocaleTimeString("en-US", {
+                                    ).toLocaleTimeString("en-CA", {
                                       hour: "2-digit",
                                       minute: "2-digit",
+                                      second: "2-digit",
                                       hour12: true,
+                                      timeZone: "America/Vancouver",
                                     })
                                   : "N/A"}
                               </td>
@@ -865,10 +890,12 @@ export default function PrintMap() {
                                 {task.pickupTime
                                   ? new Date(
                                       task.pickupTime
-                                    ).toLocaleTimeString("en-US", {
+                                    ).toLocaleTimeString("en-CA", {
                                       hour: "2-digit",
                                       minute: "2-digit",
+                                      second: "2-digit",
                                       hour12: true,
+                                      timeZone: "America/Vancouver",
                                     })
                                   : "N/A"}
                               </td>
@@ -876,10 +903,12 @@ export default function PrintMap() {
                                 {task.deliveryTime
                                   ? new Date(
                                       task.deliveryTime
-                                    ).toLocaleTimeString("en-US", {
+                                    ).toLocaleTimeString("en-CA", {
                                       hour: "2-digit",
                                       minute: "2-digit",
+                                      second: "2-digit",
                                       hour12: true,
+                                      timeZone: "America/Vancouver",
                                     })
                                   : "N/A"}
                               </td>

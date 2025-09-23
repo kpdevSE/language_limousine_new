@@ -556,12 +556,7 @@ export default function Dashboard() {
                               {assignment.studentId?.flight}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                              {formatTimeHM(
-                                assignment.studentId?.actualArrivalTime ??
-                                  assignment.studentId?.arrivalTime ??
-                                  assignment.studentId?.arrival_time ??
-                                  assignment.studentId?.arrivalTimeFormatted
-                              )}
+                              {assignment.studentId?.actualArrivalTime}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               {assignment.studentId?.dOrI}
@@ -573,10 +568,7 @@ export default function Dashboard() {
                               {assignment.studentId?.studentGivenName}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                              {assignment.studentId?.studentFamilyName ||
-                                assignment.studentId?.studentFamilyname ||
-                                assignment.studentId?.familyName ||
-                                ""}
+                              {assignment.studentId?.studentFamilyName}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               {assignment.studentId?.address}
@@ -634,7 +626,13 @@ export default function Dashboard() {
                                       </span>{" "}
                                       {new Date(
                                         assignment.pickupTime
-                                      ).toLocaleTimeString()}
+                                      ).toLocaleTimeString("en-CA", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        second: "2-digit",
+                                        hour12: true,
+                                        timeZone: "America/Vancouver",
+                                      })}
                                     </div>
                                   )}
                                   {assignment.deliveryTime && (
@@ -644,7 +642,13 @@ export default function Dashboard() {
                                       </span>{" "}
                                       {new Date(
                                         assignment.deliveryTime
-                                      ).toLocaleTimeString()}
+                                      ).toLocaleTimeString("en-CA", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        second: "2-digit",
+                                        hour12: true,
+                                        timeZone: "America/Vancouver",
+                                      })}
                                     </div>
                                   )}
                                 </div>

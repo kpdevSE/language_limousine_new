@@ -579,10 +579,7 @@ export default function Upload() {
                       Students for Selected Date
                     </h2>
                     <p className="text-sm text-gray-500 mt-1">
-                      {date
-                        ? new Date(date).toLocaleDateString()
-                        : "No date selected"}{" "}
-                      • {studentsForDate.length} student
+                      {studentsForDate.length} student
                       {studentsForDate.length === 1 ? "" : "s"}
                     </p>
                   </div>

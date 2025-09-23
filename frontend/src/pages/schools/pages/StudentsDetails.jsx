@@ -1,31 +1,17 @@
 import { useState, useEffect } from "react";
-import {
-  Search,
-  User,
-  Calendar,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-  Loader,
-} from "lucide-react";
+import { Search, User, Calendar, Filter, Loader } from "lucide-react";
 import Sidebar from "../components/Siebar";
 import { studentAPI } from "@/lib/api";
 import { toast } from "react-toastify";
 
 export default function StudentDetails() {
   const [selectedDate, setSelectedDate] = useState(""); // Empty by default to show all students
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [studentsData, setStudentsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [schoolUsername, setSchoolUsername] = useState("");
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentData = studentsData.slice(startIndex, endIndex);
+  const [schoolUsername, setSchoolUsername] = useState("");
 
   // Get school username from session storage
   useEffect(() => {
@@ -42,28 +28,28 @@ export default function StudentDetails() {
     }
   }, []);
 
-  // Fetch students when component mounts or filters change
+  // Fetch students when filters change (only when a date is selected)
   useEffect(() => {
-    if (schoolUsername) {
-      fetchStudents();
+    if (!schoolUsername) return;
+    if (!selectedDate || selectedDate.trim() === "") {
+      setStudentsData([]);
+      return;
     }
-  }, [schoolUsername, selectedDate, currentPage, itemsPerPage, searchTerm]);
+    fetchStudents();
+  }, [schoolUsername, selectedDate, searchTerm]);
 
   const fetchStudents = async () => {
     if (!schoolUsername) return;
+    if (!selectedDate || selectedDate.trim() === "") return;
 
     setIsLoading(true);
     try {
       const params = {
-        page: currentPage,
-        limit: itemsPerPage,
+        page: 1,
+        limit: 100000,
         search: searchTerm,
+        date: selectedDate,
       };
-
-      // Only add date parameter if a date is selected
-      if (selectedDate && selectedDate.trim() !== "") {
-        params.date = selectedDate;
-      }
 
       const response = await studentAPI.getStudentsBySchool(
         schoolUsername,
@@ -72,8 +58,6 @@ export default function StudentDetails() {
 
       if (response.data.success) {
         setStudentsData(response.data.data.students);
-        setTotalStudents(response.data.data.pagination.totalStudents);
-        setTotalPages(response.data.data.pagination.totalPages);
       }
     } catch (error) {
       console.error("Error fetching students:", error);
@@ -84,17 +68,12 @@ export default function StudentDetails() {
   };
 
   const handleFilter = () => {
-    setCurrentPage(1); // Reset to first page when filtering
+    if (!selectedDate || selectedDate.trim() === "") return;
     fetchStudents();
   };
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page when searching
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
   };
 
   return (
@@ -170,7 +149,6 @@ export default function StudentDetails() {
                       <button
                         onClick={() => {
                           setSelectedDate("");
-                          setCurrentPage(1);
                         }}
                         className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                         title="Clear date filter"
@@ -195,7 +173,9 @@ export default function StudentDetails() {
                 </div>
                 <button
                   onClick={handleFilter}
-                  disabled={isLoading}
+                  disabled={
+                    isLoading || !selectedDate || selectedDate.trim() === ""
+                  }
                   className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium px-8 py-2 h-10 rounded-md transition-colors"
                 >
                   {isLoading ? (
@@ -217,7 +197,7 @@ export default function StudentDetails() {
               <p className="text-sm text-gray-500">
                 {selectedDate && selectedDate.trim() !== ""
                   ? `Students for ${selectedDate}`
-                  : "All students"}
+                  : "Select a date to view students"}
               </p>
             </div>
 
@@ -227,18 +207,15 @@ export default function StudentDetails() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[80px]">
-                        Action
-                      </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[40px]">
                         Excel Order
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
                         Actual arrival time
                       </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
+                      {/* <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
                         Arr time
-                      </th>
+                      </th> */}
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[80px]">
                         Flight
                       </th>
@@ -286,7 +263,18 @@ export default function StudentDetails() {
                           </div>
                         </td>
                       </tr>
-                    ) : currentData.length === 0 ? (
+                    ) : !selectedDate || selectedDate.trim() === "" ? (
+                      <tr>
+                        <td colSpan="15" className="p-8 text-center">
+                          <div className="flex flex-col items-center gap-3 text-gray-500">
+                            <Search className="h-12 w-12 text-gray-300" />
+                            <p className="text-lg font-medium">
+                              Please select a date to view students.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : studentsData.length === 0 ? (
                       <tr>
                         <td colSpan="15" className="p-8 text-center">
                           <div className="flex flex-col items-center gap-3 text-gray-500">
@@ -295,33 +283,27 @@ export default function StudentDetails() {
                               No students found.
                             </p>
                             <p className="text-sm">
-                              {selectedDate && selectedDate.trim() !== ""
-                                ? "Try selecting a different date or check if students are registered for this date."
-                                : "No students are currently registered for this school."}
+                              Try selecting a different date or check if
+                              students are registered for this date.
                             </p>
                           </div>
                         </td>
                       </tr>
                     ) : (
-                      currentData.map((student, index) => (
+                      studentsData.map((student, index) => (
                         <tr
                           key={student._id}
                           className="border-gray-200 hover:bg-gray-50"
                         >
-                          <td className="p-3 border-r border-gray-200">
-                            <button className="text-blue-600 hover:text-blue-800 text-xs">
-                              View
-                            </button>
-                          </td>
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.excelOrder || startIndex + index + 1}
+                            {student.excelOrder || index + 1}
                           </td>
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
                             {student.actualArrivalTime || "N/A"}
                           </td>
-                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                          {/* <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
                             {student.arrivalTime || "N/A"}
-                          </td>
+                          </td> */}
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
                             {student.flight || "N/A"}
                           </td>
@@ -362,61 +344,7 @@ export default function StudentDetails() {
                 </table>
               </div>
 
-              {/* Pagination */}
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
-                <div className="text-sm text-gray-500">
-                  Showing {startIndex + 1} to{" "}
-                  {Math.min(endIndex, totalStudents)} of {totalStudents} entries
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    className="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </button>
-
-                  {Array.from(
-                    { length: Math.min(5, totalPages) },
-                    (_, i) => i + 1
-                  ).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={`w-8 h-8 text-sm border border-gray-300 rounded-md ${
-                        page === currentPage
-                          ? "bg-blue-500 text-white border-blue-500"
-                          : "bg-white text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  {totalPages > 5 && (
-                    <>
-                      <span className="px-2 py-1 text-gray-500">...</span>
-                      <button
-                        onClick={() => handlePageChange(totalPages)}
-                        className="w-8 h-8 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50"
-                      >
-                        {totalPages}
-                      </button>
-                    </>
-                  )}
-
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    className="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+              {/* Pagination removed: showing all students */}
             </div>
           </div>
         </main>

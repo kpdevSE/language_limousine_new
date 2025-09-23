@@ -612,7 +612,13 @@ export default function Dashboard() {
                                       </span>{" "}
                                       {new Date(
                                         assignment.pickupTime
-                                      ).toLocaleTimeString()}
+                                      ).toLocaleTimeString("en-CA", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        second: "2-digit",
+                                        hour12: true,
+                                        timeZone: "America/Vancouver",
+                                      })}
                                     </div>
                                   )}
                                   {assignment.deliveryTime && (
@@ -622,7 +628,13 @@ export default function Dashboard() {
                                       </span>{" "}
                                       {new Date(
                                         assignment.deliveryTime
-                                      ).toLocaleTimeString()}
+                                      ).toLocaleTimeString("en-CA", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        second: "2-digit",
+                                        hour12: true,
+                                        timeZone: "America/Vancouver",
+                                      })}
                                     </div>
                                   )}
                                 </div>

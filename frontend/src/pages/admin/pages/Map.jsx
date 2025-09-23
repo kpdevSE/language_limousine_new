@@ -516,15 +516,23 @@ export default function Map() {
       <body>
         <div class="print-header">
           <h1>Student Location Map - Canada</h1>
-          <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+          <p>Generated on ${new Date().toLocaleDateString("en-CA", {
+            timeZone: "America/Vancouver",
+          })} at ${new Date().toLocaleTimeString("en-CA", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+      timeZone: "America/Vancouver",
+    })}</p>
         </div>
         
         <div class="student-details">
           <h2>Student Information</h2>
           <div class="details-grid">
             <div class="detail-item">
-              <span class="detail-label">Student Number</span>
-              <span class="detail-value">${student.studentNo || "N/A"}</span>
+              <span class="detail-label">Excel Order</span>
+              <span class="detail-value">${student.excelOrder ?? "N/A"}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Full Name</span>
@@ -550,8 +558,12 @@ export default function Map() {
               <span class="detail-label">Date</span>
               <span class="detail-value">${
                 selectedDate
-                  ? new Date(selectedDate).toLocaleDateString()
-                  : new Date().toLocaleDateString()
+                  ? new Date(selectedDate).toLocaleDateString("en-CA", {
+                      timeZone: "America/Vancouver",
+                    })
+                  : new Date().toLocaleDateString("en-CA", {
+                      timeZone: "America/Vancouver",
+                    })
               }</span>
             </div>
           </div>
@@ -584,8 +596,8 @@ export default function Map() {
                 student.studentGivenName
               } ${
       student.studentFamilyName || ""
-    }</strong></h3><p><strong>Student ID:</strong> ${
-      student.studentNo || "N/A"
+    }</strong></h3><p><strong>Excel Order:</strong> ${
+      student.excelOrder ?? "N/A"
     }</p><p><strong>Address:</strong> ${
       student.address || student.city || "N/A"
     }</p></div>')

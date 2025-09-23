@@ -151,7 +151,7 @@ export default function Schools() {
       setError("Username is required");
       return false;
     }
-    if (formData.username.trim().length < 3) {
+    if (formData.username.trim().length < 1) {
       setError("Username must be at least 3 characters long");
       return false;
     }

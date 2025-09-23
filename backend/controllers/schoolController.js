@@ -18,7 +18,9 @@ const getSchoolStudentsStatus = async (req, res) => {
   try {
     const schoolUsername = req.user.username;
     const page = parseInt(req.query.page || "1", 10);
-    const limit = parseInt(req.query.limit || "10", 10);
+    const rawLimit = req.query.limit;
+    const noLimit = rawLimit === "all";
+    const limit = noLimit ? null : parseInt(rawLimit || "10", 10);
     const date = req.query.date;
     const search = req.query.search || "";
 
@@ -41,11 +43,20 @@ const getSchoolStudentsStatus = async (req, res) => {
       ];
     }
 
-    const skip = (page - 1) * limit;
-    const [students, total] = await Promise.all([
-      Student.find(query).sort({ arrivalTime: 1 }).skip(skip).limit(limit),
-      Student.countDocuments(query),
-    ]);
+    let students = [];
+    let total = 0;
+    if (noLimit) {
+      students = await Student.find(query).sort({ arrivalTime: 1 });
+      total = students.length;
+    } else {
+      const skip = (page - 1) * limit;
+      const [studentsResult, totalCount] = await Promise.all([
+        Student.find(query).sort({ arrivalTime: 1 }).skip(skip).limit(limit),
+        Student.countDocuments(query),
+      ]);
+      students = studentsResult;
+      total = totalCount;
+    }
 
     // Get student IDs to fetch their status
     const studentIds = students.map((student) => student._id);
@@ -105,17 +116,22 @@ const getSchoolStudentsStatus = async (req, res) => {
         };
       }
 
+      // Determine pickup time from WaitingTime first, then fallback to Assignment
+      const rawPickupTime =
+        waitingTime?.pickupTime || assignment?.pickupTime || null;
+
       // Format times
       let pickupTimeFormatted = null;
-      if (waitingTime?.pickupTime) {
+      if (rawPickupTime) {
         try {
-          const pickupTime = new Date(waitingTime.pickupTime);
+          const pickupTime = new Date(rawPickupTime);
           if (!isNaN(pickupTime.getTime())) {
-            pickupTimeFormatted = pickupTime.toLocaleTimeString("en-US", {
-              hour12: false,
+            pickupTimeFormatted = pickupTime.toLocaleTimeString("en-CA", {
+              hour12: true,
               hour: "2-digit",
               minute: "2-digit",
               second: "2-digit",
+              timeZone: "America/Vancouver",
             });
           }
         } catch (error) {
@@ -127,11 +143,12 @@ const getSchoolStudentsStatus = async (req, res) => {
       if (assignment?.deliveryTime) {
         try {
           const deliveryTime = new Date(assignment.deliveryTime);
-          deliveryTimeFormatted = deliveryTime.toLocaleTimeString("en-US", {
-            hour12: false,
+          deliveryTimeFormatted = deliveryTime.toLocaleTimeString("en-CA", {
+            hour12: true,
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit",
+            timeZone: "America/Vancouver",
           });
         } catch (error) {
           console.error("Error formatting delivery time:", error);
@@ -142,7 +159,7 @@ const getSchoolStudentsStatus = async (req, res) => {
         ...student.toObject(),
         status,
         statusDetails,
-        pickupTime: waitingTime?.pickupTime || null,
+        pickupTime: rawPickupTime,
         pickupTimeFormatted,
         deliveryTime: assignment?.deliveryTime || null,
         deliveryTimeFormatted,
@@ -164,12 +181,19 @@ const getSchoolStudentsStatus = async (req, res) => {
       data: {
         students: studentsWithStatus,
         statusCounts,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(total / limit),
-          totalStudents: total,
-          limit,
-        },
+        pagination: noLimit
+          ? {
+              currentPage: 1,
+              totalPages: 1,
+              totalStudents: total,
+              limit: total,
+            }
+          : {
+              currentPage: page,
+              totalPages: Math.ceil(total / (limit || 1)),
+              totalStudents: total,
+              limit,
+            },
       },
     });
   } catch (err) {

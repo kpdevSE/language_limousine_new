@@ -8,7 +8,18 @@ const userSchema = new mongoose.Schema(
       required: [true, "Username is required"],
       unique: true,
       trim: true,
-      minlength: [3, "Username must be at least 3 characters long"],
+      validate: {
+        validator: function (v) {
+          // Allow any length for School usernames (no min limit)
+          if (this.role === "School") {
+            return typeof v === "string" && v.trim().length >= 1;
+          }
+          // For other roles, keep a minimal requirement of 3 for safety
+          return typeof v === "string" && v.trim().length >= 3;
+        },
+        message:
+          "Username must be at least 3 characters long (no minimum for School)",
+      },
     },
     email: {
       type: String,
