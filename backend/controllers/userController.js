@@ -28,11 +28,11 @@ const addUser = async (req, res) => {
       status,
     } = req.body;
 
-    // Basic validation
-    if (!username || !email || !password || !gender || !role) {
+    // Basic validation (gender not required for School)
+    if (!username || !email || !password || !role) {
       return res.status(400).json({
         success: false,
-        message: "Username, email, password, gender, and role are required",
+        message: "Username, email, password, and role are required",
       });
     }
 
@@ -57,13 +57,15 @@ const addUser = async (req, res) => {
       });
     }
 
-    // Validate gender
+    // Validate gender if provided and not School role
     const validGenders = ["Male", "Female", "Other"];
-    if (!validGenders.includes(gender)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid gender. Must be one of: Male, Female, Other",
-      });
+    if (role !== "School") {
+      if (!gender || !validGenders.includes(gender)) {
+        return res.status(400).json({
+          success: false,
+          message: "Valid gender is required for this role",
+        });
+      }
     }
 
     // Role-specific validations
@@ -90,10 +92,10 @@ const addUser = async (req, res) => {
     }
 
     if (role === "Driver") {
-      if (!driverID || !vehicleNumber) {
+      if (!driverID) {
         return res.status(400).json({
           success: false,
-          message: "DriverID and Vehicle Number are required for Driver role",
+          message: "DriverID is required for Driver role",
         });
       }
 
@@ -107,7 +109,9 @@ const addUser = async (req, res) => {
       }
 
       roleSpecificData.driverID = driverID;
-      roleSpecificData.vehicleNumber = vehicleNumber;
+      if (vehicleNumber) {
+        roleSpecificData.vehicleNumber = vehicleNumber;
+      }
     }
 
     if (role === "Subdriver") {
@@ -167,7 +171,7 @@ const addUser = async (req, res) => {
       username,
       email,
       password,
-      gender,
+      ...(gender ? { gender } : {}),
       role,
       ...roleSpecificData,
       createdBy: req.user._id,

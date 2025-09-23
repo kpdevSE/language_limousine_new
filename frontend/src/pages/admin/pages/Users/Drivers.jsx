@@ -39,7 +39,6 @@ export default function Drivers() {
     password: "",
     gender: "",
     driverID: "",
-    vehicleNumber: "",
     role: "Driver",
   });
 
@@ -188,10 +187,6 @@ export default function Drivers() {
       setError("Driver ID is required");
       return false;
     }
-    if (!formData.vehicleNumber.trim()) {
-      setError("Vehicle Number is required");
-      return false;
-    }
     return true;
   };
 
@@ -309,7 +304,6 @@ export default function Drivers() {
       password: "",
       gender: "",
       driverID: "",
-      vehicleNumber: "",
       role: "Driver",
     });
     setError("");
@@ -571,27 +565,6 @@ export default function Drivers() {
                       />
                     </div>
 
-                    {/* Vehicle Number */}
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="vehicleNumber"
-                        className="text-gray-700 text-sm font-medium"
-                      >
-                        Vehicle Number *
-                      </Label>
-                      <Input
-                        id="vehicleNumber"
-                        name="vehicleNumber"
-                        type="text"
-                        value={formData.vehicleNumber}
-                        onChange={handleInputChange}
-                        className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Enter vehicle number"
-                        disabled={isLoading}
-                        required
-                      />
-                    </div>
-
                     {/* Role */}
                     <div className="space-y-2">
                       <Label
@@ -710,9 +683,7 @@ export default function Drivers() {
                       <TableHead className="text-gray-700 font-medium">
                         Driver ID
                       </TableHead>
-                      <TableHead className="text-gray-700 font-medium">
-                        Vehicle Number
-                      </TableHead>
+
                       <TableHead className="text-gray-700 font-medium">
                         Status
                       </TableHead>
@@ -763,9 +734,7 @@ export default function Drivers() {
                           <TableCell className="text-gray-700">
                             {driver.driverID}
                           </TableCell>
-                          <TableCell className="text-gray-700">
-                            {driver.vehicleNumber}
-                          </TableCell>
+
                           <TableCell className="text-gray-700">
                             <span
                               className={`inline-flex px-2 py-1 text-xs rounded-full ${

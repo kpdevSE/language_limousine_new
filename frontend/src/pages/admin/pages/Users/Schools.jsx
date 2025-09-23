@@ -37,7 +37,6 @@ export default function Schools() {
     username: "",
     email: "",
     password: "",
-    gender: "",
     schoolID: "",
     role: "School",
   });
@@ -142,14 +141,7 @@ export default function Schools() {
     if (success) setSuccess("");
   };
 
-  const handleSelectChange = (name, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    if (error) setError("");
-    if (success) setSuccess("");
-  };
+  const handleSelectChange = () => {};
 
   const validateForm = () => {
     // Reset previous errors
@@ -177,10 +169,6 @@ export default function Schools() {
     }
     if (formData.password.length < 6) {
       setError("Password must be at least 6 characters long");
-      return false;
-    }
-    if (!formData.gender) {
-      setError("Gender is required");
       return false;
     }
     if (!formData.schoolID.trim()) {
@@ -302,7 +290,6 @@ export default function Schools() {
       username: "",
       email: "",
       password: "",
-      gender: "",
       schoolID: "",
       role: "School",
     });
@@ -502,44 +489,6 @@ export default function Schools() {
                         </button>
                       </div>
                     </div>
-
-                    {/* Gender */}
-                    <div className="space-y-2">
-                      <Label className="text-gray-700 text-sm font-medium">
-                        Gender *
-                      </Label>
-                      <Select
-                        value={formData.gender}
-                        onValueChange={(value) =>
-                          handleSelectChange("gender", value)
-                        }
-                        disabled={isLoading}
-                      >
-                        <SelectTrigger className="bg-white text-gray-900 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                          <SelectValue placeholder="Select Gender" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200">
-                          <SelectItem
-                            value="Male"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            Male
-                          </SelectItem>
-                          <SelectItem
-                            value="Female"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            Female
-                          </SelectItem>
-                          <SelectItem
-                            value="Other"
-                            className="text-gray-900 hover:bg-gray-100"
-                          >
-                            Other
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
 
                   {/* Second Row */}
@@ -677,9 +626,7 @@ export default function Schools() {
                       <TableHead className="text-gray-700 font-medium">
                         Email
                       </TableHead>
-                      <TableHead className="text-gray-700 font-medium">
-                        Gender
-                      </TableHead>
+
                       <TableHead className="text-gray-700 font-medium">
                         School ID
                       </TableHead>
@@ -727,9 +674,7 @@ export default function Schools() {
                           <TableCell className="text-gray-700">
                             {school.email}
                           </TableCell>
-                          <TableCell className="text-gray-700">
-                            {school.gender}
-                          </TableCell>
+
                           <TableCell className="text-gray-700">
                             {school.schoolID}
                           </TableCell>

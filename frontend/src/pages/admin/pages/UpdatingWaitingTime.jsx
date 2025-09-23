@@ -31,6 +31,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { toast } from "react-toastify";
 
 export default function UpdatingWaitingTime() {
+  const CANADA_TZ = "America/Vancouver";
   const [waitingTimes, setWaitingTimes] = useState({});
   const [pickupTimes, setPickupTimes] = useState({});
   const [waitingStartedTimes, setWaitingStartedTimes] = useState({});
@@ -81,15 +82,44 @@ export default function UpdatingWaitingTime() {
     }
   );
 
-  useEffect(() => {
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString("en-US", {
+  // Helpers for Canada timezone
+  const getCanadaDateParts = () => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: CANADA_TZ,
+      year: "numeric",
       month: "2-digit",
       day: "2-digit",
-      year: "numeric",
-    });
-    setSelectedDate(formattedDate);
-    setDateInputValue(today.toISOString().split("T")[0]);
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).formatToParts(new Date());
+    const get = (type) => parts.find((p) => p.type === type)?.value || "";
+    return {
+      year: get("year"),
+      month: get("month"),
+      day: get("day"),
+      hour: get("hour"),
+      minute: get("minute"),
+      second: get("second"),
+    };
+  };
+
+  const formatCanadaDateForBackend = () => {
+    const { year, month, day } = getCanadaDateParts();
+    return `${month}/${day}/${year}`; // MM/DD/YYYY
+  };
+
+  const formatCanadaDateForInput = () => {
+    const { year, month, day } = getCanadaDateParts();
+    return `${year}-${month}-${day}`; // YYYY-MM-DD
+  };
+
+  useEffect(() => {
+    const backendDate = formatCanadaDateForBackend();
+    setSelectedDate(backendDate);
+    const htmlDateValue = formatCanadaDateForInput();
+    setDateInputValue(htmlDateValue);
   }, []);
 
   useEffect(() => {
@@ -152,6 +182,7 @@ export default function UpdatingWaitingTime() {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
+      timeZone: CANADA_TZ,
     });
 
   const diffMinutes = (arrival) => {

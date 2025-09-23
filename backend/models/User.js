@@ -148,18 +148,18 @@ const userSchema = new mongoose.Schema(
     // Vehicle number for drivers and subdrivers
     vehicleNumber: {
       type: String,
+      // Optional for Driver; still required for Subdriver below
       required: function () {
-        return this.role === "Driver" || this.role === "Subdriver";
+        return this.role === "Subdriver";
       },
       validate: {
         validator: function (v) {
-          // Only validate if role is Driver or Subdriver
-          if (this.role === "Driver" || this.role === "Subdriver") {
+          if (this.role === "Subdriver") {
             return v && v.length > 0;
           }
           return true;
         },
-        message: "Vehicle Number is required for Driver and Subdriver roles",
+        message: "Vehicle Number is required for Subdriver role",
       },
       trim: true,
     },

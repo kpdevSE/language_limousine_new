@@ -181,12 +181,13 @@ const updateWaitingTime = async (req, res) => {
       });
     }
 
-    // Current server time in HH:MM:SS
+    // Current server time in HH:MM:SS for Canada timezone
     const nowTime = new Date().toLocaleTimeString("en-US", {
       hour12: false,
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
+      timeZone: "America/Vancouver",
     });
 
     // Check if waiting time already exists for this student and date
