@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
-
+//use state
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
