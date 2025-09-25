@@ -9,7 +9,10 @@ const connectDB = require("./config/db");
 const app = express();
 
 // Connect to database
-connectDB();
+connectDB().catch((error) => {
+  console.error("Failed to connect to database:", error);
+  process.exit(1);
+});
 
 // Security middleware
 app.use(helmet());
