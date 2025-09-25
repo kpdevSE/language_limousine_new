@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Search,
   User,
@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Eye,
   EyeOff,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,15 +44,17 @@ export default function Schools() {
 
   const [schools, setSchools] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState("10");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetchingSchools, setIsFetchingSchools] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const searchInputRef = useRef(null);
 
   // Get auth token from sessionStorage (matching your sidebar logout function)
   const getAuthToken = () => {
@@ -82,13 +85,9 @@ export default function Schools() {
     }
   );
 
-  // Fetch schools on component mount and when search/pagination changes
-  useEffect(() => {
-    fetchSchools();
-  }, [currentPage, searchTerm, entriesPerPage]);
-
-  const fetchSchools = async () => {
-    setIsFetchingSchools(true);
+  // Fetch schools function - only called manually
+  const fetchSchools = async (searchTerm = "") => {
+    setIsSearching(true);
     try {
       const token = getAuthToken();
       if (!token) {
@@ -126,9 +125,14 @@ export default function Schools() {
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
-      setIsFetchingSchools(false);
+      setIsSearching(false);
     }
   };
+
+  // Load schools on component mount
+  useEffect(() => {
+    fetchSchools();
+  }, [currentPage, entriesPerPage]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -298,10 +302,13 @@ export default function Schools() {
   };
 
   const handleDelete = async (schoolId) => {
+    console.log("Delete button clicked for school ID:", schoolId);
+
     if (!window.confirm("Are you sure you want to delete this school?")) {
       return;
     }
 
+    setIsDeleting(true);
     try {
       const token = getAuthToken();
       if (!token) {
@@ -310,7 +317,9 @@ export default function Schools() {
         return;
       }
 
+      console.log("Attempting to delete school with ID:", schoolId);
       const response = await apiClient.delete(`/users/${schoolId}`);
+      console.log("Delete response:", response.data);
 
       if (response.data.success) {
         const successMessage = "School deleted successfully!";
@@ -319,6 +328,10 @@ export default function Schools() {
 
         // Refresh the schools list
         await fetchSchools();
+      } else {
+        console.error("Delete failed:", response.data.message);
+        setError(response.data.message || "Failed to delete school");
+        toast.error(response.data.message || "Failed to delete school");
       }
     } catch (err) {
       console.error("Delete error:", err);
@@ -335,12 +348,31 @@ export default function Schools() {
 
       setError(errorMessage);
       toast.error(errorMessage);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page when searching
+  // New search handlers
+  const handleSearchInputChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSearchSubmit = () => {
+    setCurrentPage(1);
+    fetchSchools(searchQuery);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setCurrentPage(1);
+    fetchSchools(""); // Show all schools
+  };
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearchSubmit();
+    }
   };
 
   const handleEntriesPerPageChange = (value) => {
@@ -361,16 +393,56 @@ export default function Schools() {
         {/* Header */}
         <div className="bg-white px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between max-w-7xl mx-auto">
-            {/* Search Bar */}
-            <div className="relative flex-1 max-w-md mx-auto">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                type="text"
-                placeholder="Type to search..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="w-full bg-gray-50 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-sm"
-              />
+            {/* Modern Search Bar */}
+            <div className="flex items-center space-x-3 flex-1 max-w-lg mx-auto">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search schools by name, email, or ID..."
+                  value={searchQuery}
+                  onChange={handleSearchInputChange}
+                  onKeyPress={handleSearchKeyPress}
+                  className="w-full bg-white text-gray-900 pl-10 pr-12 py-3 rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 text-sm shadow-sm transition-all duration-200"
+                  disabled={isSearching}
+                  autoComplete="off"
+                />
+                {searchQuery && !isSearching && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                    type="button"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                {isSearching && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                  </div>
+                )}
+              </div>
+              <Button
+                onClick={handleSearchSubmit}
+                disabled={isSearching}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                type="button"
+              >
+                {isSearching ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4 mr-2" />
+                    Search
+                  </>
+                )}
+              </Button>
             </div>
 
             {/* Admin User */}
@@ -566,7 +638,7 @@ export default function Schools() {
                     <Select
                       value={entriesPerPage}
                       onValueChange={handleEntriesPerPageChange}
-                      disabled={isFetchingSchools}
+                      disabled={isSearching}
                     >
                       <SelectTrigger className="w-20 bg-white text-gray-900 border-gray-300">
                         <SelectValue />
@@ -598,16 +670,58 @@ export default function Schools() {
                     </span>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-gray-700 text-sm">Search:</Label>
-                    <Input
-                      type="text"
-                      value={searchTerm}
-                      onChange={handleSearchChange}
-                      className="bg-white text-gray-900 border-gray-300 text-sm w-48"
-                      placeholder="Search schools..."
-                      disabled={isFetchingSchools}
-                    />
+                  <div className="flex items-center space-x-3">
+                    <Label className="text-gray-700 text-sm font-medium">
+                      Search:
+                    </Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <Input
+                        ref={searchInputRef}
+                        type="text"
+                        value={searchQuery}
+                        onChange={handleSearchInputChange}
+                        onKeyPress={handleSearchKeyPress}
+                        className="bg-white text-gray-900 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm w-64 pl-10 pr-10 py-2 rounded-lg shadow-sm transition-all duration-200"
+                        placeholder="Search schools..."
+                        disabled={isSearching}
+                        autoComplete="off"
+                      />
+                      {searchQuery && !isSearching && (
+                        <button
+                          onClick={handleClearSearch}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                          type="button"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                      {isSearching && (
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-500 border-t-transparent"></div>
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      onClick={handleSearchSubmit}
+                      disabled={isSearching}
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 text-sm rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      type="button"
+                    >
+                      {isSearching ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                          Searching
+                        </>
+                      ) : (
+                        <>
+                          <Search className="h-3 w-3 mr-1" />
+                          Search
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -639,13 +753,16 @@ export default function Schools() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {isFetchingSchools ? (
+                    {isSearching ? (
                       <TableRow className="border-gray-200">
                         <TableCell
                           colSpan={7}
                           className="text-gray-700 text-center py-8"
                         >
-                          Loading schools...
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                            <span>Searching schools...</span>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ) : schools.length === 0 ? (
@@ -695,10 +812,10 @@ export default function Schools() {
                               size="sm"
                               onClick={() => handleDelete(school._id)}
                               className="bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
-                              disabled={isFetchingSchools}
+                              disabled={isSearching || isDeleting}
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
-                              Delete
+                              {isDeleting ? "Deleting..." : "Delete"}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -718,7 +835,7 @@ export default function Schools() {
                     <div className="flex space-x-2">
                       <Button
                         onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1 || isFetchingSchools}
+                        disabled={currentPage === 1 || isSearching}
                         variant="outline"
                         size="sm"
                         className="disabled:opacity-50 disabled:cursor-not-allowed"
@@ -727,9 +844,7 @@ export default function Schools() {
                       </Button>
                       <Button
                         onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={
-                          currentPage === totalPages || isFetchingSchools
-                        }
+                        disabled={currentPage === totalPages || isSearching}
                         variant="outline"
                         size="sm"
                         className="disabled:opacity-50 disabled:cursor-not-allowed"
