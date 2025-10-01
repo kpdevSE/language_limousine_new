@@ -122,11 +122,14 @@ export default function StatusPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div
+      className="flex min-h-screen bg-white light"
+      style={{ colorScheme: "light" }}
+    >
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 ml-0 md:ml-64 min-h-screen w-full bg-white">
+      <div className="flex-1 ml-0 md:ml-64 min-h-screen w-full bg-white light">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200">
           <div className="flex items-center justify-between px-4 md:px-6 py-4 max-w-7xl mx-auto">
@@ -246,6 +249,7 @@ export default function StatusPage() {
               <Tabs defaultValue="waiting">
                 <TabsList>
                   <TabsTrigger value="waiting">Waiting Students</TabsTrigger>
+                  <TabsTrigger value="inCar">In Car Students</TabsTrigger>
                   <TabsTrigger value="completed">
                     Completed Students
                   </TabsTrigger>
@@ -264,6 +268,9 @@ export default function StatusPage() {
                           </th>
                           <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
                             Arrival Time
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
+                            Pickup Time
                           </th>
                           <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
                             Student No
@@ -285,7 +292,7 @@ export default function StatusPage() {
                       <tbody>
                         {isLoading ? (
                           <tr>
-                            <td colSpan="8" className="p-8 text-center">
+                            <td colSpan="9" className="p-8 text-center">
                               <div className="flex flex-col items-center gap-3 text-gray-500">
                                 <Loader2 className="h-12 w-12 text-gray-300 animate-spin" />
                                 <p className="text-lg font-medium">
@@ -297,7 +304,7 @@ export default function StatusPage() {
                         ) : studentsData.filter((s) => s.status === "Waiting")
                             .length === 0 ? (
                           <tr>
-                            <td colSpan="8" className="p-8 text-center">
+                            <td colSpan="9" className="p-8 text-center">
                               <div className="flex flex-col items-center gap-3 text-gray-500">
                                 <AlertCircle className="h-12 w-12 text-gray-300" />
                                 <p className="text-lg font-medium">
@@ -334,6 +341,128 @@ export default function StatusPage() {
                                   ) ||
                                     student.actualArrivalTime ||
                                     student.arrivalTime ||
+                                    "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {formatTime(student.pickupTime) ||
+                                    student.pickupTimeFormatted ||
+                                    "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.studentNo || "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.studentGivenName}{" "}
+                                  {student.studentFamilyName}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.flight || "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.hostGivenName || "N/A"}
+                                </td>
+                                <td className="p-3 text-xs text-gray-800">
+                                  {student.address || "N/A"}
+                                </td>
+                              </tr>
+                            ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="inCar">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[40px]">
+                            Excel Order
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Status
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
+                            Arrival Time
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
+                            Pickup Time
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Student No
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Student Name
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Flight
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                            Host Name
+                          </th>
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 min-w-[120px]">
+                            Address
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {isLoading ? (
+                          <tr>
+                            <td colSpan="9" className="p-8 text-center">
+                              <div className="flex flex-col items-center gap-3 text-gray-500">
+                                <Loader2 className="h-12 w-12 text-gray-300 animate-spin" />
+                                <p className="text-lg font-medium">
+                                  Loading students...
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : studentsData.filter((s) => s.status === "In Car")
+                            .length === 0 ? (
+                          <tr>
+                            <td colSpan="9" className="p-8 text-center">
+                              <div className="flex flex-col items-center gap-3 text-gray-500">
+                                <AlertCircle className="h-12 w-12 text-gray-300" />
+                                <p className="text-lg font-medium">
+                                  No students in car.
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          studentsData
+                            .filter((s) => s.status === "In Car")
+                            .map((student, index) => (
+                              <tr
+                                key={student._id}
+                                className="border-gray-200 hover:bg-gray-50"
+                              >
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {student.excelOrder || index + 1}
+                                </td>
+                                <td className="p-3 border-r border-gray-200">
+                                  <Badge
+                                    className={getStatusColor(student.status)}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      {getStatusIcon(student.status)}
+                                      {student.status}
+                                    </div>
+                                  </Badge>
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {formatTime(
+                                    student.actualArrivalTime ||
+                                      student.arrivalTime
+                                  ) ||
+                                    student.actualArrivalTime ||
+                                    student.arrivalTime ||
+                                    "N/A"}
+                                </td>
+                                <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                                  {formatTime(student.pickupTime) ||
+                                    student.pickupTimeFormatted ||
                                     "N/A"}
                                 </td>
                                 <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
@@ -374,10 +503,10 @@ export default function StatusPage() {
                           <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
                             Arrival Time
                           </th>
-                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
                             Pickup Time
                           </th>
-                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                          <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
                             Delivery Time
                           </th>
                           <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">

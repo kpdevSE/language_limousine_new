@@ -5,7 +5,7 @@ import { studentAPI } from "@/lib/api";
 import { toast } from "react-toastify";
 
 export default function StudentDetails() {
-  const [selectedDate, setSelectedDate] = useState(""); // Empty by default to show all students
+  const [selectedDate, setSelectedDate] = useState(""); // Will be set to current date
 
   const [searchTerm, setSearchTerm] = useState("");
   const [studentsData, setStudentsData] = useState([]);
@@ -26,6 +26,18 @@ export default function StudentDetails() {
         console.error("Error parsing user data:", error);
       }
     }
+  }, []);
+
+  // Set current date by default
+  useEffect(() => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Vancouver",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+    const get = (type) => parts.find((p) => p.type === type)?.value || "";
+    setSelectedDate(`${get("year")}-${get("month")}-${get("day")}`);
   }, []);
 
   // Fetch students when filters change (only when a date is selected)
@@ -77,11 +89,11 @@ export default function StudentDetails() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-white light">
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 ml-0 md:ml-64 min-h-screen w-full bg-white">
+      <div className="flex-1 ml-0 md:ml-64 min-h-screen w-full bg-white light">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200">
           <div className="flex items-center justify-between px-4 md:px-6 py-4 max-w-7xl mx-auto">
@@ -136,7 +148,7 @@ export default function StudentDetails() {
                 <div className="flex-1 space-y-2">
                   <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Select the Date (Optional)
+                    Select the Date
                   </label>
                   <div className="flex gap-2">
                     <input
@@ -197,7 +209,7 @@ export default function StudentDetails() {
               <p className="text-sm text-gray-500">
                 {selectedDate && selectedDate.trim() !== ""
                   ? `Students for ${selectedDate}`
-                  : "Select a date to view students"}
+                  : "Loading students for today..."}
               </p>
             </div>
 
@@ -269,7 +281,7 @@ export default function StudentDetails() {
                           <div className="flex flex-col items-center gap-3 text-gray-500">
                             <Search className="h-12 w-12 text-gray-300" />
                             <p className="text-lg font-medium">
-                              Please select a date to view students.
+                              Loading students for today...
                             </p>
                           </div>
                         </td>

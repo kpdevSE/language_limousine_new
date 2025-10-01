@@ -41,7 +41,7 @@ import AdminRegister from "./pages/admin/AdminRegister";
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <ToastContainer
         position="top-right"
         autoClose={5000}
