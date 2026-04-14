@@ -257,7 +257,7 @@ const getAssignments = async (req, res) => {
     let findQuery = StudentAssignment.find(query)
       .populate(
         "studentId",
-        "studentNo studentGivenName studentFamilyName arrivalTime flight dOrI hostGivenName phone school address city"
+        "trip studentNo studentGivenName studentFamilyName arrivalTime actualArrivalTime flight dOrI mOrF hostGivenName hostFamilyName phone school address city specialInstructions studyPermit client excelOrder"
       )
       .populate("driverId", "username driverID vehicleNumber")
       .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -525,7 +525,7 @@ const getDriverAssignments = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime actualArrivalTime flight dOrI hostGivenName phone school address city"
+          "trip studentNo studentGivenName studentFamilyName arrivalTime actualArrivalTime flight dOrI mOrF hostGivenName hostFamilyName phone school address city specialInstructions studyPermit client excelOrder"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")
@@ -620,7 +620,7 @@ const getDriverCompletedTasks = async (req, res) => {
       StudentAssignment.find(query)
         .populate(
           "studentId",
-          "studentNo studentGivenName studentFamilyName arrivalTime actualArrivalTime flight dOrI hostGivenName phone school address city"
+          "trip studentNo studentGivenName studentFamilyName arrivalTime actualArrivalTime flight dOrI mOrF hostGivenName hostFamilyName phone school address city specialInstructions studyPermit client excelOrder"
         )
         .populate("driverId", "username driverID vehicleNumber")
         .populate("subdriverId", "username subdriverID vehicleNumber")

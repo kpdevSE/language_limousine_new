@@ -219,7 +219,7 @@ export default function Dashboard() {
                   setCurrentPage(1);
                 }}
                 variant={showCompletedTasks ? "default" : "outline"}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm"
+                className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded text-sm"
               >
                 {showCompletedTasks ? "Show All Tasks" : "Show Completed Tasks"}
               </Button>
@@ -242,7 +242,7 @@ export default function Dashboard() {
               <span className="text-gray-900 font-medium text-sm md:text-base">
                 Driver User
               </span>
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
             </div>
@@ -254,7 +254,7 @@ export default function Dashboard() {
           <div className="max-w-7xl mx-auto">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card className="bg-blue-50 border-blue-200">
+              <Card className="bg-gray-50 border-gray-300">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -267,7 +267,7 @@ export default function Dashboard() {
                         {totalAssignments}
                       </p>
                     </div>
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                       <User className="h-4 w-4 text-white" />
                     </div>
                   </div>
@@ -276,7 +276,7 @@ export default function Dashboard() {
 
               {!showCompletedTasks && (
                 <>
-                  <Card className="bg-yellow-50 border-yellow-200">
+                  <Card className="bg-gray-50 border-gray-300">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -291,21 +291,21 @@ export default function Dashboard() {
                             }
                           </p>
                         </div>
-                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                           <XCircle className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-green-50 border-green-200">
+                  <Card className="bg-gray-50 border-gray-300">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-green-600">
+                          <p className="text-sm font-medium text-gray-600">
                             Completed Pickup
                           </p>
-                          <p className="text-2xl font-bold text-green-900">
+                          <p className="text-2xl font-bold text-gray-900">
                             {
                               assignments.filter(
                                 (a) => a.pickupStatus === "Completed"
@@ -313,21 +313,21 @@ export default function Dashboard() {
                             }
                           </p>
                         </div>
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                           <CheckCircle className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-purple-50 border-purple-200">
+                  <Card className="bg-gray-50 border-gray-300">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-purple-600">
+                          <p className="text-sm font-medium text-gray-600">
                             Completed Delivery
                           </p>
-                          <p className="text-2xl font-bold text-purple-900">
+                          <p className="text-2xl font-bold text-gray-900">
                             {
                               assignments.filter(
                                 (a) => a.deliveryStatus === "Completed"
@@ -335,7 +335,7 @@ export default function Dashboard() {
                             }
                           </p>
                         </div>
-                        <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                           <CheckCircle className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -346,14 +346,14 @@ export default function Dashboard() {
 
               {showCompletedTasks && (
                 <>
-                  <Card className="bg-green-50 border-green-200">
+                  <Card className="bg-gray-50 border-gray-300">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-green-600">
+                          <p className="text-sm font-medium text-gray-600">
                             Completed Pickups
                           </p>
-                          <p className="text-2xl font-bold text-green-900">
+                          <p className="text-2xl font-bold text-gray-900">
                             {
                               assignments.filter(
                                 (a) => a.pickupStatus === "Completed"
@@ -361,21 +361,21 @@ export default function Dashboard() {
                             }
                           </p>
                         </div>
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                           <CheckCircle className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-purple-50 border-purple-200">
+                  <Card className="bg-gray-50 border-gray-300">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-purple-600">
+                          <p className="text-sm font-medium text-gray-600">
                             Completed Deliveries
                           </p>
-                          <p className="text-2xl font-bold text-purple-900">
+                          <p className="text-2xl font-bold text-gray-900">
                             {
                               assignments.filter(
                                 (a) => a.deliveryStatus === "Completed"
@@ -383,21 +383,21 @@ export default function Dashboard() {
                             }
                           </p>
                         </div>
-                        <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                           <CheckCircle className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-orange-50 border-orange-200">
+                  <Card className="bg-gray-50 border-gray-300">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-orange-600">
+                          <p className="text-sm font-medium text-gray-600">
                             Fully Completed
                           </p>
-                          <p className="text-2xl font-bold text-orange-900">
+                          <p className="text-2xl font-bold text-gray-900">
                             {
                               assignments.filter(
                                 (a) =>
@@ -407,7 +407,7 @@ export default function Dashboard() {
                             }
                           </p>
                         </div>
-                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                           <CheckCircle className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -447,14 +447,9 @@ export default function Dashboard() {
             <Card className="bg-white border-gray-200 overflow-hidden shadow-sm">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[800px]">
+                  <table className="w-full min-w-[1600px]">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                          <span className="text-xs md:text-sm">
-                            Excel Order
-                          </span>
-                        </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                           <span className="text-xs md:text-sm">Pick Up</span>
                         </th>
@@ -462,36 +457,52 @@ export default function Dashboard() {
                           <span className="text-xs md:text-sm">Delivered</span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                          <span className="text-xs md:text-sm">Flight</span>
+                          <span className="text-xs md:text-sm">Trip</span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                          <span className="text-xs md:text-sm">
-                            Actual Arrival Time
-                          </span>
+                          <span className="text-xs md:text-sm">Arr Time</span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">Flight #</span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                           <span className="text-xs md:text-sm">D/I</span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                          <span className="text-xs md:text-sm">
-                            Student Number
-                          </span>
+                          <span className="text-xs md:text-sm">M or F</span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                          <span className="text-xs md:text-sm">
-                            Student Given Name
-                          </span>
+                          <span className="text-xs md:text-sm">Student Numb</span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                          <span className="text-xs md:text-sm">
-                            Student Family Name
-                          </span>
+                          <span className="text-xs md:text-sm">Student Given Name</span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">Student Family Name</span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">Host Given Name</span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">Host Family Name</span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">Phone</span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                           <span className="text-xs md:text-sm">Address</span>
                         </th>
                         <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                           <span className="text-xs md:text-sm">City</span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">Special Instructions</span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">Study Permit Y/N</span>
+                        </th>
+                        <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                          <span className="text-xs md:text-sm">Client</span>
                         </th>
                         {!showCompletedTasks && (
                           <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
@@ -500,9 +511,7 @@ export default function Dashboard() {
                         )}
                         {showCompletedTasks && (
                           <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                            <span className="text-xs md:text-sm">
-                              Completion Time
-                            </span>
+                            <span className="text-xs md:text-sm">Completion Time</span>
                           </th>
                         )}
                       </tr>
@@ -511,7 +520,7 @@ export default function Dashboard() {
                       {isLoading ? (
                         <tr className="border-gray-200">
                           <td
-                            colSpan={12}
+                            colSpan={showCompletedTasks ? 19 : 20}
                             className="text-gray-700 text-center py-8 px-4 border-b border-gray-200 text-sm"
                           >
                             <div className="flex items-center justify-center">
@@ -527,15 +536,11 @@ export default function Dashboard() {
                             className="border-gray-200 hover:bg-gray-50 transition-colors"
                           >
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                              {assignment.studentId?.excelOrder ||
-                                assignment._id.slice(-6)}
-                            </td>
-                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               <span
                                 className={`px-2 py-1 rounded-full text-xs ${
                                   assignment.pickupStatus === "Completed"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-yellow-100 text-yellow-800"
+                                    ? "bg-gray-200 text-gray-800"
+                                    : "bg-gray-100 text-gray-600"
                                 }`}
                               >
                                 {assignment.pickupStatus}
@@ -545,21 +550,27 @@ export default function Dashboard() {
                               <span
                                 className={`px-2 py-1 rounded-full text-xs ${
                                   assignment.deliveryStatus === "Completed"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-red-100 text-red-800"
+                                    ? "bg-gray-200 text-gray-800"
+                                    : "bg-gray-100 text-gray-600"
                                 }`}
                               >
                                 {assignment.deliveryStatus}
                               </span>
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              {assignment.studentId?.trip}
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              {assignment.studentId?.actualArrivalTime || assignment.studentId?.arrivalTime}
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               {assignment.studentId?.flight}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                              {assignment.studentId?.actualArrivalTime}
+                              {assignment.studentId?.dOrI}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                              {assignment.studentId?.dOrI}
+                              {assignment.studentId?.mOrF}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               {assignment.studentId?.studentNo}
@@ -571,10 +582,51 @@ export default function Dashboard() {
                               {assignment.studentId?.studentFamilyName}
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                              {assignment.studentId?.address}
+                              {assignment.studentId?.hostGivenName}
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              {assignment.studentId?.hostFamilyName}
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              <div className="max-w-[120px] truncate">
+                                {assignment.studentId?.phone && assignment.studentId.phone !== "N/A" ? (
+                                  (() => {
+                                    const numbersOnly = assignment.studentId.phone.replace(/[^0-9]/g, '');
+                                    return numbersOnly ? (
+                                      <a
+                                        href={`tel:${numbersOnly}`}
+                                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors"
+                                        title={`Call ${numbersOnly}`}
+                                      >
+                                        {assignment.studentId.phone}
+                                      </a>
+                                    ) : (
+                                      assignment.studentId.phone
+                                    );
+                                  })()
+                                ) : (
+                                  "N/A"
+                                )}
+                              </div>
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              <div className="max-w-[150px] truncate">
+                                {assignment.studentId?.address}
+                              </div>
                             </td>
                             <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                               {assignment.studentId?.city}
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              <div className="max-w-[120px] truncate">
+                                {assignment.studentId?.specialInstructions || '-'}
+                              </div>
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              {assignment.studentId?.studyPermit}
+                            </td>
+                            <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                              {assignment.studentId?.client}
                             </td>
                             {!showCompletedTasks && (
                               <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
@@ -659,7 +711,7 @@ export default function Dashboard() {
                       ) : (
                         <tr className="border-gray-200">
                           <td
-                            colSpan={12}
+                            colSpan={showCompletedTasks ? 19 : 20}
                             className="text-gray-700 text-center py-8 px-4 border-b border-gray-200 text-sm"
                           >
                             {totalAssignments === 0
@@ -701,7 +753,7 @@ export default function Dashboard() {
                       onClick={() => handlePageChange(pageNumber)}
                       className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                         currentPage === pageNumber
-                          ? "bg-blue-500 text-white"
+                          ? "bg-black text-white"
                           : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                       }`}
                     >
@@ -718,7 +770,7 @@ export default function Dashboard() {
                       onClick={() => handlePageChange(totalPages)}
                       className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                         currentPage === totalPages
-                          ? "bg-blue-500 text-white"
+                          ? "bg-black text-white"
                           : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                       }`}
                     >

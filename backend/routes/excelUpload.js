@@ -1,5 +1,7 @@
 const express = require("express");
 const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const {
   uploadExcelFile,
   getUploadTemplate,
@@ -40,6 +42,44 @@ const upload = multer({
 
 // GET /api/excel-upload/template - Get upload template structure
 router.get("/template", authenticateToken, getUploadTemplate);
+
+// GET /api/excel-upload/download-template - Download actual Excel template file
+router.get("/download-template", authenticateToken, (req, res) => {
+  try {
+    const templatePath = path.join(__dirname, '../templates/User_Upload_Template.xlsx');
+    
+    // Check if template file exists
+    if (!fs.existsSync(templatePath)) {
+      return res.status(404).json({
+        success: false,
+        message: "Template file not found. Please contact administrator."
+      });
+    }
+
+    // Set headers for file download
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="Student_Upload_Template.xlsx"');
+    
+    // Send the file
+    res.sendFile(templatePath, (err) => {
+      if (err) {
+        console.error('Error sending template file:', err);
+        if (!res.headersSent) {
+          res.status(500).json({
+            success: false,
+            message: "Error downloading template file"
+          });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Template download error:', error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+});
 
 // POST /api/excel-upload/students - Upload Excel file and process students
 router.post(

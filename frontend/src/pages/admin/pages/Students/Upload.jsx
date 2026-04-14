@@ -250,35 +250,113 @@ export default function Upload() {
         return;
       }
 
-      const response = await apiClient.get("/excel-upload/template");
+      // Show loading state
+      toast.info("Preparing Excel template for download...");
 
-      if (response.data.success) {
-        const template = response.data.data;
+      // Call the download-template endpoint to get the actual Excel file
+      const response = await fetch(`${API_BASE_URL}/excel-upload/download-template`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-        // Create CSV content
-        const headers = template.headers.join(",");
-        const sampleRow = Object.values(template.sampleData[0]).join(",");
-        const csvContent = `${headers}\n${sampleRow}`;
-
-        // Create and download file
-        const blob = new Blob([csvContent], { type: "text/csv" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "student_upload_template.csv";
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-
-        toast.success(
-          "Template downloaded successfully! School and Client will be automatically extracted from the Excel file."
-        );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      // Get the blob data
+      const blob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Student_Upload_Template.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("Excel template downloaded successfully! Use this template with the exact headers provided.");
+      
     } catch (err) {
       console.error("Download template error:", err);
-      setError("Failed to download template");
-      toast.error("Failed to download template");
+      
+      // Fallback to the old CSV method if Excel download fails
+      try {
+        const response = await apiClient.get("/excel-upload/template");
+        if (response.data.success) {
+          const template = response.data.data;
+
+          // Create CSV content with your exact headers
+          const headers = [
+            "Trip #",
+            "Actual Arrival Time / Departure Pick Up Time", 
+            "Arr Time / Dep PU",
+            "Flight #",
+            "D/I",
+            "M or F", 
+            "Student Number",
+            "Student Given Name",
+            "Student Family Name",
+            "Host Given Name",
+            "Host Family Name",
+            "Phone H=Home C=Cell B=Business",
+            "Address",
+            "City",
+            "Special Instructions",
+            "Study Permit Y or N",
+            "School",
+            "Staff Member Assigned",
+            "Client"
+          ];
+          
+          // Sample data row
+          const sampleRow = [
+            "1",
+            "5:10 PM / 8:00 AM",
+            "5:10 PM / 8:00 AM", 
+            "TK 075",
+            "I",
+            "M",
+            "733382",
+            "Osama",
+            "Alansar",
+            "Rose",
+            "Pugosa",
+            "C=6044909182",
+            "Clinton Street",
+            "Burnaby",
+            "",
+            "N",
+            "EC",
+            "Staff Member 1",
+            "EC"
+          ];
+
+          const csvContent = `${headers.join(",")}\n${sampleRow.join(",")}`;
+
+          // Create and download CSV file
+          const blob = new Blob([csvContent], { type: "text/csv" });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "student_upload_template.csv";
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+          toast.success("CSV template downloaded as fallback. Please convert to Excel format before uploading.");
+        }
+      } catch (fallbackErr) {
+        console.error("Fallback download error:", fallbackErr);
+        setError("Failed to download template. Please try again.");
+        toast.error("Failed to download template. Please try again.");
+      }
     }
   };
 
@@ -310,7 +388,7 @@ export default function Upload() {
             {/* Admin User */}
             <div className="flex items-center space-x-3 ml-6">
               <span className="text-gray-900 font-medium">Admin User</span>
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
             </div>
@@ -327,10 +405,10 @@ export default function Upload() {
               </h1>
               <Button
                 onClick={downloadTemplate}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
+                className="bg-black hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-medium flex items-center space-x-2 shadow-md hover:shadow-lg transition-all"
               >
-                <Download className="h-4 w-4" />
-                <span>Download Template</span>
+                <Download className="h-5 w-5" />
+                <span>Download Excel Template</span>
               </Button>
             </div>
 
@@ -355,7 +433,7 @@ export default function Upload() {
             )}
 
             {success && (
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="mb-4 p-4 bg-green-50 border border-green-300 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
@@ -376,31 +454,40 @@ export default function Upload() {
             {/* Upload Form */}
             <Card className="bg-white border-gray-200 mb-8 shadow-sm">
               <CardHeader className="pb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Upload Excel File
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Select an Excel file containing student data. School and
-                  Client will be automatically extracted from the file.
-                </p>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Upload Excel File
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      Select an Excel file containing student data using the exact template format.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={downloadTemplate}
+                    variant="outline"
+                    className="border-green-600 text-green-700 hover:bg-green-100 px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Get Template</span>
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-6">
                   {/* Info Section */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0">
                         <AlertCircle className="h-5 w-5 text-blue-600" />
                       </div>
                       <div className="flex-1">
                         <h3 className="text-sm font-medium text-blue-800">
-                          Automatic Data Extraction
+                          Excel Template Required
                         </h3>
                         <p className="text-sm text-blue-700 mt-1">
-                          School and Client information will be automatically
-                          extracted from your Excel file. Make sure your Excel
-                          file contains "School" and "Client" columns with the
-                          appropriate values.
+                          Download the Excel template above and use the exact column headers provided. 
+                          Your Excel file must have all 19 columns in the correct order: Trip #, Actual Arrival Time / Departure Pick Up Time, Arr Time / Dep PU, Flight #, D/I, M or F, Student Number, Student Given Name, Student Family Name, Host Given Name, Host Family Name, Phone H=Home C=Cell B=Business, Address, City, Special Instructions, Study Permit Y or N, School, Staff Member Assigned, Client.
                         </p>
                       </div>
                     </div>
@@ -468,7 +555,7 @@ export default function Upload() {
                     <Button
                       onClick={handleUpload}
                       disabled={isUploading || !selectedFile || !date}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 flex items-center space-x-2"
+                      className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-medium disabled:opacity-50 flex items-center space-x-2"
                     >
                       <UploadIcon className="h-4 w-4" />
                       <span>
@@ -500,16 +587,16 @@ export default function Upload() {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-800">
                         {uploadResult.totalProcessed}
                       </div>
                       <div className="text-sm text-gray-600">
                         Total Processed
                       </div>
                     </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-800">
                         {uploadResult.created}
                       </div>
                       <div className="text-sm text-gray-600">
@@ -531,7 +618,7 @@ export default function Upload() {
                         <h3 className="text-md font-semibold text-gray-900 mb-3">
                           Created Students
                         </h3>
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+                        <div className="bg-green-50 border border-green-300 rounded-lg p-4 max-h-60 overflow-y-auto">
                           {uploadResult.createdStudents.map(
                             (student, index) => (
                               <div
@@ -720,19 +807,19 @@ export default function Upload() {
                 <div className="text-center py-8">
                   <FileSpreadsheet className="mx-auto h-16 w-16 text-gray-400 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Excel Upload Instructions
+                    Excel Template Instructions
                   </h3>
                   <p className="text-gray-500 mb-4">
-                    Download the template and fill in your student data, then
-                    upload the Excel file.
+                    Download the Excel template above and fill in your student data with the exact column headers provided.
                   </p>
-                  <div className="text-sm text-gray-400 space-y-1">
-                    <p>• Supported file formats: .xlsx, .xls</p>
-                    <p>• Maximum file size: 10MB</p>
-                    <p>
-                      • Student numbers will be auto-generated if not provided
-                    </p>
-                    <p>• All required fields must be filled</p>
+                  <div className="text-sm text-gray-600 space-y-2">
+                    <p><strong>Required:</strong> Use the exact 19 column headers from the template</p>
+                    <p><strong>File formats:</strong> .xlsx, .xls (Excel format required)</p>
+                    <p><strong>Maximum file size:</strong> 10MB</p>
+                    <p><strong>D/I column:</strong> Use "D" for Domestic or "I" for International</p>
+                    <p><strong>M or F column:</strong> Use "M" for Male or "F" for Female</p>
+                    <p><strong>Student Number:</strong> Can be left empty for auto-generation</p>
+                    <p><strong>Phone format:</strong> Use H=1234567890, C=1234567890, or B=1234567890</p>
                   </div>
                 </div>
               </CardContent>

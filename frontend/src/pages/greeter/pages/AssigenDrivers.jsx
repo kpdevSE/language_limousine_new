@@ -565,15 +565,15 @@ export default function AssignDrivers() {
   const getStatusColor = (status) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-gray-200 text-gray-800";
       case "in_progress":
-        return "bg-orange-100 text-orange-800";
+        return "bg-gray-100 text-gray-700";
       case "cancelled":
-        return "bg-red-100 text-red-800";
+        return "bg-gray-300 text-gray-900";
       case "pending":
-        return "bg-blue-100 text-blue-800";
+        return "bg-gray-100 text-gray-600";
       case "assigned":
-        return "bg-purple-100 text-purple-800";
+        return "bg-gray-200 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -587,13 +587,13 @@ export default function AssignDrivers() {
   const getPickupStatusColor = (status) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-gray-200 text-gray-800";
       case "in_progress":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-gray-100 text-gray-700";
       case "not_started":
         return "bg-gray-100 text-gray-800";
       case "pending":
-        return "bg-blue-100 text-blue-800";
+        return "bg-gray-100 text-gray-600";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -632,7 +632,7 @@ export default function AssignDrivers() {
               <span className="text-gray-900 font-medium text-sm md:text-base">
                 Greeter User
               </span>
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
             </div>
@@ -675,14 +675,14 @@ export default function AssignDrivers() {
 
             {/* Error/Success Messages */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+              <div className="mb-6 p-4 bg-red-50 border border-red-300 rounded-lg flex items-center space-x-2">
                 <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
                 <span className="text-red-700">{error}</span>
               </div>
             )}
 
             {success && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+              <div className="mb-6 p-4 bg-green-50 border border-green-300 rounded-lg flex items-center space-x-2">
                 <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
                 <span className="text-green-700">{success}</span>
               </div>
@@ -771,7 +771,7 @@ export default function AssignDrivers() {
                             isLoading ||
                             selectedStudents.length === 0
                           }
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isAssigning ? (
                             <>
@@ -816,7 +816,7 @@ export default function AssignDrivers() {
                 <Card className="bg-white border-gray-200 overflow-hidden shadow-sm">
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
-                      <table className="w-full min-w-[800px]">
+                      <table className="w-full min-w-[1400px]">
                         <thead>
                           <tr className="bg-gray-50">
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
@@ -841,23 +841,26 @@ export default function AssignDrivers() {
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                               <span className="text-xs md:text-sm">
-                                Excel Order
+                                Trip
                               </span>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                               <span className="text-xs md:text-sm">
-                                Arrival Time
+                                Arr Time
                               </span>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                              <span className="text-xs md:text-sm">Flight</span>
+                              <span className="text-xs md:text-sm">Flight #</span>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
-                              <span className="text-xs md:text-sm">D or I</span>
+                              <span className="text-xs md:text-sm">D/I</span>
+                            </th>
+                            <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                              <span className="text-xs md:text-sm">M or F</span>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                               <span className="text-xs md:text-sm">
-                                Student Number
+                                Student Numb
                               </span>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
@@ -867,12 +870,47 @@ export default function AssignDrivers() {
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                               <span className="text-xs md:text-sm">
+                                Student Family Name
+                              </span>
+                            </th>
+                            <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                              <span className="text-xs md:text-sm">
                                 Host Given Name
                               </span>
                             </th>
                             <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
                               <span className="text-xs md:text-sm">
-                                Phone Numbers
+                                Host Family Name
+                              </span>
+                            </th>
+                            <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                              <span className="text-xs md:text-sm">
+                                Phone
+                              </span>
+                            </th>
+                            <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                              <span className="text-xs md:text-sm">
+                                Address
+                              </span>
+                            </th>
+                            <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                              <span className="text-xs md:text-sm">
+                                City
+                              </span>
+                            </th>
+                            <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                              <span className="text-xs md:text-sm">
+                                Special Instructions
+                              </span>
+                            </th>
+                            <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                              <span className="text-xs md:text-sm">
+                                Study Permit Y/N
+                              </span>
+                            </th>
+                            <th className="text-gray-700 font-medium text-left px-2 md:px-4 py-3 border-b border-gray-200">
+                              <span className="text-xs md:text-sm">
+                                Client
                               </span>
                             </th>
                           </tr>
@@ -882,7 +920,7 @@ export default function AssignDrivers() {
                           {isLoading ? (
                             <tr className="border-gray-200">
                               <td
-                                colSpan={9}
+                                colSpan={18}
                                 className="text-gray-700 text-center py-8 px-4 border-b border-gray-200 text-sm"
                               >
                                 <div className="flex items-center justify-center">
@@ -911,10 +949,10 @@ export default function AssignDrivers() {
                                   />
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                                  {student.excelOrder || student._id.slice(-6)}
+                                  {student.trip}
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                                  {student.actualArrivalTime}
+                                  {student.actualArrivalTime || student.arrivalTime}
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                                   {student.flight}
@@ -923,25 +961,70 @@ export default function AssignDrivers() {
                                   {student.dOrI}
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                                  {student.mOrF}
+                                </td>
+                                <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                                   {student.studentNo}
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                                   {student.studentGivenName}
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                                  {student.studentFamilyName}
+                                </td>
+                                <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
                                   {student.hostGivenName}
                                 </td>
                                 <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
-                                  <div className="max-w-[150px] truncate">
-                                    {student.phone}
+                                  {student.hostFamilyName}
+                                </td>
+                                <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                                  <div className="max-w-[120px] truncate">
+                                    {student.phone && student.phone !== "N/A" ? (
+                                      (() => {
+                                        const numbersOnly = student.phone.replace(/[^0-9]/g, '');
+                                        return numbersOnly ? (
+                                          <a
+                                            href={`tel:${numbersOnly}`}
+                                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors"
+                                            title={`Call ${numbersOnly}`}
+                                          >
+                                            {student.phone}
+                                          </a>
+                                        ) : (
+                                          student.phone
+                                        );
+                                      })()
+                                    ) : (
+                                      student.phone || "N/A"
+                                    )}
                                   </div>
+                                </td>
+                                <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                                  <div className="max-w-[150px] truncate">
+                                    {student.address}
+                                  </div>
+                                </td>
+                                <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                                  {student.city}
+                                </td>
+                                <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                                  <div className="max-w-[120px] truncate">
+                                    {student.specialInstructions || '-'}
+                                  </div>
+                                </td>
+                                <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                                  {student.studyPermit}
+                                </td>
+                                <td className="text-gray-700 px-2 md:px-4 py-3 border-b border-gray-200 text-xs md:text-sm">
+                                  {student.client}
                                 </td>
                               </tr>
                             ))
                           ) : (
                             <tr className="border-gray-200">
                               <td
-                                colSpan={9}
+                                colSpan={18}
                                 className="text-gray-700 text-center py-8 px-4 border-b border-gray-200 text-sm"
                               >
                                 {!selectedDate
@@ -987,7 +1070,7 @@ export default function AssignDrivers() {
                             disabled={isLoading}
                             className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                               currentPage === pageNumber
-                                ? "bg-blue-500 text-white"
+                                ? "bg-black text-white"
                                 : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                             }`}
                           >
@@ -1005,7 +1088,7 @@ export default function AssignDrivers() {
                             disabled={isLoading}
                             className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                               currentPage === totalPages
-                                ? "bg-blue-500 text-white"
+                                ? "bg-black text-white"
                                 : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                             }`}
                           >
@@ -1236,7 +1319,7 @@ export default function AssignDrivers() {
                                           isCancelling &&
                                           cancellingId === assignment._id
                                         }
-                                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
                                         {isCancelling &&
                                         cancellingId === assignment._id ? (
@@ -1337,7 +1420,7 @@ export default function AssignDrivers() {
                               disabled={isLoadingAssignments}
                               className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                                 assignmentsPage === pageNumber
-                                  ? "bg-blue-500 text-white"
+                                  ? "bg-black text-white"
                                   : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                               }`}
                             >
@@ -1359,7 +1442,7 @@ export default function AssignDrivers() {
                               disabled={isLoadingAssignments}
                               className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                                 assignmentsPage === assignmentsPages
-                                  ? "bg-blue-500 text-white"
+                                  ? "bg-black text-white"
                                   : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                               }`}
                             >
@@ -1471,7 +1554,7 @@ export default function AssignDrivers() {
                 <Button
                   onClick={confirmCancelAssignment}
                   disabled={isCancelling}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isCancelling ? (
                     <>

@@ -223,54 +223,54 @@ export default function RoleLoginDialog() {
         <DialogTrigger asChild>
           <Button
             size="lg"
-            className="bg-gradient-to-r from-blue-500 to-pink-500 hover:from-blue-600 hover:to-pink-600 text-white font-medium px-8 py-3"
+            className="bg-black hover:bg-gray-800 text-white font-medium px-8 py-3"
           >
             <LogIn className="w-5 h-5 mr-2" />
             Login
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md bg-slate-900/95 backdrop-blur-md border-white/20">
+        <DialogContent className="sm:max-w-md bg-white border-gray-300">
           <DialogHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-gradient-to-r from-blue-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-12 h-12 bg-black rounded-full flex items-center justify-center mb-4">
               <User className="w-6 h-6 text-white" />
             </div>
-            <DialogTitle className="text-2xl font-bold text-white">
+            <DialogTitle className="text-2xl font-bold text-black">
               Role-based Login
             </DialogTitle>
-            <DialogDescription className="text-gray-300">
+            <DialogDescription className="text-gray-600">
               Select your role and enter your credentials
             </DialogDescription>
-            <div className="text-center">
-              <p className="text-gray-400 text-sm mb-2">
+            {/* <div className="text-center">
+              <p className="text-gray-500 text-sm mb-2">
                 New admin?{" "}
                 <a
                   href="/admin/register"
-                  className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                  className="text-black hover:text-gray-700 underline transition-colors"
                 >
                   Register here
                 </a>
               </p>
-            </div>
+            </div> */}
           </DialogHeader>
           <div className="space-y-4">
             {success && (
-              <Alert className="border-green-500 bg-green-500/10">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <AlertDescription className="text-green-500">
+              <Alert className="border-green-500 bg-green-50">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-700">
                   Login successful! Redirecting to dashboard...
                 </AlertDescription>
               </Alert>
             )}
             {error && (
-              <Alert className="border-red-500 bg-red-500/10">
-                <AlertCircle className="h-4 w-4 text-red-500" />
-                <AlertDescription className="text-red-500">
+              <Alert className="border-red-500 bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-700">
                   {error}
                 </AlertDescription>
               </Alert>
             )}
             <div className="space-y-2">
-              <Label htmlFor="role" className="text-white">
+              <Label htmlFor="role" className="text-black">
                 Select Role
               </Label>
               <select
@@ -279,7 +279,7 @@ export default function RoleLoginDialog() {
                 value={formData.role}
                 onChange={handleRoleChange}
                 disabled={isLoading || success}
-                className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 focus:border-purple-500 focus:outline-none"
+                className="w-full bg-white border border-gray-300 text-black rounded-md px-3 py-2 focus:border-black focus:outline-none"
               >
                 <option value="" disabled>
                   Choose your role
@@ -288,7 +288,7 @@ export default function RoleLoginDialog() {
                   <option
                     key={key}
                     value={key}
-                    className="bg-slate-800 text-white"
+                    className="bg-white text-black"
                   >
                     {role.label}
                   </option>
@@ -296,7 +296,7 @@ export default function RoleLoginDialog() {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white">
+              <Label htmlFor="email" className="text-black">
                 Email Address
               </Label>
               <Input
@@ -307,12 +307,12 @@ export default function RoleLoginDialog() {
                 value={formData.email}
                 onChange={handleInputChange}
                 disabled={isLoading || success}
-                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-purple-500"
+                className="bg-white border-gray-300 text-black placeholder:text-gray-400 focus:border-black"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white">
+              <Label htmlFor="password" className="text-black">
                 Password
               </Label>
               <div className="relative">
@@ -324,14 +324,14 @@ export default function RoleLoginDialog() {
                   value={formData.password}
                   onChange={handleInputChange}
                   disabled={isLoading || success}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-purple-500 pr-10"
+                  className="bg-white border-gray-300 text-black placeholder:text-gray-400 focus:border-black pr-10"
                   required
                 />
                 <button
                   type="button"
                   onClick={togglePasswordVisibility}
                   disabled={isLoading || success}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black transition-colors"
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -345,7 +345,7 @@ export default function RoleLoginDialog() {
               <Button
                 onClick={handleSubmit}
                 disabled={isLoading || success}
-                className="w-full bg-gradient-to-r from-blue-500 to-pink-500 hover:from-blue-600 hover:to-pink-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50"
+                className="w-full bg-black hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center space-x-2">

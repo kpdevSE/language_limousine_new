@@ -193,8 +193,8 @@ export default function Sidebar() {
               : "justify-between px-3"
           } py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
             isActive
-              ? "bg-blue-600 text-white shadow-md hover:bg-blue-700"
-              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+              ? "bg-black text-white shadow-md hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
           } ${className}`}
           onClick={onClick}
         >
@@ -261,7 +261,7 @@ export default function Sidebar() {
                 !isMobile && isCollapsed ? "justify-center" : ""
               }`}
             >
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">A</span>
               </div>
               {(!isCollapsed || isMobile) && (
@@ -329,8 +329,8 @@ export default function Sidebar() {
                             <button
                               className={`w-full flex items-center space-x-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 ${
                                 isChildActive
-                                  ? "bg-blue-600 text-white shadow-md"
-                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                  ? "bg-black text-white shadow-md"
+                                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                               }`}
                               style={{
                                 transitionDelay: item.expanded

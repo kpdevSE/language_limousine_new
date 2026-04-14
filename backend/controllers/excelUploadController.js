@@ -1,5 +1,7 @@
 const XLSX = require("xlsx");
 const Student = require("../models/Student");
+const path = require("path");
+const fs = require("fs");
 const {
   generateStudentNumberFromExcel,
 } = require("../utils/studentNumberGenerator");
@@ -50,37 +52,43 @@ const parseExcelFile = (buffer) => {
 
     // Map Excel columns to our schema fields
     const columnMapping = {
+      // Your exact Excel headers - D/I and M or F are separate columns
       "Trip #": "trip",
       "Actual Arrival Time / Departure Pick Up Time": "actualArrivalTime",
-      // Common variant seen in sheets
-      "Actual Arrival Time": "actualArrivalTime",
       "Arr Time / Dep PU": "arrivalTime",
-      // Short variants
-      "Arr Time": "arrivalTime",
       "Flight #": "flight",
-      // This column is gender (Male/Female); map correctly
-      "I or M / F": "mOrF",
-      "I/ D": "dOrI",
-      "I/D": "dOrI",
+      "D/I": "dOrI",                        // Separate column for Domestic/International
+      "M or F": "mOrF",                     // Separate column for Male/Female
       "Student Number": "studentNo",
       "Student Given Name": "studentGivenName",
-      "Student Giver": "studentGivenName", // truncated header in some files
       "Student Family Name": "studentFamilyName",
-      "Student Fam Name": "studentFamilyName", // Handle truncated header
-      "Student Fam": "studentFamilyName",
       "Host Given Name": "hostGivenName",
-      "Host Give Name": "hostGivenName", // Handle truncated header
       "Host Family Name": "hostFamilyName",
-      "Host Fami Name": "hostFamilyName", // Handle truncated header
       "Phone H=Home C=Cell B=Business": "phone",
-      Address: "address",
-      City: "city",
+      "Address": "address",
+      "City": "city",
       "Special Instructions": "specialInstructions",
       "Study Permit Y or N": "studyPermit",
-      School: "school",
+      "School": "school",
       "Staff Member Assigned": "staffMemberAssigned",
+      "Client": "client",
+      
+      // Alternative/shortened headers for compatibility
+      "Trip": "trip",
+      "Arr Time": "arrivalTime",
+      "Actual Arrival Time": "actualArrivalTime",
+      "I/ D": "dOrI",
+      "I/D": "dOrI",
+      "I or M / F": "mOrF",                 // Legacy combined field
+      "Student Numb": "studentNo",
+      "Student Giver": "studentGivenName",
+      "Student Fam Name": "studentFamilyName",
+      "Student Fam": "studentFamilyName",
+      "Host Give Name": "hostGivenName",
+      "Host Fami Name": "hostFamilyName",
+      "Phone": "phone",
+      "Study Permit Y/N": "studyPermit",
       "Staff Member As": "staffMemberAssigned",
-      Client: "client",
     };
 
     const students = [];
@@ -154,11 +162,11 @@ const parseExcelFile = (buffer) => {
 
           // Handle special cases
           if (mappedField === "mOrF") {
-            // Extract gender from combined field (I/M or F)
-            const v = String(value).toUpperCase();
-            if (v.includes("F")) {
+            // Handle M or F column (separate column for gender)
+            const v = String(value).toUpperCase().trim();
+            if (v === "F" || v.includes("F")) {
               studentData.mOrF = "F";
-            } else if (v.includes("M")) {
+            } else if (v === "M" || v.includes("M")) {
               studentData.mOrF = "M";
             }
           } else if (mappedField === "dOrI") {
@@ -285,7 +293,8 @@ const uploadExcelFile = async (req, res) => {
           "Actual Arrival Time / Departure Pick Up Time",
           "Arr Time / Dep PU",
           "Flight #",
-          "I or M / F",
+          "D/I",
+          "M or F",
           "Student Number",
           "Student Given Name",
           "Student Family Name",
@@ -446,53 +455,227 @@ const uploadExcelFile = async (req, res) => {
 };
 
 /**
+ * Create Excel template file if it doesn't exist
+ */
+const createExcelTemplate = () => {
+  const templatesDir = path.join(__dirname, '../templates');
+  const templatePath = path.join(templatesDir, 'User_Upload_Template.xlsx');
+  
+  // Check if template already exists
+  if (fs.existsSync(templatePath)) {
+    return templatePath;
+  }
+
+  // Create templates directory if it doesn't exist
+  if (!fs.existsSync(templatesDir)) {
+    fs.mkdirSync(templatesDir, { recursive: true });
+  }
+
+  // Define headers exactly as users must provide them (D/I and M or F are separate columns)
+  const headers = [
+    'Trip #',
+    'Actual Arrival Time / Departure Pick Up Time',
+    'Arr Time / Dep PU',
+    'Flight #',
+    'D/I',                                  // Separate column for Domestic/International
+    'M or F',                               // Separate column for Male/Female
+    'Student Number',
+    'Student Given Name',
+    'Student Family Name',
+    'Host Given Name',
+    'Host Family Name',
+    'Phone H=Home C=Cell B=Business',
+    'Address',
+    'City',
+    'Special Instructions',
+    'Study Permit Y or N',
+    'School',
+    'Staff Member Assigned',
+    'Client'
+  ];
+
+  // Sample data rows
+  const sampleData = [
+    [
+      '1',                                    // Trip #
+      '5:10 PM / 8:00 AM',                  // Actual Arrival Time / Departure Pick Up Time
+      '5:10 PM / 8:00 AM',                  // Arr Time / Dep PU
+      'TK 075',                             // Flight #
+      'I',                                  // D/I (Domestic/International)
+      'M',                                  // M or F (Male/Female)
+      '733382',                             // Student Number
+      'Osama',                              // Student Given Name
+      'Alansar',                            // Student Family Name
+      'Rose',                               // Host Given Name
+      'Pugosa',                             // Host Family Name
+      'C=6044909182',                       // Phone H=Home C=Cell B=Business
+      'Clinton Street',                     // Address
+      'Burnaby',                            // City
+      '',                                   // Special Instructions
+      'N',                                  // Study Permit Y or N
+      'EC',                                 // School
+      'Staff Member 1',                     // Staff Member Assigned
+      'EC'                                  // Client
+    ],
+    [
+      '2',
+      '4:15 AM / 8:15 AM',
+      '4:15 AM / 8:15 AM',
+      'AM 695',
+      'I',                                  // International
+      'F',                                  // Female
+      '704047',
+      'Judith',
+      'Marcondes Armando',
+      'Maria',
+      'Santos',
+      'H=6041234567',
+      'Main Street',
+      'Vancouver',
+      'Departs @ 8:15 AM',
+      'Y',
+      'ILSC',
+      'Staff Member 2',
+      'ILSC'
+    ],
+    [
+      '3',
+      '2:00 AM / 6:00 AM',
+      '2:00 AM / 6:00 AM',
+      'AS 6047',
+      'I',
+      'F',
+      'VE158887',
+      'Mariana',
+      'Palmieri Panazzolo',
+      'Angelica',
+      'Lim',
+      'C=7782510236',
+      'Fleming Street',
+      'Vancouver',
+      'Departs @ 6:00 AM',
+      'Y',
+      'VEC',
+      'Jaskirat 1st Job',
+      'VEC'
+    ]
+  ];
+
+  try {
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheetData = [headers, ...sampleData];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // Set column widths
+    const columnWidths = [
+      { wch: 8 },   // Trip #
+      { wch: 25 },  // Actual Arrival Time / Departure Pick Up Time
+      { wch: 20 },  // Arr Time / Dep PU
+      { wch: 12 },  // Flight #
+      { wch: 6 },   // D/I
+      { wch: 8 },   // M or F
+      { wch: 15 },  // Student Number
+      { wch: 18 },  // Student Given Name
+      { wch: 20 },  // Student Family Name
+      { wch: 15 },  // Host Given Name
+      { wch: 18 },  // Host Family Name
+      { wch: 25 },  // Phone H=Home C=Cell B=Business
+      { wch: 20 },  // Address
+      { wch: 15 },  // City
+      { wch: 25 },  // Special Instructions
+      { wch: 18 },  // Study Permit Y or N
+      { wch: 12 },  // School
+      { wch: 20 },  // Staff Member Assigned
+      { wch: 12 }   // Client
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Student Upload Template');
+
+    // Write the Excel file
+    XLSX.writeFile(workbook, templatePath);
+    
+    console.log('Excel template created at:', templatePath);
+    return templatePath;
+  } catch (error) {
+    console.error('Error creating Excel template:', error);
+    throw error;
+  }
+};
+
+/**
  * Get upload template structure
  */
 const getUploadTemplate = (req, res) => {
   try {
+    // Ensure template file exists
+    createExcelTemplate();
+    
     const template = {
       headers: [
-        "Trip #",
-        "Actual Arrival Time / Departure Pick Up Time",
-        "Arr Time / Dep PU",
+        "Trip",
+        "Arr Time", 
         "Flight #",
-        "I or M / F",
-        "Student Number",
+        "D/I",
+        "M or F",
+        "Student Numb",
         "Student Given Name",
         "Student Family Name",
         "Host Given Name",
         "Host Family Name",
-        "Phone H=Home C=Cell B=Business",
+        "Phone",
         "Address",
         "City",
         "Special Instructions",
-        "Study Permit Y or N",
+        "Study Permit Y/N",
         "School",
-        "Staff Member Assigned",
         "Client",
       ],
       sampleData: [
         {
-          "Trip #": "1",
-          "Actual Arrival Time / Departure Pick Up Time": "2:00 AM / 6:00 AM",
-          "Arr Time / Dep PU": "2:00 AM / 6:00 AM",
-          "Flight #": "AS 6047",
-          "I or M / F": "F",
-          "Student Number": "VE158887",
-          "Student Given Name": "Mariana",
-          "Student Family Name": "Palmieri Panazzolo",
-          "Host Given Name": "Angelica",
-          "Host Family Name": "Lim",
-          "Phone H=Home C=Cell B=Business": "7782510236",
-          Address: "6962 Fleming St",
-          City: "Vancouver",
-          "Special Instructions": "Departs @ 6:00 AM",
-          "Study Permit Y or N": "Y",
-          School: "ILSC",
-          "Staff Member Assigned": "Jaskirat 1st Job",
-          Client: "ILSC",
+          "Trip": "1",
+          "Arr Time": "5:10 PM",
+          "Flight #": "TK 075",
+          "D/I": "I",
+          "M or F": "M",
+          "Student Numb": "733382",
+          "Student Given Name": "Osama",
+          "Student Family Name": "Alansar",
+          "Host Given Name": "Rose",
+          "Host Family Name": "Pugosa",
+          "Phone": "C=6044909182",
+          "Address": "Clinton Street",
+          "City": "Burnaby",
+          "Special Instructions": "",
+          "Study Permit Y/N": "N",
+          "School": "EC",
+          "Client": "EC",
         },
       ],
+      downloadUrl: "/api/excel-upload/download-template",
+      instructions: {
+        required: [
+          "Trip", "Arr Time", "Flight #", "D/I", "M or F",
+          "Student Given Name", "Student Family Name",
+          "Host Given Name", "Host Family Name", 
+          "Phone", "Address", "City", "School", "Client"
+        ],
+        optional: [
+          "Student Numb (auto-generated if empty)",
+          "Special Instructions",
+          "Study Permit Y/N"
+        ],
+        formats: {
+          "Trip": "1, 2, 3",
+          "Arr Time": "5:10 PM, 14:30, 2:00 AM",
+          "D/I": "D (Domestic) or I (International)",
+          "M or F": "M (Male) or F (Female)",
+          "Phone": "C=6044909182, H=7781234567, B=6049876543",
+          "Study Permit Y/N": "Y (Yes) or N (No)"
+        }
+      }
     };
 
     return res.status(200).json({
@@ -511,4 +694,5 @@ const getUploadTemplate = (req, res) => {
 module.exports = {
   uploadExcelFile,
   getUploadTemplate,
+  createExcelTemplate,
 };

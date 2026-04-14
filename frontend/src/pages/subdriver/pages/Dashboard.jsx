@@ -172,9 +172,9 @@ export default function Dashboard() {
   const getStatusColor = (status) => {
     switch (status) {
       case "Completed":
-        return "text-green-600 bg-green-100";
+        return "text-gray-800 bg-gray-200";
       case "In Progress":
-        return "text-yellow-600 bg-yellow-100";
+        return "text-gray-700 bg-gray-100";
       case "Pending":
         return "text-gray-600 bg-gray-100";
       default:
@@ -237,7 +237,7 @@ export default function Dashboard() {
           <div className="max-w-7xl mx-auto">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card className="bg-blue-50 border-blue-200">
+              <Card className="bg-gray-50 border-gray-300">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -250,7 +250,7 @@ export default function Dashboard() {
                         {totalAssignments}
                       </p>
                     </div>
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
                       <User className="h-4 w-4 text-white" />
                     </div>
                   </div>

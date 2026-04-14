@@ -234,7 +234,7 @@ export default function AdminDashboard() {
       title: "Total Schools",
       value: stats.schools.total.toString(),
       icon: User,
-      bgColor: "bg-emerald-500",
+      bgColor: "bg-black",
       trend: "+5%",
       trendUp: true,
     },
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
       title: "Total Drivers",
       value: stats.drivers.total.toString(),
       icon: Car,
-      bgColor: "bg-blue-500",
+      bgColor: "bg-black",
       trend: "+2%",
       trendUp: true,
     },
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
       title: "Total Subdrivers",
       value: stats.subdrivers.total.toString(),
       icon: Users,
-      bgColor: "bg-purple-500",
+      bgColor: "bg-black",
       trend: "+1%",
       trendUp: true,
     },
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
       title: "Total Greeters",
       value: stats.greeters.total.toString(),
       icon: UserCheck,
-      bgColor: "bg-orange-500",
+      bgColor: "bg-black",
       trend: "0%",
       trendUp: false,
     },
@@ -280,13 +280,13 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
 
       {/* Main Content Area */}
       <div className="flex-1 md:ml-64 min-h-screen w-full">
         {/* Header */}
-        <div className="bg-white px-4 md:px-6 py-4 border-b border-gray-200 shadow-sm">
+        <div className="bg-white px-4 md:px-6 py-4 border-b border-gray-300 shadow-sm">
           <div className="flex items-center justify-between max-w-7xl mx-auto">
             <div className="md:hidden w-12"></div>
 
@@ -296,7 +296,7 @@ export default function AdminDashboard() {
               <input
                 type="text"
                 placeholder="Type to search..."
-                className="w-full bg-gray-50 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-slate-400 text-sm"
+                className="w-full bg-gray-100 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-500 text-sm"
               />
             </div>
 
@@ -305,7 +305,7 @@ export default function AdminDashboard() {
               <span className="hidden sm:block text-black font-medium">
                 Admin User
               </span>
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
 
@@ -315,7 +315,7 @@ export default function AdminDashboard() {
                 disabled={loading}
                 variant="outline"
                 size="sm"
-                className="border-gray-300 hover:bg-gray-50"
+                className="border-gray-400 hover:bg-gray-100"
               >
                 <RefreshCw
                   className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
@@ -328,12 +328,12 @@ export default function AdminDashboard() {
                 disabled={loading}
                 variant="outline"
                 size="sm"
-                className={`border-gray-300 ${live ? "bg-green-50" : ""}`}
+                className={`border-gray-400 ${live ? "bg-gray-100" : ""}`}
                 title="Toggle live auto-refresh"
               >
                 <span
                   className={`h-2 w-2 rounded-full mr-2 ${
-                    live ? "bg-green-500" : "bg-gray-400"
+                    live ? "bg-black" : "bg-gray-400"
                   }`}
                 />
                 {live ? "Live On" : "Live Off"}
@@ -343,7 +343,7 @@ export default function AdminDashboard() {
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="border-red-500 text-red-600 hover:bg-red-500 hover:text-white transition-all duration-200"
+                className="border-red-500 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-200"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
@@ -415,43 +415,43 @@ export default function AdminDashboard() {
             {/* Dashboard Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               {/* Quick Actions (replaces Recent Activity) */}
-              <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-300 p-4 md:p-6 shadow-sm">
                 <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
                   Quick Actions
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-black hover:bg-gray-800 text-white"
                     onClick={() => navigate("/admin/admin-students/upload")}
                   >
                     Upload Students
                   </Button>
                   <Button
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full bg-black hover:bg-gray-800 text-white"
                     onClick={() => navigate("/admin/admin-students/add")}
                   >
                     Add Student
                   </Button>
                   <Button
-                    className="w-full bg-indigo-600 hover:bg-indigo-700"
+                    className="w-full bg-black hover:bg-gray-800 text-white"
                     onClick={() => navigate("/admin/admin-students/view")}
                   >
                     View Students
                   </Button>
                   <Button
-                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    className="w-full bg-black hover:bg-gray-800 text-white"
                     onClick={() => navigate("/admin/assigndrivers")}
                   >
                     Assign Drivers
                   </Button>
                   <Button
-                    className="w-full bg-orange-500 hover:bg-orange-600"
+                    className="w-full bg-black hover:bg-gray-800 text-white"
                     onClick={() => navigate("/admin/admin-waitingtime")}
                   >
                     Update Waiting Time
                   </Button>
                   <Button
-                    className="w-full bg-gray-700 hover:bg-gray-800"
+                    className="w-full bg-black hover:bg-gray-800 text-white"
                     onClick={() => navigate("/admin/printmap")}
                   >
                     Print Map
@@ -460,7 +460,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* System Status */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
+              <div className="bg-white rounded-2xl border border-gray-300 p-4 md:p-6 shadow-sm">
                 <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
                   System Status
                 </h2>
@@ -531,7 +531,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Additional Dashboard Content */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
+            <div className="bg-white rounded-2xl border border-gray-300 p-4 md:p-6 shadow-sm">
               <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
                 Dashboard Overview
               </h2>
@@ -541,12 +541,12 @@ export default function AdminDashboard() {
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-4">
+                <div className="bg-black text-white rounded-xl p-4">
                   <h3 className="font-medium mb-2">Today's Assignments</h3>
                   <p className="text-2xl font-bold">{recentActivity.length}</p>
-                  <p className="text-blue-100 text-sm">Active routes</p>
+                  <p className="text-gray-300 text-sm">Active routes</p>
                 </div>
-                <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl p-4">
+                <div className="bg-black text-white rounded-xl p-4">
                   <h3 className="font-medium mb-2">Completed Today</h3>
                   <p className="text-2xl font-bold">
                     {
@@ -558,7 +558,7 @@ export default function AdminDashboard() {
                     Successful deliveries
                   </p>
                 </div>
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl p-4">
+                <div className="bg-black text-white rounded-xl p-4">
                   <h3 className="font-medium mb-2">System Health</h3>
                   <p className="text-2xl font-bold">
                     {
@@ -572,7 +572,7 @@ export default function AdminDashboard() {
                     Services operational
                   </p>
                 </div>
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl p-4">
+                <div className="bg-black text-white rounded-xl p-4">
                   <h3 className="font-medium mb-2">Response Time</h3>
                   <p className="text-2xl font-bold">~2s</p>
                   <p className="text-orange-100 text-sm">
@@ -585,7 +585,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Footer */}
-        <div className="bg-white border-t border-gray-200 px-4 md:px-6 py-4 mt-6 md:mt-8">
+        <div className="bg-white border-t border-gray-300 px-4 md:px-6 py-4 mt-6 md:mt-8">
           <div className="max-w-7xl mx-auto">
             <p className="text-center text-gray-500 text-sm">
               Copyright © 2024. All right reserved.

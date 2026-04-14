@@ -300,10 +300,10 @@ export default function Sidebar() {
               : "justify-between px-3"
           } py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
             isActive
-              ? "bg-blue-600 text-white shadow-md hover:bg-blue-700"
+              ? "bg-black text-white shadow-md hover:bg-gray-800"
               : item.id === "logout"
-              ? "text-red-600 hover:bg-red-50 hover:text-red-700"
-              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+              ? "text-red-600 hover:bg-red-100 hover:text-red-700"
+              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
           } ${className}`}
           onClick={onClick}
         >
@@ -320,7 +320,7 @@ export default function Sidebar() {
 
         {/* Tooltip for collapsed state on desktop */}
         {shouldShowTooltip && (
-          <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+          <div className="absolute left-full ml-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
             {item.label}
           </div>
         )}
@@ -334,7 +334,7 @@ export default function Sidebar() {
       {isMobile && (
         <button
           onClick={toggleSidebar}
-          className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+          className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white border border-gray-400 rounded-lg shadow-sm hover:bg-gray-100 transition-colors"
         >
           {isMobileOpen ? (
             <X className="w-5 h-5 text-gray-600" />
@@ -354,7 +354,7 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <div
-        className={`bg-white border-r border-gray-200 h-screen flex flex-col transition-all duration-300 ease-in-out z-40 ${
+        className={`bg-white border-r border-gray-400 h-screen flex flex-col transition-all duration-300 ease-in-out z-40 ${
           isMobile
             ? `fixed left-0 top-0 w-64 transform ${
                 isMobileOpen ? "translate-x-0" : "-translate-x-full"
@@ -370,7 +370,7 @@ export default function Sidebar() {
                 !isMobile && isCollapsed ? "justify-center" : ""
               }`}
             >
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">A</span>
               </div>
               {(!isCollapsed || isMobile) && (
@@ -383,7 +383,7 @@ export default function Sidebar() {
             {!isMobile && (
               <button
                 onClick={toggleSidebar}
-                className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-1 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 <ChevronRight
                   className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${
@@ -438,8 +438,8 @@ export default function Sidebar() {
                             <button
                               className={`w-full flex items-center space-x-3 px-3 py-2 text-sm rounded-lg transition-all duration-150 ${
                                 isChildActive
-                                  ? "bg-blue-600 text-white shadow-md"
-                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                  ? "bg-black text-white shadow-md"
+                                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                               }`}
                               style={{
                                 transitionDelay: item.expanded

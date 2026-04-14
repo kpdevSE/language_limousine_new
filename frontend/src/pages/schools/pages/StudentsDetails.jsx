@@ -219,54 +219,66 @@ export default function StudentDetails() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[40px]">
-                        Excel Order
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        Actual arrival time
-                      </th>
-                      {/* <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
-                        Arr time
-                      </th> */}
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[80px]">
-                        Flight
-                      </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[60px]">
-                        D or I
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[60px]">
-                        M or F
+                        Trip #
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        student number
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        student given name
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        student family name
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        host given name
-                      </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
-                        host family name
+                        Actual Arrival Time / Departure Pick Up Time
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
-                        Phone
+                        Arr Time / Dep PU
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[80px]">
+                        Flight #
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[40px]">
+                        I or M
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[40px]">
+                        F
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
+                        Student Number
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                        Student Given Name
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                        Student Family Name
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                        Host Given Name
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                        Host Family Name
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                        Phone H=Home C=Cell B=Business
                       </th>
                       <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[150px]">
                         Address
                       </th>
-                      <th className="text-left p-3 text-xs font-medium text-gray-700 min-w-[80px]">
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[80px]">
                         City
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[120px]">
+                        Special Instructions
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[80px]">
+                        Study Permit Y or N
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 border-r border-gray-200 min-w-[100px]">
+                        School
+                      </th>
+                      <th className="text-left p-3 text-xs font-medium text-gray-700 min-w-[120px]">
+                        Staff Member Assigned
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {isLoading ? (
                       <tr>
-                        <td colSpan="15" className="p-8 text-center">
+                        <td colSpan="18" className="p-8 text-center">
                           <div className="flex flex-col items-center gap-3 text-gray-500">
                             <Loader className="h-12 w-12 text-gray-300 animate-spin" />
                             <p className="text-lg font-medium">
@@ -277,7 +289,7 @@ export default function StudentDetails() {
                       </tr>
                     ) : !selectedDate || selectedDate.trim() === "" ? (
                       <tr>
-                        <td colSpan="15" className="p-8 text-center">
+                        <td colSpan="18" className="p-8 text-center">
                           <div className="flex flex-col items-center gap-3 text-gray-500">
                             <Search className="h-12 w-12 text-gray-300" />
                             <p className="text-lg font-medium">
@@ -288,7 +300,7 @@ export default function StudentDetails() {
                       </tr>
                     ) : studentsData.length === 0 ? (
                       <tr>
-                        <td colSpan="15" className="p-8 text-center">
+                        <td colSpan="18" className="p-8 text-center">
                           <div className="flex flex-col items-center gap-3 text-gray-500">
                             <Search className="h-12 w-12 text-gray-300" />
                             <p className="text-lg font-medium">
@@ -308,14 +320,14 @@ export default function StudentDetails() {
                           className="border-gray-200 hover:bg-gray-50"
                         >
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.excelOrder || index + 1}
+                            {student.trip || "N/A"}
                           </td>
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
                             {student.actualArrivalTime || "N/A"}
                           </td>
-                          {/* <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
                             {student.arrivalTime || "N/A"}
-                          </td> */}
+                          </td>
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
                             {student.flight || "N/A"}
                           </td>
@@ -341,13 +353,48 @@ export default function StudentDetails() {
                             {student.hostFamilyName || "N/A"}
                           </td>
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.phone || "N/A"}
+                            <div className="max-w-[120px] truncate">
+                              {student.phone && student.phone !== "N/A" ? (
+                                (() => {
+                                  const numbersOnly = student.phone.replace(/[^0-9]/g, '');
+                                  return numbersOnly ? (
+                                    <a
+                                      href={`tel:${numbersOnly}`}
+                                      className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors"
+                                      title={`Call ${numbersOnly}`}
+                                    >
+                                      {student.phone}
+                                    </a>
+                                  ) : (
+                                    student.phone
+                                  );
+                                })()
+                              ) : (
+                                "N/A"
+                              )}
+                            </div>
                           </td>
                           <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
-                            {student.address || "N/A"}
+                            <div className="max-w-[150px] truncate">
+                              {student.address || "N/A"}
+                            </div>
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.city || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            <div className="max-w-[120px] truncate">
+                              {student.specialInstructions || "-"}
+                            </div>
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.studyPermit || "N/A"}
+                          </td>
+                          <td className="p-3 border-r border-gray-200 text-xs text-gray-800">
+                            {student.school || "N/A"}
                           </td>
                           <td className="p-3 text-xs text-gray-800">
-                            {student.city || "N/A"}
+                            {student.staffMemberAssigned || "N/A"}
                           </td>
                         </tr>
                       ))

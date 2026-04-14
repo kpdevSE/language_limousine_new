@@ -1,0 +1,11 @@
+Trip,Arr Time,Flight #,D/I,M or F,Student Numb,Student Given Name,Student Family Name,Host Given Name,Host Family Name,Phone,Address,City,Special Instructions,Study Permit Y/N,School,Client
+1,5:10 PM,TK 075,I,M,733382,Osama,Alansar,Rose,Pugosa,C=6044909182,Clinton Street,Burnaby,N,,EC,EC
+2,4:15 AM,AM 695,I,F,704047,Judith,Marcondes Armando,Maria,Santos,H=6041234567,Main Street,Vancouver,Departs @ 8:15 AM,Y,ILSC,ILSC
+3,2:00 AM,AS 6047,I,F,VE158887,Mariana,Palmieri Panazzolo,Angelica,Lim,C=7782510236,Fleming Street,Vancouver,,Y,VEC,VEC
+4,6:30 PM,AC 123,D,M,,John,Smith,David,Johnson,B=6049876543,Oak Street,Richmond,Early pickup required,N,ILAC,ILAC
+5,3:45 AM,WF 456,I,F,,Sarah,Williams,Lisa,Brown,H=7781234567,Granville Street,Vancouver,,Y,EC,EC
+6,11:20 AM,BA 789,I,M,ST001,Michael,Chen,Robert,Taylor,C=7789876543,Broadway,Vancouver,Wheelchair accessible,N,ILSC,ILSC
+7,8:15 PM,LH 321,I,F,,Emma,Rodriguez,Jennifer,Wilson,H=6042345678,Cambie Street,Richmond,Late arrival,Y,VEC,VEC
+8,1:30 PM,UA 654,D,M,DM002,James,Thompson,Mark,Anderson,B=7783456789,Hastings Street,Burnaby,,N,ILAC,ILAC
+9,7:45 AM,KL 987,I,F,,Sophie,Martin,Susan,Garcia,C=6043456789,Fraser Street,Vancouver,Special dietary needs,Y,EC,EC
+10,10:00 PM,AF 147,I,M,,Lucas,Dubois,Paul,Martinez,H=7784567890,Kingsway,Burnaby,Very late pickup,N,ILSC,ILSC

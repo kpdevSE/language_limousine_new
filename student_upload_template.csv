@@ -1,0 +1,6 @@
+Trip,Arr Time,Flight #,D/I,M or F,Student Numb,Student Given Name,Student Family Name,Host Given Name,Host Family Name,Phone,Address,City,Special Instructions,Study Permit Y/N,School,Client
+1,5:10 PM,TK 075,,M,733382,Osama,Alansar,Rose,Pugosa,C=6044909182,Clinton Street,Burnaby,N,,EC,EC
+2,4:15 AM,AM 695,,F,704047,Judith,Marcondes Armando,Maria,Santos,H=6041234567,Main Street,Vancouver,Departs @ 8:15 AM,Y,ILSC,ILSC
+3,2:00 AM,AS 6047,,F,VE158887,Mariana,Palmieri Panazzolo,Angelica,Lim,C=7782510236,Fleming Street,Vancouver,,Y,VEC,VEC
+4,6:30 PM,AC 123,,M,,John,Smith,David,Johnson,B=6049876543,Oak Street,Richmond,Early pickup required,N,ILAC,ILAC
+5,3:45 AM,WF 456,,F,,Sarah,Williams,Lisa,Brown,H=7781234567,Granville Street,Vancouver,,Y,EC,EC
