@@ -555,15 +555,15 @@ export default function AssignDrivers() {
   const getStatusColor = (status) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-gray-100 text-gray-800";
       case "in_progress":
-        return "bg-orange-100 text-orange-800";
+        return "bg-gray-200 text-gray-900";
       case "cancelled":
-        return "bg-red-100 text-red-800";
+        return "bg-gray-300 text-gray-900";
       case "pending":
-        return "bg-blue-100 text-blue-800";
+        return "bg-gray-100 text-gray-800";
       case "assigned":
-        return "bg-purple-100 text-purple-800";
+        return "bg-gray-200 text-gray-900";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -577,13 +577,13 @@ export default function AssignDrivers() {
   const getPickupStatusColor = (status) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-gray-100 text-gray-800";
       case "in_progress":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-gray-200 text-gray-900";
       case "not_started":
         return "bg-gray-100 text-gray-800";
       case "pending":
-        return "bg-blue-100 text-blue-800";
+        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -612,7 +612,7 @@ export default function AssignDrivers() {
                     ? handleSearchChange
                     : handleAssignmentSearchChange
                 }
-                className="w-full bg-gray-50 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-sm"
+                className="w-full bg-gray-50 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-black placeholder-gray-400 text-sm"
                 disabled={isLoading || isLoadingAssignments}
               />
             </div>
@@ -622,7 +622,7 @@ export default function AssignDrivers() {
               <span className="text-gray-900 font-medium text-sm md:text-base">
                 Admin User
               </span>
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
             </div>
@@ -633,7 +633,7 @@ export default function AssignDrivers() {
         <div className="p-4 md:p-6 overflow-x-hidden bg-white">
           <div className="max-w-7xl mx-auto">
             {/* Page Title */}
-            <h1 className="text-2xl font-semibold text-blue-500 mb-6">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-6">
               Driver Assignment Management
             </h1>
 
@@ -643,7 +643,7 @@ export default function AssignDrivers() {
                 onClick={() => setActiveTab("assign")}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                   activeTab === "assign"
-                    ? "bg-white text-blue-600 shadow-sm"
+                    ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
@@ -654,7 +654,7 @@ export default function AssignDrivers() {
                 onClick={() => setActiveTab("manage")}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                   activeTab === "manage"
-                    ? "bg-white text-blue-600 shadow-sm"
+                    ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
@@ -665,16 +665,16 @@ export default function AssignDrivers() {
 
             {/* Error/Success Messages */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-                <span className="text-red-700">{error}</span>
+              <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-gray-900 flex-shrink-0" />
+                <span className="text-gray-900">{error}</span>
               </div>
             )}
 
             {success && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                <span className="text-green-700">{success}</span>
+              <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center space-x-2">
+                <CheckCircle className="h-5 w-5 text-gray-900 flex-shrink-0" />
+                <span className="text-gray-900">{success}</span>
               </div>
             )}
 
@@ -762,7 +762,7 @@ export default function AssignDrivers() {
                             isLoading ||
                             selectedStudents.length === 0
                           }
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isAssigning ? (
                             <>
@@ -820,7 +820,7 @@ export default function AssignDrivers() {
                                     selectedStudents.length ===
                                       studentsData.length
                                   }
-                                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 mr-2"
+                                  className="w-4 h-4 text-gray-900 bg-gray-100 border-gray-300 rounded focus:ring-black mr-2"
                                   disabled={
                                     isLoading || studentsData.length === 0
                                   }
@@ -896,7 +896,7 @@ export default function AssignDrivers() {
                                     onChange={() =>
                                       handleCheckboxChange(student._id)
                                     }
-                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                    className="w-4 h-4 text-gray-900 bg-gray-100 border-gray-300 rounded focus:ring-black"
                                     disabled={isAssigning}
                                   />
                                 </td>
@@ -977,7 +977,7 @@ export default function AssignDrivers() {
                             disabled={isLoading}
                             className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                               currentPage === pageNumber
-                                ? "bg-blue-500 text-white"
+                                ? "bg-black text-white"
                                 : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                             }`}
                           >
@@ -995,7 +995,7 @@ export default function AssignDrivers() {
                             disabled={isLoading}
                             className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                               currentPage === totalPages
-                                ? "bg-blue-500 text-white"
+                                ? "bg-black text-white"
                                 : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                             }`}
                           >
@@ -1238,7 +1238,7 @@ export default function AssignDrivers() {
                                           isCancelling &&
                                           cancellingId === assignment._id
                                         }
-                                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="bg-gray-800 hover:bg-black text-white px-3 py-1 rounded text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
                                         {isCancelling &&
                                         cancellingId === assignment._id ? (
@@ -1262,7 +1262,7 @@ export default function AssignDrivers() {
                                       </span>
                                     )}
                                     {assignment.status === "completed" && (
-                                      <span className="text-xs text-green-600 font-medium">
+                                      <span className="text-xs text-gray-900 font-medium">
                                         ✓ Completed
                                       </span>
                                     )}
@@ -1279,7 +1279,7 @@ export default function AssignDrivers() {
 
                                     {/* Show default action for assignments without specific status */}
                                     {!assignment.status && (
-                                      <span className="text-xs text-blue-600 font-medium">
+                                      <span className="text-xs text-gray-900 font-medium">
                                         Active
                                       </span>
                                     )}
@@ -1339,7 +1339,7 @@ export default function AssignDrivers() {
                               disabled={isLoadingAssignments}
                               className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                                 assignmentsPage === pageNumber
-                                  ? "bg-blue-500 text-white"
+                                  ? "bg-black text-white"
                                   : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                               }`}
                             >
@@ -1361,7 +1361,7 @@ export default function AssignDrivers() {
                               disabled={isLoadingAssignments}
                               className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                                 assignmentsPage === assignmentsPages
-                                  ? "bg-blue-500 text-white"
+                                  ? "bg-black text-white"
                                   : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                               }`}
                             >
@@ -1473,7 +1473,7 @@ export default function AssignDrivers() {
                 <Button
                   onClick={confirmCancelAssignment}
                   disabled={isCancelling}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gray-800 hover:bg-black text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
                 >
                   {isCancelling ? (
                     <>

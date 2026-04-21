@@ -643,14 +643,14 @@ export default function Map() {
                 placeholder="Search students by name, number, or address..."
                 value={searchTerm}
                 onChange={handleSearchTermChange}
-                className="w-full bg-gray-50 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-sm"
+                className="w-full bg-gray-50 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-black placeholder-gray-400 text-sm"
               />
             </div>
 
             {/* Admin User */}
             <div className="flex items-center space-x-3 ml-6">
               <span className="text-gray-900 font-medium">Admin User</span>
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
             </div>
@@ -661,22 +661,22 @@ export default function Map() {
         <div className="p-6 overflow-x-hidden bg-white">
           <div className="max-w-7xl mx-auto">
             {/* Page Title */}
-            <h1 className="text-2xl font-semibold text-blue-500 mb-6">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-6">
               Student Locations Map - Canada
             </h1>
 
             {/* Instructions */}
             {!selectedDate && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0">
-                    <MapPin className="h-5 w-5 text-blue-400" />
+                    <MapPin className="h-5 w-5 text-gray-600" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-blue-800">
+                    <h3 className="text-sm font-medium text-gray-900">
                       How to use the Map
                     </h3>
-                    <p className="text-sm text-blue-700 mt-1">
+                    <p className="text-sm text-gray-700 mt-1">
                       1. Select a date from the calendar below
                       <br />
                       2. Click "Search Students" to load student locations for
@@ -720,7 +720,7 @@ export default function Map() {
                       <Button
                         onClick={handleSearch}
                         disabled={isLoading || !selectedDate}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium w-full h-12 disabled:opacity-50"
+                        className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-medium w-full h-12 disabled:opacity-50"
                       >
                         {isLoading ? (
                           <>
@@ -830,7 +830,7 @@ export default function Map() {
                                 key={student._id}
                                 className={`border-gray-200 hover:bg-gray-50 cursor-pointer ${
                                   selectedStudent?._id === student._id
-                                    ? "bg-blue-50"
+                                    ? "bg-gray-50"
                                     : ""
                                 }`}
                                 onClick={() => handleStudentSelect(student)}
@@ -911,7 +911,7 @@ export default function Map() {
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <MapPin className="h-5 w-5 text-blue-500" />
+                    <MapPin className="h-5 w-5 text-gray-900" />
                     <span className="text-sm text-gray-600">
                       {locationCount} locations
                     </span>

@@ -150,7 +150,7 @@ const getWaitingTimes = async (req, res) => {
 // POST /api/waiting-time - Create or update waiting time
 const updateWaitingTime = async (req, res) => {
   try {
-    const { studentId, date, waitingTime, pickupTime, notes, status } =
+    const { studentId, date, waitingTime, pickupTime, notes, status, waitingStartedAt } =
       req.body;
     const updatedBy = req.user._id;
 
@@ -201,8 +201,10 @@ const updateWaitingTime = async (req, res) => {
       // Update existing record
       waitingTimeRecord.waitingTime = waitingTime;
       if (pickupTime !== undefined) waitingTimeRecord.pickupTime = pickupTime;
-      // Set waitingStartedAt if not set yet
-      if (!waitingTimeRecord.waitingStartedAt) {
+      // Update waitingStartedAt if provided, otherwise set it if not set yet
+      if (waitingStartedAt !== undefined) {
+        waitingTimeRecord.waitingStartedAt = waitingStartedAt;
+      } else if (!waitingTimeRecord.waitingStartedAt) {
         waitingTimeRecord.waitingStartedAt = nowTime;
       }
       waitingTimeRecord.status = status || waitingTimeRecord.status;
@@ -217,7 +219,7 @@ const updateWaitingTime = async (req, res) => {
         flight: student.flight,
         arrivalTime: student.arrivalTime,
         waitingTime,
-        waitingStartedAt: nowTime,
+        waitingStartedAt: waitingStartedAt || nowTime,
         pickupTime,
         status: status || "waiting",
         notes: notes || "",

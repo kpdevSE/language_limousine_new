@@ -394,14 +394,14 @@ export default function PrintMap() {
               <Input
                 type="text"
                 placeholder="Type to search..."
-                className="w-full bg-gray-50 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-sm"
+                className="w-full bg-gray-50 text-gray-900 pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-black placeholder-gray-400 text-sm"
               />
             </div>
 
             {/* Admin User */}
             <div className="flex items-center space-x-3 ml-6">
               <span className="text-gray-900 font-medium">Admin User</span>
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
             </div>
@@ -413,7 +413,7 @@ export default function PrintMap() {
           <div className="max-w-7xl mx-auto">
             {/* Page Title */}
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-semibold text-blue-500">
+              <h1 className="text-2xl font-semibold text-gray-900">
                 Print Student Data
               </h1>
             </div>
@@ -469,7 +469,7 @@ export default function PrintMap() {
                         disabled={
                           !selectedDate || !selectedDriver || isLoadingData
                         }
-                        className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-6 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
+                        className="bg-black hover:bg-black disabled:bg-gray-300 text-white px-6 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
                       >
                         {isLoadingData ? (
                           <Loader className="h-4 w-4 animate-spin" />
@@ -551,7 +551,7 @@ export default function PrintMap() {
                         disabled={
                           !selectedDate || !selectedSubDriver || isLoadingData
                         }
-                        className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-6 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
+                        className="bg-black hover:bg-black disabled:bg-gray-300 text-white px-6 py-3 rounded-lg font-medium w-full h-12 flex items-center justify-center space-x-2"
                       >
                         {isLoadingData ? (
                           <Loader className="h-4 w-4 animate-spin" />
@@ -586,7 +586,7 @@ export default function PrintMap() {
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <Users className="h-5 w-5 text-blue-500" />
+                      <Users className="h-5 w-5 text-gray-900" />
                       Driver Data Preview
                     </h3>
                     <div className="flex gap-2">

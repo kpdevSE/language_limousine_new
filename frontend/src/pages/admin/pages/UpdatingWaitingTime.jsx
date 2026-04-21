@@ -2,8 +2,6 @@ import Sidebar from "../components/Sidebar";
 import { useState, useEffect } from "react";
 import {
   User,
-  Clock,
-  Save,
   Info,
   Timer,
   Search,
@@ -41,11 +39,9 @@ export default function UpdatingWaitingTime() {
   const [dateInputValue, setDateInputValue] = useState("");
   const [studentsData, setStudentsData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [entriesPerPage] = useState(10);
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const getAuthToken = () => {
     return (
@@ -206,18 +202,25 @@ export default function UpdatingWaitingTime() {
         return;
       }
       const minutes = diffMinutes(student.arrivalTime);
+      const currentTime = timeNow();
 
       // Update local state immediately for better UX
       setWaitingTimes((prev) => ({ ...prev, [student._id]: minutes }));
+      setWaitingStartedTimes((prev) => ({
+        ...prev,
+        [student._id]: currentTime,
+      }));
 
       const resp = await apiClient.post("/waiting-time", {
         studentId: student._id,
         date: selectedDate,
         waitingTime: minutes,
+        waitingStartedAt: currentTime, // Send the current time to backend
         status: student.status || "waiting",
       });
 
       const saved = resp?.data?.data?.waitingTime;
+      // Update with backend response to ensure consistency
       if (saved?.waitingStartedAt) {
         setWaitingStartedTimes((prev) => ({
           ...prev,
@@ -225,13 +228,19 @@ export default function UpdatingWaitingTime() {
         }));
       }
 
-      toast.success("Waiting time set");
+      const isUpdate = waitingStartedTimes[student._id];
+      toast.success(isUpdate ? "Waiting time updated" : "Waiting time set");
       // No need to reload entire data - just update the specific student
     } catch (err) {
       console.error("Error setting waiting time:", err);
       toast.error("Failed to set waiting time");
       // Revert local state on error
       setWaitingTimes((prev) => ({ ...prev, [student._id]: 0 }));
+      setWaitingStartedTimes((prev) => {
+        const newState = { ...prev };
+        delete newState[student._id];
+        return newState;
+      });
     }
   };
 
@@ -297,12 +306,12 @@ export default function UpdatingWaitingTime() {
   const getStatusColor = (status) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-gray-200 text-gray-800";
       case "picked_up":
-        return "bg-blue-100 text-blue-800";
+        return "bg-gray-300 text-gray-900";
       case "waiting":
       default:
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -343,8 +352,8 @@ export default function UpdatingWaitingTime() {
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium">Admin</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600">
-                <User className="h-5 w-5 text-primary-foreground" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black hover:bg-gray-800">
+                <User className="h-5 w-5 text-white" />
               </div>
             </div>
           </div>
@@ -383,24 +392,17 @@ export default function UpdatingWaitingTime() {
           </div>
 
           {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {success && (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>{success}</AlertDescription>
+            <Alert variant="destructive" className="bg-gray-50 border-gray-300">
+              <AlertCircle className="h-4 w-4 text-gray-700" />
+              <AlertDescription className="text-gray-700">{error}</AlertDescription>
             </Alert>
           )}
 
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
+          <Alert className="bg-gray-50 border-gray-300">
+            <Info className="h-4 w-4 text-gray-700" />
+            <AlertDescription className="text-gray-700">
               Click "Set Waiting" to capture waiting minutes (computed from
-              arrival time). Click "Mark Picked Up" to record pickup time. After
-              setting, buttons are disabled and show the captured values.
+              arrival time). Click "Update Waiting Time" to recalculate and update the time. Click "Mark Picked Up" to record pickup time.
             </AlertDescription>
           </Alert>
 
@@ -450,7 +452,7 @@ export default function UpdatingWaitingTime() {
                             </Badge>
                           </TableCell>
                           <TableCell className="font-mono text-sm">
-                            {student.actualArrivalTime}
+                            {student.arrivalTime}
                           </TableCell>
                           <TableCell className="font-mono text-sm">
                             {student.studentNo}
@@ -464,19 +466,17 @@ export default function UpdatingWaitingTime() {
                               {/* Waiting Time button */}
                               <Button
                                 size="sm"
-                                variant="outline"
-                                className="h-6 px-2 text-xs"
-                                disabled={!!waitingStartedTimes[student._id]}
+                                className="h-6 px-2 text-xs bg-black hover:bg-gray-800 text-white"
                                 onClick={() => handleSetWaitingTime(student)}
                               >
                                 {waitingStartedTimes[student._id]
-                                  ? "Waiting Set"
+                                  ? "Update Waiting Time"
                                   : "Set Waiting"}
                               </Button>
                               {waitingStartedTimes[student._id] && (
                                 <Badge
                                   variant="outline"
-                                  className="font-mono text-xs"
+                                  className="font-mono text-xs border-gray-300"
                                 >
                                   {waitingStartedTimes[student._id]}
                                 </Badge>
@@ -488,14 +488,14 @@ export default function UpdatingWaitingTime() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-6 px-2 text-xs"
+                                    className="h-6 px-2 text-xs border-gray-300"
                                     disabled
                                   >
                                     Picked Up
                                   </Button>
                                   <Badge
                                     variant="outline"
-                                    className="font-mono text-xs"
+                                    className="font-mono text-xs border-gray-300"
                                   >
                                     {pickupTimes[student._id]}
                                   </Badge>
@@ -503,11 +503,10 @@ export default function UpdatingWaitingTime() {
                               ) : (
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  className="h-6 px-2 text-xs bg-black hover:bg-gray-800 text-white"
                                   onClick={() =>
                                     handlePickupTimeUpdate(student._id)
                                   }
-                                  className="h-6 px-2 text-xs"
                                 >
                                   Mark Picked Up
                                 </Button>
@@ -584,19 +583,17 @@ export default function UpdatingWaitingTime() {
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="w-full sm:w-auto h-8 px-3 text-xs"
-                          disabled={!!waitingStartedTimes[student._id]}
+                          className="w-full sm:w-auto h-8 px-3 text-xs bg-black hover:bg-gray-800 text-white"
                           onClick={() => handleSetWaitingTime(student)}
                         >
                           {waitingStartedTimes[student._id]
-                            ? "Waiting Set"
+                            ? "Update Waiting Time"
                             : "Set Waiting"}
                         </Button>
                         {waitingStartedTimes[student._id] && (
                           <Badge
                             variant="outline"
-                            className="font-mono text-xs w-fit"
+                            className="font-mono text-xs w-fit border-gray-300"
                           >
                             {waitingStartedTimes[student._id]}
                           </Badge>
@@ -612,14 +609,14 @@ export default function UpdatingWaitingTime() {
                           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                             <Badge
                               variant="outline"
-                              className="bg-green-50 text-green-700 border-green-200 w-fit"
+                              className="bg-gray-100 text-gray-700 border-gray-300 w-fit"
                             >
                               {pickupTimes[student._id]}
                             </Badge>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="w-full sm:w-auto h-8 px-3 text-xs"
+                              className="w-full sm:w-auto h-8 px-3 text-xs border-gray-300"
                               disabled
                             >
                               Picked Up
@@ -628,9 +625,8 @@ export default function UpdatingWaitingTime() {
                         ) : (
                           <Button
                             size="sm"
-                            variant="outline"
+                            className="w-full sm:w-auto h-8 px-3 text-xs bg-black hover:bg-gray-800 text-white"
                             onClick={() => handlePickupTimeUpdate(student._id)}
-                            className="w-full sm:w-auto h-8 px-3 text-xs"
                           >
                             Mark Picked Up
                           </Button>
@@ -683,7 +679,7 @@ export default function UpdatingWaitingTime() {
                       disabled={isLoading}
                       className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                         currentPage === pageNumber
-                          ? "bg-blue-500 text-white"
+                          ? "bg-black text-white hover:bg-gray-800"
                           : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                       }`}
                     >
@@ -701,7 +697,7 @@ export default function UpdatingWaitingTime() {
                       disabled={isLoading}
                       className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm ${
                         currentPage === totalPages
-                          ? "bg-blue-500 text-white"
+                          ? "bg-black text-white hover:bg-gray-800"
                           : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                       }`}
                     >

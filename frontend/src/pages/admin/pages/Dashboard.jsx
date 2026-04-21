@@ -10,10 +10,19 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
+  Upload,
+  Plus,
+  Eye,
+  UserPlus,
+  Clock,
+  Printer,
+  MapPin,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { API_BASE_URL } from "@/lib/config";
 import { userAPI, studentAPI, assignmentAPI, waitingTimeAPI } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
@@ -380,207 +389,272 @@ export default function AdminDashboard() {
               {statsCards.map((stat) => {
                 const IconComponent = stat.icon;
                 return (
-                  <div
+                  <Card
                     key={stat.id}
-                    className={`${stat.bgColor} text-white rounded-2xl p-4 md:p-6 shadow-lg relative overflow-hidden`}
+                    className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-slate-900 to-slate-800 text-white hover:shadow-xl transition-all duration-300 hover:scale-105"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/90 text-sm font-medium mb-1">
-                          {stat.title}
-                        </p>
-                        <p className="text-2xl md:text-4xl font-bold">
-                          {loading ? "..." : stat.value}
-                        </p>
-                        <div className="flex items-center mt-2">
-                          <TrendingUp
-                            className={`h-3 w-3 mr-1 ${
-                              stat.trendUp ? "text-green-300" : "text-gray-300"
-                            }`}
-                          />
-                          <span className="text-xs text-white/80">
-                            {stat.trend}
-                          </span>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-2">
+                          <p className="text-slate-200 text-sm font-medium">
+                            {stat.title}
+                          </p>
+                          <p className="text-3xl md:text-4xl font-bold">
+                            {loading ? "..." : stat.value}
+                          </p>
+                          <div className="flex items-center space-x-1">
+                            <TrendingUp
+                              className={`h-4 w-4 ${
+                                stat.trendUp ? "text-green-400" : "text-slate-400"
+                              }`}
+                            />
+                            <Badge
+                              variant="secondary"
+                              className={`text-xs ${
+                                stat.trendUp
+                                  ? "bg-green-500/20 text-green-400 border-green-500/30"
+                                  : "bg-slate-500/20 text-slate-400 border-slate-500/30"
+                              }`}
+                            >
+                              {stat.trend}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-white/10 rounded-full blur-xl"></div>
+                          <div className="relative bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                            <IconComponent className="h-8 w-8" />
+                          </div>
                         </div>
                       </div>
-                      <div className="bg-white/20 rounded-full p-2 md:p-3">
-                        <IconComponent className="h-5 w-5 md:h-7 md:w-7" />
-                      </div>
-                    </div>
-                  </div>
+                      {/* Decorative gradient overlay */}
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/10 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
 
             {/* Dashboard Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              {/* Quick Actions (replaces Recent Activity) */}
-              <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-300 p-4 md:p-6 shadow-sm">
-                <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
-                  Quick Actions
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                  <Button
-                    className="w-full bg-black hover:bg-gray-800 text-white"
-                    onClick={() => navigate("/admin/admin-students/upload")}
-                  >
-                    Upload Students
-                  </Button>
-                  <Button
-                    className="w-full bg-black hover:bg-gray-800 text-white"
-                    onClick={() => navigate("/admin/admin-students/add")}
-                  >
-                    Add Student
-                  </Button>
-                  <Button
-                    className="w-full bg-black hover:bg-gray-800 text-white"
-                    onClick={() => navigate("/admin/admin-students/view")}
-                  >
-                    View Students
-                  </Button>
-                  <Button
-                    className="w-full bg-black hover:bg-gray-800 text-white"
-                    onClick={() => navigate("/admin/assigndrivers")}
-                  >
-                    Assign Drivers
-                  </Button>
-                  <Button
-                    className="w-full bg-black hover:bg-gray-800 text-white"
-                    onClick={() => navigate("/admin/admin-waitingtime")}
-                  >
-                    Update Waiting Time
-                  </Button>
-                  <Button
-                    className="w-full bg-black hover:bg-gray-800 text-white"
-                    onClick={() => navigate("/admin/printmap")}
-                  >
-                    Print Map
-                  </Button>
-                </div>
-              </div>
+              {/* Quick Actions */}
+              <Card className="lg:col-span-2 shadow-lg border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      Quick Actions
+                    </h2>
+                    <Badge variant="outline" className="text-xs">
+                      6 Actions Available
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <Button
+                      className="w-full h-12 bg-gradient-to-r from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                      onClick={() => navigate("/admin/admin-students/upload")}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Students
+                    </Button>
+                    <Button
+                      className="w-full h-12 bg-gradient-to-r from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                      onClick={() => navigate("/admin/admin-students/add")}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Student
+                    </Button>
+                    <Button
+                      className="w-full h-12 bg-gradient-to-r from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                      onClick={() => navigate("/admin/admin-students/view")}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Students
+                    </Button>
+                    <Button
+                      className="w-full h-12 bg-gradient-to-r from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                      onClick={() => navigate("/admin/assigndrivers")}
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Assign Drivers
+                    </Button>
+                    <Button
+                      className="w-full h-12 bg-gradient-to-r from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                      onClick={() => navigate("/admin/admin-waitingtime")}
+                    >
+                      <Clock className="w-4 h-4 mr-2" />
+                      Update Waiting Time
+                    </Button>
+                    <Button
+                      className="w-full h-12 bg-gradient-to-r from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                      onClick={() => navigate("/admin/printmap")}
+                    >
+                      <Printer className="w-4 h-4 mr-2" />
+                      Print Map
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* System Status */}
-              <div className="bg-white rounded-2xl border border-gray-300 p-4 md:p-6 shadow-sm">
-                <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
-                  System Status
-                </h2>
-                <div className="space-y-4">
-                  {Object.entries(systemStatus).map(([service, status]) => (
-                    <div
-                      key={service}
-                      className="flex items-center justify-between"
+              <Card className="shadow-lg border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      System Status
+                    </h2>
+                    <Badge
+                      variant={
+                        Object.values(systemStatus).every(s => s === "operational")
+                          ? "default"
+                          : "destructive"
+                      }
+                      className="text-xs"
                     >
-                      <div className="flex items-center space-x-2">
-                        {getStatusIcon(status)}
-                        <span className="text-sm font-medium text-gray-700 capitalize">
-                          {service}
-                        </span>
-                      </div>
-                      <span
-                        className={`text-sm font-medium ${getStatusColor(
-                          status
-                        )}`}
+                      {Object.values(systemStatus).filter(s => s === "operational").length}/
+                      {Object.keys(systemStatus).length} Online
+                    </Badge>
+                  </div>
+                  <div className="space-y-4">
+                    {Object.entries(systemStatus).map(([service, status]) => (
+                      <div
+                        key={service}
+                        className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                       >
-                        {status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                        <div className="flex items-center space-x-3">
+                          {getStatusIcon(status)}
+                          <span className="text-sm font-medium text-gray-700 capitalize">
+                            {service}
+                          </span>
+                        </div>
+                        <Badge
+                          variant={status === "operational" ? "default" : "destructive"}
+                          className="text-xs"
+                        >
+                          {status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
 
-                {/* Quick Stats */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">
-                    Quick Stats
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Active Users:</span>
-                      <span className="font-medium">
-                        {stats.drivers.active +
-                          stats.subdrivers.active +
-                          stats.greeters.active}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Waiting Today:</span>
-                      <span className="font-medium">
-                        {statusCounts.waiting}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">In Car Today:</span>
-                      <span className="font-medium">{statusCounts.inCar}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Delivered Today:</span>
-                      <span className="font-medium">
-                        {statusCounts.delivered}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Total Schools:</span>
-                      <span className="font-medium">{stats.schools.total}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Pending Tasks:</span>
-                      <span className="font-medium text-orange-600">3</span>
+                  {/* Quick Stats */}
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <h3 className="text-sm font-medium text-gray-700 mb-4">
+                      Today's Overview
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <p className="text-2xl font-bold text-gray-900">
+                          {stats.drivers.active + stats.subdrivers.active + stats.greeters.active}
+                        </p>
+                        <p className="text-xs text-gray-600 font-medium">Active Users</p>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <p className="text-2xl font-bold text-green-600">
+                          {statusCounts.delivered}
+                        </p>
+                        <p className="text-xs text-green-600 font-medium">Delivered</p>
+                      </div>
+                      <div className="text-center p-3 bg-orange-50 rounded-lg">
+                        <p className="text-2xl font-bold text-orange-600">
+                          {statusCounts.waiting}
+                        </p>
+                        <p className="text-xs text-orange-600 font-medium">Waiting</p>
+                      </div>
+                      <div className="text-center p-3 bg-purple-50 rounded-lg">
+                        <p className="text-2xl font-bold text-purple-600">
+                          {statusCounts.inCar}
+                        </p>
+                        <p className="text-xs text-purple-600 font-medium">In Transit</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Additional Dashboard Content */}
-            <div className="bg-white rounded-2xl border border-gray-300 p-4 md:p-6 shadow-sm">
-              <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">
-                Dashboard Overview
-              </h2>
-              <p className="text-gray-600 mb-6 text-sm md:text-base">
-                Welcome to the Admin Dashboard. Here you can monitor and manage
-                all aspects of your transportation system in real-time.
-              </p>
+            <Card className="shadow-lg border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Performance Metrics
+                  </h2>
+                  <Badge variant="outline" className="text-xs">
+                    Real-time Data
+                  </Badge>
+                </div>
+                <p className="text-gray-600 mb-6 text-sm">
+                  Monitor key performance indicators and system metrics in real-time.
+                </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-black text-white rounded-xl p-4">
-                  <h3 className="font-medium mb-2">Today's Assignments</h3>
-                  <p className="text-2xl font-bold">{recentActivity.length}</p>
-                  <p className="text-gray-300 text-sm">Active routes</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card className="bg-gradient-to-br from-gray-800 to-black text-white border-0">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium mb-1">Today's Routes</h3>
+                          <p className="text-2xl font-bold">{recentActivity.length}</p>
+                          <p className="text-gray-100 text-xs">Active assignments</p>
+                        </div>
+                        <div className="bg-white/20 rounded-lg p-2">
+                          <MapPin className="h-5 w-5" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-green-600 to-green-700 text-white border-0">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium mb-1">Completed</h3>
+                          <p className="text-2xl font-bold">
+                            {recentActivity.filter((a) => a.status === "completed").length}
+                          </p>
+                          <p className="text-green-100 text-xs">Successful trips</p>
+                        </div>
+                        <div className="bg-white/20 rounded-lg p-2">
+                          <CheckCircle className="h-5 w-5" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white border-0">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium mb-1">System Health</h3>
+                          <p className="text-2xl font-bold">
+                            {Object.values(systemStatus).filter((s) => s === "operational").length}/
+                            {Object.keys(systemStatus).length}
+                          </p>
+                          <p className="text-purple-100 text-xs">Services online</p>
+                        </div>
+                        <div className="bg-white/20 rounded-lg p-2">
+                          <AlertCircle className="h-5 w-5" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium mb-1">Response Time</h3>
+                          <p className="text-2xl font-bold">~2s</p>
+                          <p className="text-orange-100 text-xs">Avg API response</p>
+                        </div>
+                        <div className="bg-white/20 rounded-lg p-2">
+                          <TrendingUp className="h-5 w-5" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-                <div className="bg-black text-white rounded-xl p-4">
-                  <h3 className="font-medium mb-2">Completed Today</h3>
-                  <p className="text-2xl font-bold">
-                    {
-                      recentActivity.filter((a) => a.status === "completed")
-                        .length
-                    }
-                  </p>
-                  <p className="text-green-100 text-sm">
-                    Successful deliveries
-                  </p>
-                </div>
-                <div className="bg-black text-white rounded-xl p-4">
-                  <h3 className="font-medium mb-2">System Health</h3>
-                  <p className="text-2xl font-bold">
-                    {
-                      Object.values(systemStatus).filter(
-                        (s) => s === "operational"
-                      ).length
-                    }
-                    /{Object.keys(systemStatus).length}
-                  </p>
-                  <p className="text-purple-100 text-sm">
-                    Services operational
-                  </p>
-                </div>
-                <div className="bg-black text-white rounded-xl p-4">
-                  <h3 className="font-medium mb-2">Response Time</h3>
-                  <p className="text-2xl font-bold">~2s</p>
-                  <p className="text-orange-100 text-sm">
-                    Average API response
-                  </p>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
